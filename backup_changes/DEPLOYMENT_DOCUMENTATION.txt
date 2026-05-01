@@ -1,0 +1,769 @@
+================================================================================
+                    BINTECH CLOUD DEPLOYMENT DOCUMENTATION
+                              Full Setup Guide
+================================================================================
+
+Date Created: May 1, 2026
+Project: BinTECH - Waste Segregation & Incentive Platform
+Deployment Target: Render.com
+Database: Supabase (PostgreSQL)
+Version: 1.0.0
+
+================================================================================
+TABLE OF CONTENTS
+================================================================================
+
+1. DEPLOYMENT OVERVIEW
+2. TECHNOLOGIES & STACK
+3. PREREQUISITES CHECKLIST
+4. STEP 1: GITHUB REPOSITORY SETUP
+5. STEP 2: SUPABASE DATABASE CONFIGURATION
+6. STEP 3: GOOGLE OAUTH SETUP
+7. STEP 4: RENDER DEPLOYMENT
+8. STEP 5: ENVIRONMENT VARIABLES CONFIGURATION
+9. STEP 6: POST-DEPLOYMENT VERIFICATION
+10. STEP 7: ESP32 HARDWARE INTEGRATION
+11. TROUBLESHOOTING & COMMON ISSUES
+12. MAINTENANCE & MONITORING
+
+================================================================================
+1. DEPLOYMENT OVERVIEW
+================================================================================
+
+BinTECH is a full-stack Node.js web application designed to manage intelligent
+waste segregation with gamification features. The application runs on a cloud
+server (Render.com) and uses a remote PostgreSQL database (Supabase) for data
+storage.
+
+DEPLOYMENT ARCHITECTURE:
+- Frontend: HTML5, CSS3 (Tailwind), JavaScript with EJS templating
+- Backend: Node.js + Express.js REST API
+- Database: Supabase (PostgreSQL-based)
+- Authentication: Google OAuth 2.0 + Session-based
+- Hardware: ESP32 Waste Sorter Device
+- Hosting: Render.com Free Tier
+- Version Control: GitHub
+
+FINAL URL: https://bintech-001.onrender.com
+
+================================================================================
+2. TECHNOLOGIES & STACK
+================================================================================
+
+BACKEND TECHNOLOGIES:
+- Node.js (JavaScript Runtime)
+- Express.js (Web Framework)
+- npm (Package Manager)
+
+KEY DEPENDENCIES:
+- @supabase/supabase-js - Database client
+- express - Web server framework
+- bcrypt - Password hashing
+- multer - File upload handling
+- nodemailer - Email notifications
+- cors - Cross-Origin Resource Sharing
+- dotenv - Environment variables management
+- ejs - Server-side templating
+
+FRONTEND TECHNOLOGIES:
+- HTML5 - Markup
+- CSS3 - Styling (Tailwind CSS)
+- JavaScript - Interactivity
+- EJS - Dynamic templating
+
+DATABASE:
+- Supabase (PostgreSQL)
+- Real-time capabilities
+- Row-level security
+- Built-in authentication
+
+AUTHENTICATION:
+- Google OAuth 2.0
+- Express-session
+- bcrypt password hashing
+
+DEPLOYMENT PLATFORM:
+- Render.com (Free Tier Web Service)
+- Automatic deployments from GitHub
+- Environment variable management
+
+================================================================================
+3. PREREQUISITES CHECKLIST
+================================================================================
+
+Before deployment, ensure you have:
+
+ACCOUNTS REQUIRED:
+☐ GitHub Account (for version control)
+☐ Render.com Account (for hosting)
+☐ Supabase Account (for database)
+☐ Google Cloud Project (for OAuth)
+☐ Gmail Account (for email notifications)
+
+CREDENTIALS NEEDED:
+☐ Supabase URL and API Keys (Anon and Service Role)
+☐ Google OAuth Client ID and Secret
+☐ Gmail app password (for email functionality)
+☐ Secret keys for JWT and sessions (generate new ones for production)
+
+LOCAL DEVELOPMENT SETUP:
+☐ Node.js installed (v14 or higher)
+☐ npm installed
+☐ Git installed
+☐ .env file with all credentials
+☐ Application tested locally before deployment
+
+================================================================================
+4. STEP 1: GITHUB REPOSITORY SETUP
+================================================================================
+
+PURPOSE:
+GitHub serves as your version control system and connects to Render for
+automatic deployments. Any push to the main branch triggers a new deployment.
+
+PROCESS:
+
+Step 4.1.1: Initialize Git Repository
+- Navigate to your project folder
+- Run: git init
+- Add all files: git add .
+- Create initial commit: git commit -m "Initial commit"
+
+Step 4.1.2: Create GitHub Repository
+- Go to https://github.com/new
+- Create new repository (public or private)
+- Repository name: BINTECH-001
+- Do NOT initialize with README (your files already exist)
+
+Step 4.1.3: Connect Local to GitHub
+- In terminal, run:
+  git remote add origin https://github.com/YOUR_USERNAME/BINTECH-001.git
+  git branch -M main
+  git push -u origin main
+
+Step 4.1.4: Authentication
+- First push may prompt for authentication
+- Use your GitHub personal access token or OAuth browser login
+- Windows: May need to clear cached credentials from Credential Manager
+
+EXPECTED RESULT:
+✓ Repository visible on GitHub with all files
+✓ Branch 'main' set up to track 'origin/main'
+✓ Ready for Render integration
+
+================================================================================
+5. STEP 2: SUPABASE DATABASE CONFIGURATION
+================================================================================
+
+PURPOSE:
+Supabase provides a managed PostgreSQL database with real-time capabilities,
+authentication, and security features for your application.
+
+PROCESS:
+
+Step 5.1: Create Supabase Project
+- Go to https://supabase.io
+- Click "New Project"
+- Project name: BinTECH
+- Choose region closest to your users
+- Create strong database password
+- Wait for project initialization (5-10 minutes)
+
+Step 5.2: Access Project Credentials
+- Once active, click on "Settings" → "API"
+- Copy your Project URL (SUPABASE_URL)
+- Copy Anon Public Key (SUPABASE_ANON_KEY)
+- Copy Service Role Key (SUPABASE_SERVICE_ROLE_KEY)
+
+Step 5.3: Set Up Database Tables (Optional - if migrating data)
+- Go to "SQL Editor" tab
+- Run any migration scripts or create tables manually
+- Ensure tables match your application schema
+
+Step 5.4: Row-Level Security (RLS)
+- Enable RLS for sensitive tables (users, rewards, admin data)
+- Create policies to restrict access based on user ID
+- Supabase dashboard provides policy builder interface
+
+Step 5.5: Set Environment Variables Locally
+Create/update .env file with:
+  SUPABASE_URL=https://your-project.supabase.co
+  SUPABASE_ANON_KEY=eyJhbGc...
+  SUPABASE_SERVICE_ROLE_KEY=eyJhbGc...
+  NODE_ENV=development (local) or production (deployed)
+
+SECURITY NOTES:
+- Never commit .env file to GitHub
+- Service Role Key is sensitive - only used server-side
+- Always use HTTPS connections to Supabase
+- Rotate keys periodically in production
+
+================================================================================
+6. STEP 3: GOOGLE OAUTH SETUP
+================================================================================
+
+PURPOSE:
+Google OAuth allows users to sign in using their Google accounts, eliminating
+the need for password management and reducing registration friction.
+
+PROCESS:
+
+Step 6.1: Create Google Cloud Project
+- Go to https://console.cloud.google.com
+- Click "Select a Project" → "New Project"
+- Project name: BinTECH
+- Click "Create"
+
+Step 6.2: Enable Google+ API
+- Search for "Google+ API" in search bar
+- Click on result
+- Click "Enable"
+
+Step 6.3: Create OAuth 2.0 Credentials
+- Go to "APIs & Services" → "Credentials"
+- Click "Create Credentials" → "OAuth client ID"
+- Application type: Web application
+- Name: BinTECH OAuth
+
+Step 6.4: Configure Authorized URIs
+IMPORTANT: These must be configured BEFORE deployment
+
+For Local Development:
+  Authorized JavaScript Origins:
+    - http://localhost:3000
+  Authorized Redirect URIs:
+    - http://localhost:3000/auth/google/callback
+
+For Render Deployment (add these AFTER creating Render service):
+  Authorized JavaScript Origins:
+    - https://bintech-001.onrender.com
+  Authorized Redirect URIs:
+    - https://bintech-001.onrender.com/auth/google/callback
+
+Step 6.5: Copy Credentials
+- Copy Client ID (GOOGLE_CLIENT_ID)
+- Copy Client Secret (GOOGLE_CLIENT_SECRET)
+
+Step 6.6: Update Environment Variables
+Add to .env file:
+  GOOGLE_CLIENT_ID=[REDACTED_GOOGLE_CLIENT_ID]
+  GOOGLE_CLIENT_SECRET=[REDACTED_GOOGLE_CLIENT_SECRET]
+  VITE_GOOGLE_CLIENT_ID=[REDACTED_VITE_GOOGLE_CLIENT_ID]
+
+SECURITY NOTES:
+- Keep Client Secret private - never expose in frontend
+- Use VITE_GOOGLE_CLIENT_ID for frontend JavaScript
+- Update GOOGLE_CALLBACK_URL after Render deployment
+- Test OAuth locally before deploying
+
+TROUBLESHOOTING:
+If you see "Error 400: origin_mismatch":
+1. Verify your Render URL matches Google Cloud configuration
+2. Clear browser cookies for your domain
+3. Wait 2-3 minutes for changes to propagate
+4. Try in incognito/private browser window
+5. Ensure trailing slashes match exactly
+
+================================================================================
+7. STEP 4: RENDER DEPLOYMENT
+================================================================================
+
+PURPOSE:
+Render.com hosts your Node.js application and provides automatic deployments
+from GitHub. The free tier is sufficient for BinTECH.
+
+PROCESS:
+
+Step 7.1: Create Render Account
+- Go to https://render.com
+- Click "Sign Up"
+- Connect with GitHub account (recommended for easy integration)
+
+Step 7.2: Create New Web Service
+- Dashboard → "New +" → "Web Service"
+- Connect to your GitHub repository (BINTECH-001)
+- Choose branch: main
+- Service name: bintech-001
+- Environment: Node
+- Build command: npm install
+- Start command: npm start
+- Instance type: Free
+- Click "Create Web Service"
+
+RENDER WILL NOW:
+- Build your application
+- Install dependencies
+- Attempt to start the server
+- Provide you with a URL (e.g., https://bintech-001.onrender.com)
+
+Step 7.3: Monitor Initial Deployment
+- Render dashboard shows "Live" when ready
+- Check logs for any errors
+- Initial deployment takes 5-10 minutes
+- If build fails, check error logs
+
+CONFIGURATION FILES NEEDED:
+Your repository must include:
+- Procfile (optional for Render, but recommended)
+- package.json with "start" script
+- .gitignore (to exclude node_modules, .env, etc.)
+
+PROCFILE CONTENT:
+web: node app.js
+
+================================================================================
+8. STEP 5: ENVIRONMENT VARIABLES CONFIGURATION
+================================================================================
+
+PURPOSE:
+Environment variables store sensitive credentials and configuration without
+exposing them in the source code.
+
+WHERE TO ADD VARIABLES:
+- Locally: In .env file (NOT committed to GitHub)
+- Production (Render): Dashboard Settings → Environment
+
+COMPLETE ENVIRONMENT VARIABLES LIST:
+
+NODE_ENV
+  Description: Application environment mode
+  Local: development
+  Production: production
+
+SUPABASE_URL
+  Description: Supabase project URL
+  Value: [REDACTED_SUPABASE_URL]
+
+SUPABASE_ANON_KEY
+  Description: Supabase anonymous/public key
+  Value: [Your Supabase JWT token - starts with eyJh...]
+  Security: Can be exposed to frontend
+
+SUPABASE_SERVICE_ROLE_KEY
+  Description: Supabase service role key for server operations
+  Value: [Your Supabase Service Role JWT token]
+  Security: KEEP SECRET - server-side only
+
+GOOGLE_CLIENT_ID
+  Description: Google OAuth application ID
+  Value: [REDACTED_GOOGLE_CLIENT_ID]
+
+GOOGLE_CLIENT_SECRET
+  Description: Google OAuth secret
+  Value: [REDACTED_GOOGLE_CLIENT_SECRET]
+  Security: KEEP SECRET
+
+GOOGLE_CALLBACK_URL
+  Description: URL where Google redirects after authentication
+  Value: https://bintech-001.onrender.com/auth/google/callback
+  IMPORTANT: Must match exactly in Google Cloud Console
+
+VITE_GOOGLE_CLIENT_ID
+  Description: Frontend-accessible Google Client ID
+  Value: [REDACTED_VITE_GOOGLE_CLIENT_ID]
+  Note: Same as GOOGLE_CLIENT_ID, but prefixed with VITE_ for frontend
+
+JWT_SECRET
+  Description: Secret key for JWT token signing
+  Local: your_jwt_secret_key_here (placeholder)
+  Production: Generate secure random value using:
+    openssl rand -base64 32
+    Or use online generator: https://generate-secret.now.sh/
+
+SESSION_SECRET
+  Description: Secret key for session management
+  Local: your_session_secret_here (placeholder)
+  Production: Generate secure random value
+
+EMAIL_HOST
+  Description: SMTP server for email notifications
+  Value: smtp.gmail.com
+
+EMAIL_PORT
+  Description: SMTP port
+  Value: 587
+
+EMAIL_USER
+  Description: Gmail address for sending notifications
+  Value: bintechman@gmail.com
+
+EMAIL_PASSWORD
+  Description: Gmail app password (NOT regular password)
+  Value: lkeh mhov awts uqtc
+  Note: Generate in Gmail Security settings → App passwords
+
+FRONTEND_URL
+  Description: Frontend application URL (for CORS and redirects)
+  Value: https://bintech-001.onrender.com
+
+HOW TO ADD TO RENDER:
+
+1. Open https://dashboard.render.com
+2. Click your Web Service: bintech-001
+3. Click "Settings" tab
+4. Scroll to "Environment" section
+5. Click "Add Environment Variable" for each variable
+6. Enter KEY, then VALUE
+7. After adding all variables, click "Save"
+8. Click "Deploy" to redeploy with new variables
+
+================================================================================
+9. STEP 6: POST-DEPLOYMENT VERIFICATION
+================================================================================
+
+PURPOSE:
+After deployment, verify that all systems are functioning correctly before
+considering the deployment complete.
+
+VERIFICATION CHECKLIST:
+
+Step 9.1: Check Deployment Status
+☐ Render dashboard shows "Live"
+☐ No errors in deployment logs
+☐ Service shows as active
+
+Step 9.2: Test Landing Page
+☐ Visit https://bintech-001.onrender.com
+☐ Landing page loads (HTML renders)
+☐ CSS styling appears correctly
+☐ No 404 or 500 errors
+
+Step 9.3: Test Google Sign-In
+☐ Click "Sign In" button
+☐ Redirects to Google login
+☐ After auth, redirects back to dashboard
+☐ User is logged in and visible
+☐ Session persists after page reload
+
+DEBUGGING IF SIGN-IN FAILS:
+- Check browser console for errors (F12 → Console)
+- Verify Google Cloud URIs match exactly
+- Clear browser cookies/cache
+- Try incognito window
+- Check Render logs for errors
+
+Step 9.4: Test Dashboard Features
+☐ View user dashboard
+☐ Statistics display correctly
+☐ Can access rewards page
+☐ Can access admin panel (if admin user)
+
+Step 9.5: Test Database Connection
+☐ User data saves to database
+☐ Supabase shows new records
+☐ Can retrieve and display data
+
+Step 9.6: Check Browser Console
+☐ No JavaScript errors
+☐ No CORS errors
+☐ No API errors (check Network tab)
+
+IF THERE ARE ISSUES:
+
+Check Render Logs:
+1. Dashboard → Web Service → Logs
+2. Look for error messages
+3. Common issues:
+   - Missing environment variables
+   - Database connection failed
+   - Google OAuth misconfiguration
+   - Port binding issues
+
+Check Local Development:
+1. Run npm start locally
+2. Try same OAuth flow
+3. Check if issue is environment-specific
+
+================================================================================
+10. STEP 7: ESP32 HARDWARE INTEGRATION
+================================================================================
+
+PURPOSE:
+ESP32 Waste Sorter is a hardware device that communicates with your deployed
+backend. After deployment, update the ESP32 to point to your Render URL.
+
+INITIAL SETUP (Completed During Development):
+- ESP32_WASTE_SORTER.ino created and uploaded to ESP32 board
+- Firmware includes WiFi connectivity
+- REST API endpoints configured
+- Sensors: Metal/Plastic/Paper detection
+- Bin occupancy monitoring
+
+POST-DEPLOYMENT UPDATE:
+
+Current Backend URL (Local):
+  BACKEND_URL = "http://192.168.254.119:3000"
+
+Update To (Production Render):
+  BACKEND_URL = "https://bintech-001.onrender.com"
+
+STEPS:
+
+1. Connect ESP32 to your computer via USB
+2. Open ESP32_WASTE_SORTER.ino in Arduino IDE
+3. Find this line:
+   #define BACKEND_URL "http://192.168.254.119:3000"
+4. Replace with:
+   #define BACKEND_URL "https://bintech-001.onrender.com"
+5. Update WiFi credentials if needed:
+   const char* ssid = "YOUR_WIFI_SSID";
+   const char* password = "YOUR_WIFI_PASSWORD";
+6. Upload firmware to ESP32
+7. Monitor Serial output to verify connection
+8. Test waste detection and bin capacity reporting
+
+ESP32 API ENDPOINTS CALLED:
+- POST /api/waste-sorter/session → Create session
+- POST /api/waste-sorter/update → Send waste data
+- POST /api/waste-sorter/stats → Send bin occupancy
+- POST /api/waste-sorter/alert → Send alerts
+
+TESTING:
+1. Deploy waste item to ESP32
+2. Check Render logs for POST requests
+3. Verify user receives points
+4. Confirm admin sees collection data
+
+================================================================================
+11. TROUBLESHOOTING & COMMON ISSUES
+================================================================================
+
+ISSUE 1: "Error 400: origin_mismatch" during Google Sign-In
+
+CAUSE: Google Cloud Console authorized URIs don't match your Render URL
+
+SOLUTION:
+1. Go to Google Cloud Console
+2. APIs & Services → Credentials
+3. Edit your OAuth 2.0 Client
+4. Authorized JavaScript Origins: Add https://bintech-001.onrender.com
+5. Authorized Redirect URIs: Add https://bintech-001.onrender.com/auth/google/callback
+6. Save
+7. Clear browser cookies
+8. Wait 2-3 minutes
+9. Try again in incognito window
+
+ISSUE 2: "Build failed" on Render
+
+CAUSE: Dependency installation or build script error
+
+SOLUTION:
+1. Check Render logs for specific error
+2. Verify package.json has all dependencies
+3. Ensure node_modules is in .gitignore (not committed)
+4. Run npm install locally to verify
+5. Check for post-install scripts in package.json
+6. Commit fix and push to GitHub (auto-redeploys)
+
+ISSUE 3: "Connection refused" - Cannot connect to Supabase
+
+CAUSE: Missing or incorrect environment variables
+
+SOLUTION:
+1. Verify SUPABASE_URL and SUPABASE_ANON_KEY are set in Render
+2. Check Supabase project is active
+3. Verify API keys haven't expired
+4. Check firewall/network rules in Supabase
+5. Redeploy Web Service to apply variables
+
+ISSUE 4: Email notifications not working
+
+CAUSE: Gmail app password or SMTP configuration incorrect
+
+SOLUTION:
+1. Verify EMAIL_USER and EMAIL_PASSWORD in Render
+2. Ensure using app password (not regular password)
+3. Generate new app password in Gmail Security settings
+4. Enable "Less secure app access" if needed (not recommended)
+5. Test with: curl -X POST https://bintech-001.onrender.com/api/test-email
+
+ISSUE 5: Session/Cookies not persisting
+
+CAUSE: SESSION_SECRET missing or incorrect
+
+SOLUTION:
+1. Generate new SESSION_SECRET: openssl rand -base64 32
+2. Add to Render environment variables
+3. Redeploy Web Service
+4. Clear browser cookies
+5. Sign in again
+
+ISSUE 6: Static files (CSS, JS) not loading
+
+CAUSE: Incorrect static file path configuration
+
+SOLUTION:
+1. Verify app.js includes:
+   app.use(express.static('public'));
+   app.use(express.static('templates'));
+2. Ensure /public and /templates directories exist
+3. Check file paths in HTML templates
+4. Redeploy after fixing paths
+
+ISSUE 7: Admin panel showing 404
+
+CAUSE: Admin routes not accessible or authentication required
+
+SOLUTION:
+1. Verify user is admin in database
+2. Check admin routes configuration
+3. Verify JWT token includes admin role
+4. Check Render logs for routing errors
+
+GENERAL DEBUGGING STEPS:
+
+1. Check Render logs: Dashboard → Logs
+2. Check browser console: F12 → Console tab
+3. Check Network tab: F12 → Network tab (look for failed requests)
+4. Test locally: npm start and verify functionality
+5. Compare .env values with Render environment variables
+6. Restart service: Redeploy from Render dashboard
+7. Check GitHub: Verify pushed code matches intended changes
+
+================================================================================
+12. MAINTENANCE & MONITORING
+================================================================================
+
+REGULAR TASKS:
+
+Weekly:
+- Check Render dashboard for service health
+- Monitor error logs for recurring issues
+- Verify user sign-ins are working
+- Check email notifications are sending
+
+Monthly:
+- Review Supabase database usage and quotas
+- Check Google OAuth token validity
+- Review and archive old logs
+- Test backup and recovery procedures
+
+Quarterly:
+- Update npm dependencies (npm update)
+- Security audit of environment variables
+- Review and update documentation
+- Performance optimization review
+
+MONITORING TOOLS:
+
+Render Dashboard:
+- Service status and uptime
+- Deployment history and logs
+- CPU and memory usage
+- Bandwidth statistics
+
+Supabase Dashboard:
+- Database usage and quotas
+- Real-time activity
+- Security logs
+- Backup status
+
+Google Cloud Console:
+- OAuth app usage statistics
+- API quota monitoring
+- Security alerts
+
+SCALING CONSIDERATIONS:
+
+Current Deployment:
+- Render free tier with 0.5 CPU and 512MB RAM
+- Suitable for up to ~50 concurrent users
+- Supabase free tier with basic quotas
+
+When to Upgrade:
+- App reaches production usage (>100 daily users)
+- Database reaches storage limits
+- Email quota exceeded
+- Need for custom domain and SSL
+
+Upgrade Path:
+1. Render: Switch to paid tier ($7+/month)
+2. Supabase: Upgrade to paid plan ($25+/month)
+3. Custom domain: Purchase from registrar (~$10/year)
+4. Monitoring: Add Sentry or DataDog ($29+/month)
+
+SECURITY BEST PRACTICES:
+
+Environment Variables:
+☐ Never commit .env to GitHub
+☐ Rotate secrets quarterly
+☐ Use strong random values for JWT and SESSION secrets
+☐ Store passwords in secure password manager
+
+Database Security:
+☐ Enable Row-Level Security (RLS) in Supabase
+☐ Create policies for data access control
+☐ Regular backups (Supabase handles automatically)
+☐ Monitor access logs for suspicious activity
+
+OAuth Security:
+☐ Keep Client Secret private
+☐ Verify callback URLs match exactly
+☐ Monitor OAuth usage for unusual patterns
+☐ Update Google credentials annually
+
+BACKUP & DISASTER RECOVERY:
+
+Automatic Backups:
+- GitHub: Distributed version control
+- Supabase: Daily backups included
+- Render: Application code backed up via GitHub
+
+Manual Backups:
+1. Export Supabase database: Supabase → Backups
+2. Clone GitHub repository locally
+3. Save all environment variable documentation
+4. Store backups in secure location
+
+Recovery Procedure (if needed):
+1. Create new Render Web Service pointing to GitHub
+2. Create new Supabase project
+3. Restore database from backup
+4. Update environment variables
+5. Redeploy service
+6. Verify all systems operational
+
+================================================================================
+CONCLUSION
+================================================================================
+
+Your BinTECH application is now deployed on Render with a production-grade
+PostgreSQL database on Supabase. The system includes:
+
+✓ Secure user authentication via Google OAuth
+✓ Real-time waste tracking and gamification
+✓ Admin dashboard for waste collection management
+✓ Email notifications for users and administrators
+✓ Hardware integration with ESP32 waste sorter device
+✓ Scalable cloud infrastructure with automatic deployments
+
+The application is ready for user testing and eventual production use.
+
+NEXT STEPS:
+1. Distribute deployment URL to test users
+2. Gather feedback on functionality and UX
+3. Monitor server logs for errors or optimization opportunities
+4. Plan feature enhancements based on user feedback
+5. Schedule hardware deployment at actual waste collection sites
+
+For ongoing support, maintain this documentation and update it as you make
+changes to the deployment configuration.
+
+================================================================================
+QUICK REFERENCE LINKS
+================================================================================
+
+Render Dashboard: https://dashboard.render.com
+Supabase Console: https://supabase.com/dashboard
+Google Cloud Console: https://console.cloud.google.com
+BinTECH Application: https://bintech-001.onrender.com
+GitHub Repository: https://github.com/ctayona/BINTECH-001
+
+SUPPORT CONTACTS:
+Render Support: https://render.com/docs
+Supabase Docs: https://supabase.io/docs
+Google OAuth Docs: https://developers.google.com/identity/protocols/oauth2
+
+================================================================================
+END OF DOCUMENTATION
+================================================================================

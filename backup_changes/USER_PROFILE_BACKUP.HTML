@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en" class="h-full">
-<head>
+ <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>BinTECH - My Profile</title>
@@ -19,8 +19,14 @@
       --page-bg: #E8ECEB;
     }
     
-    * { box-sizing: border-box; }
-    html, body { height: 100%; }
+    * {
+      box-sizing: border-box;
+    }
+    
+    html, body {
+      height: 100%;
+    }
+    
     body {
       font-family: 'Poppins', sans-serif;
       background-color: var(--page-bg);
@@ -28,14 +34,23 @@
       padding: 0;
     }
     
-    .font-playfair { font-family: 'Playfair Display', serif; }
-    .gradient-dark { background: linear-gradient(135deg, var(--secondary-gradient-start), var(--secondary-gradient-end)); }
-    .card-shadow { box-shadow: 0 4px 20px rgba(15, 59, 46, 0.12); }
+    .font-playfair {
+      font-family: 'Playfair Display', serif;
+    }
+    
+    .gradient-dark {
+      background: linear-gradient(135deg, var(--secondary-gradient-start), var(--secondary-gradient-end));
+    }
+    
+    .card-shadow {
+      box-shadow: 0 4px 20px rgba(15, 59, 46, 0.12);
+    }
     
     .nav-link {
       position: relative;
       transition: color 0.3s ease;
     }
+    
     .nav-link::after {
       content: '';
       position: absolute;
@@ -46,18 +61,24 @@
       background: var(--accent-yellow);
       transition: width 0.3s ease;
     }
-    .nav-link:hover::after, .nav-link.active::after { width: 100%; }
+    
+    .nav-link:hover::after,
+    .nav-link.active::after {
+      width: 100%;
+    }
     
     .form-input {
       border: 1.5px solid #E0E0E0;
       transition: all 0.3s ease;
       font-family: 'Poppins', sans-serif;
     }
+    
     .form-input:focus {
       border-color: var(--accent-yellow);
       box-shadow: 0 0 0 3px rgba(212, 225, 87, 0.15);
       outline: none;
     }
+    
     .form-input:disabled {
       background-color: #f5f5f5;
       color: #999;
@@ -69,11 +90,16 @@
       transition: all 0.3s ease;
       font-weight: 600;
     }
+    
     .save-btn:hover:not(:disabled) {
       background: linear-gradient(135deg, #4CAF50, var(--card-green));
       transform: scale(1.02);
     }
-    .save-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    
+    .save-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
     
     .cancel-btn {
       border: 1.5px solid var(--primary-dark);
@@ -81,7 +107,42 @@
       transition: all 0.3s ease;
       font-weight: 600;
     }
-    .cancel-btn:hover { background-color: var(--page-bg); }
+    
+    .cancel-btn:hover {
+      background-color: var(--page-bg);
+    }
+    
+    @keyframes pulse-glow {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(212, 225, 87, 0.4); }
+      50% { box-shadow: 0 0 20px 4px rgba(212, 225, 87, 0.6); }
+    }
+    
+    .points-badge {
+      animation: pulse-glow 2s ease-in-out infinite;
+    }
+
+    .mobile-nav-panel {
+      display: none;
+    }
+
+    @media (max-width: 767px) {
+      .mobile-nav-toggle {
+        display: inline-flex;
+      }
+
+      .points-badge {
+        display: none;
+      }
+
+      .mobile-nav-panel[data-open="true"] {
+        display: block;
+      }
+    }
+    
+    .stat-box {
+      background: linear-gradient(135deg, rgba(93, 174, 96, 0.1), rgba(212, 225, 87, 0.05));
+      border: 1px solid rgba(93, 174, 96, 0.2);
+    }
     
     .profile-avatar {
       width: 120px;
@@ -95,9 +156,15 @@
       margin: 0 auto 20px;
     }
     
-    .stat-box {
-      background: linear-gradient(135deg, rgba(93, 174, 96, 0.1), rgba(212, 225, 87, 0.05));
-      border: 1px solid rgba(93, 174, 96, 0.2);
+    .edit-mode-indicator {
+      display: inline-block;
+      background: rgba(212, 225, 87, 0.2);
+      color: var(--card-green);
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      border: 1px solid rgba(212, 225, 87, 0.5);
     }
     
     .toast-container {
@@ -107,6 +174,7 @@
       z-index: 9999;
       pointer-events: none;
     }
+
     .toast {
       padding: 16px 24px;
       border-radius: 12px;
@@ -119,77 +187,94 @@
       animation: slideUp 0.4s ease-out;
       pointer-events: auto;
     }
-    .toast.success { background-color: #10b981; color: white; }
-    .toast.error { background-color: #ef4444; color: white; }
-    .toast.info { background-color: #3b82f6; color: white; }
+
+    .toast.success {
+      background-color: #10b981;
+      color: white;
+    }
+
+    .toast.error {
+      background-color: #ef4444;
+      color: white;
+    }
+
+    .toast.info {
+      background-color: #3b82f6;
+      color: white;
+    }
     
     @keyframes slideUp {
-      from { transform: translateY(100px); opacity: 0; }
-      to { transform: translateY(0); opacity: 1; }
+      from {
+        transform: translateY(100px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
     }
+    
     @keyframes fadeOut {
-      to { opacity: 0; transform: translateY(20px); }
+      to {
+        opacity: 0;
+        transform: translateY(20px);
+      }
     }
-    
-    .section-title {
-      font-size: 1.125rem;
-      font-weight: 600;
-      color: var(--primary-dark);
-      margin-top: 1.5rem;
-      margin-bottom: 1rem;
-      padding-bottom: 0.75rem;
-      border-bottom: 2px solid var(--accent-yellow);
-    }
-    
-    .hidden { display: none; }
   </style>
-</head>
-<body class="h-full">
+ </head>
+ <body class="h-full">
   <div id="app-wrapper" class="w-full min-h-screen flex flex-col">
-    <!-- Navigation -->
-    <nav class="gradient-dark">
-      <div class="nav-container">
-        <!-- Left -->
-        <div class="nav-left">
-          <button class="profile-btn" onclick="window.location.href='/profile'" title="View Profile">
-            <svg fill="currentColor" viewbox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" /></svg>
-          </button>
-          <div class="nav-welcome show">
-            <p>Welcome Back</p>
-            <p id="nav-user-name">User</p>
+    <!-- Navigation Bar -->
+    <nav class="gradient-dark sticky top-0 z-50">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-16">
+          <!-- Left - User Welcome -->
+          <div class="flex items-center space-x-3">
+            <button onclick="window.location.href='/profile'" class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center overflow-hidden border-2 border-[#D4E157]/30 hover:border-[#D4E157]/60 hover:bg-white/20 transition-all cursor-pointer" title="My Profile">
+              <svg class="w-6 h-6 text-[#D4E157]" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" /></svg>
+            </button>
+            <div class="block">
+              <p class="text-[#D4E157]/70 text-xs uppercase tracking-wider">Welcome Back</p>
+              <p id="nav-user-name" class="text-white font-semibold text-sm">User</p>
+            </div>
           </div>
-        </div>
-
-        <!-- Center -->
-        <div class="nav-center show">
-          <a href="/dashboard" class="nav-link">Dashboard</a>
-          <a href="/rewards" class="nav-link">Rewards</a>
-          <a href="/history" class="nav-link">History</a>
-          <a href="/how-it-works" class="nav-link">How It Works</a>
-          <a href="/qr-scanner" class="nav-link">Transfer Points</a>
-        </div>
-
-        <!-- Right -->
-        <div class="nav-right">
-          <button id="mobile-nav-toggle" type="button" class="mobile-nav-toggle" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="mobile-nav-panel">
-            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
-          </button>
-          <div class="points-badge">
-            <span>✨</span>
-            <span id="nav-points">0 Points</span>
+          
+          <!-- Center - Navigation Links -->
+          <div class="hidden md:flex items-center space-x-8">
+            <a href="/dashboard" class="nav-link text-white/80 hover:text-white text-sm font-medium">Dashboard</a>
+            <a href="/rewards" class="nav-link text-white/80 hover:text-white text-sm font-medium">Rewards</a>
+            <a href="/history" class="nav-link text-white/80 hover:text-white text-sm font-medium">History</a>
+            <a href="/how-it-works" class="nav-link text-white/80 hover:text-white text-sm font-medium">How It Works</a>
+            <a href="/qr-scanner" class="nav-link text-white/80 hover:text-white text-sm font-medium flex items-center gap-1"><span>💳</span> Transfer Points</a>
           </div>
-          <button class="logout-btn" onclick="handleLogout()">Logout</button>
+          
+          <!-- Right - Points & Logout -->
+          <div class="flex items-center space-x-3">
+            <button id="mobile-nav-toggle" type="button" class="mobile-nav-toggle md:hidden p-2 text-white/80 hover:text-[#D4E157] border border-white/30 rounded-full" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="mobile-nav-panel">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
+            </button>
+            <div class="hidden md:flex items-center space-x-4">
+              <div class="points-badge flex items-center space-x-2 bg-[#D4E157]/20 px-4 py-2 rounded-full border border-[#D4E157]/40">
+                <span class="text-lg">✨</span>
+                <span id="nav-points" class="text-[#D4E157] font-bold text-sm">0 Points</span>
+              </div>
+              <button onclick="handleLogout()" class="px-2 sm:px-4 py-2 text-white/70 hover:text-white text-xs sm:text-sm border border-white/30 rounded-full hover:bg-white/10 transition-all">
+                Logout
+              </button>
+            </div>
+          </div>
         </div>
       </div>
-      <div id="mobile-nav-panel" class="mobile-nav-panel" data-open="false" style="display:none;padding:0.9rem 1rem 1rem;border-top:1px solid rgba(255,255,255,.15);background:rgba(20,61,46,.95)">
-        <a href="/dashboard" class="nav-link" style="display:block;margin-bottom:0.7rem;">Dashboard</a>
-        <a href="/rewards" class="nav-link" style="display:block;margin-bottom:0.7rem;">Rewards</a>
-        <a href="/history" class="nav-link" style="display:block;margin-bottom:0.7rem;">History</a>
-        <a href="/how-it-works" class="nav-link" style="display:block;margin-bottom:0.7rem;">How It Works</a>
-        <a href="/qr-scanner" class="nav-link" style="display:block;margin-bottom:0.9rem;">Transfer Points</a>
-        <div style="padding-top:0.8rem;border-top:1px solid rgba(255,255,255,.15);display:flex;align-items:center;justify-content:space-between;gap:0.5rem;">
-          <span id="mobile-nav-points" style="color:var(--accent-yellow);font-size:0.85rem;font-weight:700;">0 Points</span>
-          <button class="logout-btn" onclick="handleLogout()" style="display:inline-block;padding:0.35rem 0.7rem;font-size:0.72rem;">Logout</button>
+      <div id="mobile-nav-panel" class="mobile-nav-panel md:hidden border-t border-white/15 bg-[#143D2E]/95 px-4 py-4 space-y-3" data-open="false" style="display:none;">
+        <a href="/dashboard" class="block text-white/90 text-sm font-medium">Dashboard</a>
+        <a href="/profile" class="block text-[#D4E157] text-sm font-medium">Profile</a>
+        <a href="/rewards" class="block text-white/90 text-sm font-medium">Rewards</a>
+        <a href="/history" class="block text-white/90 text-sm font-medium">History</a>
+        <a href="/how-it-works" class="block text-white/90 text-sm font-medium">How It Works</a>
+        <a href="/qr-scanner" class="block text-white/90 text-sm font-medium">Transfer Points</a>
+        <div class="pt-2 border-t border-white/15 flex items-center justify-between">
+          <span id="mobile-nav-points" class="text-[#D4E157] text-sm font-semibold">0 Points</span>
+          <button onclick="handleLogout()" class="px-3 py-1.5 text-white/80 text-xs border border-white/30 rounded-full hover:bg-white/10">Logout</button>
         </div>
       </div>
     </nav>
@@ -377,43 +462,10 @@
                   <label class="block text-sm font-semibold text-[#0F3B2E] mb-2">Program</label>
                   <input type="text" id="program" class="form-input w-full px-4 py-3 rounded-lg" placeholder="Program" disabled>
                 </div>
-                <!-- Department (Editable - Dropdown) -->
-                <div>
-                  <label class="block text-sm font-semibold text-[#0F3B2E] mb-2">Department</label>
-                  <select id="studentDepartment" class="form-input w-full px-4 py-3 rounded-lg" disabled>
-                    <option value="">Select Department...</option>
-                    <option value="CLAS">College of Liberal Arts and Sciences (CLAS)</option>
-                    <option value="CBFS">College of Business and Financial Science (CBFS)</option>
-                    <option value="CCIS">College of Computing and Information Sciences (CCIS)</option>
-                    <option value="CCAPS">College of Continuing, Advanced and Professional Studies (CCAPS)</option>
-                    <option value="CITE">College of Innovative Teacher Education (CITE)</option>
-                    <option value="CCSE">College of Construction Sciences and Engineering (CCSE)</option>
-                    <option value="CET">College of Engineering Technology (CET)</option>
-                    <option value="CGPP">College of Governance and Public Policy (CGPP)</option>
-                    <option value="CTHM">College of Tourism and Hospitality Management (CTHM)</option>
-                    <option value="SOL">School of Law (SOL)</option>
-                    <option value="ION">Institute of Nursing</option>
-                    <option value="IOP">Institute of Pharmacy</option>
-                    <option value="IIHS">Institute of Imaging and Health Sciences</option>
-                    <option value="IOA">Institute of Accountancy</option>
-                    <option value="IOPS">Institute of Psychology</option>
-                    <option value="IOAD">Institute of Arts and Design</option>
-                    <option value="IOSW">Institute of Social Work</option>
-                    <option value="IODEM">Institute of Disaster and Emergency Management</option>
-                    <option value="IOSDN">Institute of Social Development and Nation Building</option>
-                    <option value="CHK">Center of Human Kinesthetics (CHK)</option>
-                  </select>
-                </div>
+                <!-- Year Level (Editable) -->
                 <div>
                   <label class="block text-sm font-semibold text-[#0F3B2E] mb-2">Year Level</label>
-                  <select id="yearLevel" class="form-input w-full px-4 py-3 rounded-lg" disabled>
-                    <option value="">Select Year Level...</option>
-                    <option value="First Year">First Year</option>
-                    <option value="Second Year">Second Year</option>
-                    <option value="Third Year">Third Year</option>
-                    <option value="Fourth Year">Fourth Year</option>
-                    <option value="Fifth Year">Fifth Year</option>
-                  </select>
+                  <input type="text" id="yearLevel" class="form-input w-full px-4 py-3 rounded-lg" placeholder="Year Level" disabled>
                 </div>
                 <!-- COR (Image Upload) -->
                 <div>
@@ -421,7 +473,7 @@
                   <div class="flex items-center gap-4">
                     <input type="file" id="corFile" class="form-input flex-1 px-4 py-3 rounded-lg" accept="image/*" disabled>
                     <div class="relative group">
-                      <img id="corPreview" class="w-20 h-20 rounded-lg object-cover bg-[#f5f5f5] hidden cursor-pointer hover:opacity-80 transition-opacity" alt="COR Preview" title="Click to view full image" onclick="openImageModal(this.src, 'Class of Record (COR) Preview')">
+                      <img id="corPreview" class="w-20 h-20 rounded-lg object-cover bg-[#f5f5f5] hidden cursor-pointer hover:opacity-80 transition-opacity" alt="COR Preview" title="Click to view full image">
                       <!-- Remove button overlay -->
                       <button 
                         type="button"
@@ -550,7 +602,7 @@
         <nav class="bintech-user-footer__nav" aria-label="Products links">
           <h4>Products</h4>
           <ul>
-            <li><a href="/rewards">Rewards</a></li>
+            <li><a href="#">Rewards</a></li>
           </ul>
         </nav>
 
@@ -599,39 +651,6 @@
       </div>
     </div>
    </footer>
-
-    <!-- Image Preview Modal -->
-    <div id="imagePreviewModal" class="hidden fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
-      <div class="relative bg-white rounded-2xl max-w-4xl max-h-[90vh] overflow-auto card-shadow">
-        <!-- Modal Header -->
-        <div class="sticky top-0 bg-white border-b border-[#E8ECEB] p-4 flex items-center justify-between rounded-t-2xl">
-          <h3 id="modalTitle" class="font-playfair text-xl text-[#0F3B2E]">Image Preview</h3>
-          <button 
-            onclick="closeImageModal()" 
-            class="text-[#0F3B2E]/60 hover:text-[#0F3B2E] text-2xl font-bold transition-colors"
-            title="Close preview (or press Escape)"
-          >
-            ✕
-          </button>
-        </div>
-        
-        <!-- Modal Content -->
-        <div class="p-6 flex items-center justify-center">
-          <img id="modalImage" src="" alt="Preview" class="max-w-full max-h-[70vh] object-contain rounded-lg">
-        </div>
-        
-        <!-- Modal Footer -->
-        <div class="sticky bottom-0 bg-white border-t border-[#E8ECEB] p-4 flex items-center justify-between rounded-b-2xl">
-          <p class="text-xs text-[#0F3B2E]/60">Click outside or press Escape to close</p>
-          <button 
-            onclick="closeImageModal()" 
-            class="px-4 py-2 bg-[#5DAE60] hover:bg-[#4CAF50] text-white rounded-lg font-semibold transition-all"
-          >
-            Close
-          </button>
-        </div>
-      </div>
-    </div>
 
   </div>
 
@@ -831,7 +850,6 @@
           document.getElementById('studentId').value = profile.student_id || '';
           document.getElementById('program').value = profile.program || '';
           document.getElementById('yearLevel').value = profile.year_level || '';
-          document.getElementById('studentDepartment').value = profile.department || '';
           // COR image URL will be loaded separately
           if (profile.cor) {
             document.getElementById('corPreview').src = profile.cor;
@@ -869,7 +887,7 @@
         // Store original data for cancel functionality AFTER populating fields
         const allFieldIds = [
           'firstName', 'middleName', 'lastName', 'birthdate', 'sex',
-          'program', 'yearLevel', 'studentDepartment',
+          'program', 'yearLevel',
           'department', 'position',
           'designation', 'institution'
         ];
@@ -1065,7 +1083,7 @@
       // All EDITABLE field IDs (NOT including ID fields like studentId, facultyId, accountId, etc.)
       const editableFields = [
         'firstName', 'middleName', 'lastName', 'birthdate', 'sex',
-        'program', 'yearLevel', 'studentDepartment', 'corFile',
+        'program', 'yearLevel', 'corFile',
         'department', 'position',
         'designation', 'institution'
       ];
@@ -1111,7 +1129,9 @@
     }
 
     // ============================================
-    // SAVE PROFILE CHANGES
+    // SAVE PROFILE CHANGES (Steps 6-9)
+    // ============================================
+    // SAVE PROFILE CHANGES (Steps 6-9)
     // ============================================
     async function handleSaveProfile(event) {
       event.preventDefault();
@@ -1147,15 +1167,10 @@
         const corFileInput = document.getElementById('corFile');
         const profilePicFileInput = document.getElementById('profilePictureFile');
         
-        // Show single status message if uploading files
-        if ((currentUser.role === 'student' && corFileInput && corFileInput.files.length > 0) ||
-            (profilePicFileInput && profilePicFileInput.files.length > 0)) {
-          showInfo('Uploading files and saving profile...');
-        }
-        
         // Upload COR file if selected (students only)
         if (currentUser.role === 'student' && corFileInput && corFileInput.files.length > 0) {
           console.log('📤 Uploading COR file...');
+          showInfo('Uploading COR image...');
           const corUrl = await uploadFileToSupabase(corFileInput.files[0], 'cor-uploads');
           updateData.cor = corUrl;
           console.log('✓ COR uploaded, signed URL stored');
@@ -1164,6 +1179,7 @@
         // Upload Profile Picture if selected (all roles)
         if (profilePicFileInput && profilePicFileInput.files.length > 0) {
           console.log('📤 Uploading profile picture...');
+          showInfo('Uploading profile picture...');
           // Use cor-uploads bucket for profile pictures too (since it works)
           const profileUrl = await uploadFileToSupabase(profilePicFileInput.files[0], 'cor-uploads');
           updateData.profile_picture = profileUrl;
@@ -1174,7 +1190,6 @@
         if (currentUser.role === 'student') {
           updateData.program = document.getElementById('program').value || '';
           updateData.yearLevel = document.getElementById('yearLevel').value || '';
-          updateData.department = document.getElementById('studentDepartment').value || '';
         } else if (currentUser.role === 'faculty') {
           updateData.department = document.getElementById('department').value || '';
           updateData.position = document.getElementById('position').value || '';
@@ -1184,6 +1199,7 @@
         }
 
         // Call backend API to update profile
+        showInfo('Saving profile...');
         const response = await fetch('/auth/update-profile', {
           method: 'POST',
           headers: {
@@ -1238,7 +1254,7 @@
       // Restore all original values (excluding file inputs)
       const allFieldIds = [
         'firstName', 'middleName', 'lastName', 'birthdate', 'sex',
-        'program', 'yearLevel', 'studentDepartment',
+        'program', 'yearLevel',
         'department', 'position',
         'designation', 'institution'
       ];
@@ -1354,49 +1370,6 @@
       
       showInfo('COR image removed');
     }
-
-    // ============================================
-    // IMAGE PREVIEW MODAL
-    // ============================================
-    function openImageModal(imageSrc, imageTitle = 'Image Preview') {
-      const modal = document.getElementById('imagePreviewModal');
-      const modalImage = document.getElementById('modalImage');
-      const modalTitle = document.getElementById('modalTitle');
-      
-      if (modal && modalImage) {
-        modalImage.src = imageSrc;
-        modalTitle.textContent = imageTitle;
-        modal.classList.remove('hidden');
-        document.body.style.overflow = 'hidden'; // Prevent scrolling
-      }
-    }
-
-    function closeImageModal() {
-      const modal = document.getElementById('imagePreviewModal');
-      if (modal) {
-        modal.classList.add('hidden');
-        document.body.style.overflow = 'auto'; // Re-enable scrolling
-      }
-    }
-
-    // Close modal when clicking outside the image
-    document.addEventListener('DOMContentLoaded', function() {
-      const modal = document.getElementById('imagePreviewModal');
-      if (modal) {
-        modal.addEventListener('click', function(e) {
-          if (e.target === modal) {
-            closeImageModal();
-          }
-        });
-      }
-      
-      // Close modal with Escape key
-      document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-          closeImageModal();
-        }
-      });
-    });
 
     // ============================================
     // ROUTE PROTECTION
