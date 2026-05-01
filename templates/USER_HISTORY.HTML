@@ -45,6 +45,43 @@
     .card-shadow {
       box-shadow: 0 4px 20px rgba(15, 59, 46, 0.12);
     }
+    /* Navigation (copied from USER_QR_CODE for consistent navbar styles) */
+    nav.gradient-dark {
+      background: linear-gradient(135deg, var(--secondary-gradient-start), var(--secondary-gradient-end));
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      box-shadow: 0 4px 12px rgba(15, 59, 46, 0.1);
+    }
+
+    .nav-container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 0 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 4rem;
+    }
+
+    .nav-left { display: flex; align-items: center; gap: 1rem; }
+
+    .profile-btn { width: 2.5rem; height: 2.5rem; border-radius: 9999px; background: rgba(255,255,255,0.1); border: 2px solid rgba(212,225,87,0.3); display:flex; align-items:center; justify-content:center; cursor:pointer; transition:all .3s ease; }
+    .profile-btn:hover { background: rgba(255,255,255,0.2); border-color: rgba(212,225,87,0.6); }
+    .profile-btn svg { width:1.5rem; height:1.5rem; color:var(--accent-yellow); }
+
+    .nav-welcome { display:none; }
+    .nav-welcome.show { display:block; }
+    .nav-welcome p:first-child { color: rgba(212, 225, 87, 0.7); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    .nav-welcome p:last-child { color: white; font-weight: 600; font-size: 0.875rem; }
+
+    .nav-center { display:none; }
+    .nav-center.show { display:flex; align-items:center; gap:2rem; }
+
+    .nav-right { display:flex; align-items:center; gap:1rem; }
+
+    .logout-btn { padding: 0.5rem 1rem; color: rgba(255,255,255,0.7); font-size: 0.875rem; border: 1px solid rgba(255,255,255,0.3); border-radius: 9999px; background: transparent; cursor: pointer; transition: all 0.3s ease; }
+    .logout-btn:hover { color: white; background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.5); }
     
     .nav-link {
       position: relative;
