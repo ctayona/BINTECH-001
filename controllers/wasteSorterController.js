@@ -226,19 +226,23 @@ async function applyLiveTelemetry(machineId, capacities = {}) {
     const plastic = capacities.plastic || {};
     const paper = capacities.paper || {};
 
+    // When hardware reports isFull=true, force the fill percentage to 100%.
     if (metal.fillPercentage !== undefined && metal.fillPercentage !== null) {
-      row.metal_fill_percentage = coercePercentage(metal.fillPercentage, row.metal_fill_percentage);
-      row.metal_status = metal.isFull ? 'FULL' : 'ACTIVE';
+      const forcedMetalFill = metal.isFull === true ? 100 : metal.fillPercentage;
+      row.metal_fill_percentage = coercePercentage(forcedMetalFill, row.metal_fill_percentage);
+      row.metal_status = metal.isFull ? 'FULL' : (row.metal_status || 'ACTIVE');
     }
 
     if (plastic.fillPercentage !== undefined && plastic.fillPercentage !== null) {
-      row.plastic_fill_percentage = coercePercentage(plastic.fillPercentage, row.plastic_fill_percentage);
-      row.plastic_status = plastic.isFull ? 'FULL' : 'ACTIVE';
+      const forcedPlasticFill = plastic.isFull === true ? 100 : plastic.fillPercentage;
+      row.plastic_fill_percentage = coercePercentage(forcedPlasticFill, row.plastic_fill_percentage);
+      row.plastic_status = plastic.isFull ? 'FULL' : (row.plastic_status || 'ACTIVE');
     }
 
     if (paper.fillPercentage !== undefined && paper.fillPercentage !== null) {
-      row.paper_fill_percentage = coercePercentage(paper.fillPercentage, row.paper_fill_percentage);
-      row.paper_status = paper.isFull ? 'FULL' : 'ACTIVE';
+      const forcedPaperFill = paper.isFull === true ? 100 : paper.fillPercentage;
+      row.paper_fill_percentage = coercePercentage(forcedPaperFill, row.paper_fill_percentage);
+      row.paper_status = paper.isFull ? 'FULL' : (row.paper_status || 'ACTIVE');
     }
 
     return row;
