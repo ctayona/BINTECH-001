@@ -18,36 +18,124 @@
       --card-green: #5DAE60;
       --page-bg: #E8ECEB;
     }
-    
-    * { box-sizing: border-box; }
-    
-    html, body { height: 100%; }
-    
-    body {
-      font-family: 'Poppins', sans-serif;
-      background-color: var(--page-bg);
+
+    * {
       margin: 0;
       padding: 0;
+      box-sizing: border-box;
     }
-    
+
+    html, body {
+      width: 100%;
+      height: 100%;
+    }
+
+    body {
+      font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--page-bg);
+      display: flex;
+      flex-direction: column;
+    }
+
     .font-playfair { font-family: 'Playfair Display', serif; }
-    .gradient-dark { background: linear-gradient(135deg, var(--secondary-gradient-start), var(--secondary-gradient-end)); }
-    .card-shadow { box-shadow: 0 4px 20px rgba(15, 59, 46, 0.12); }
-    
-    .reward-card {
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
+
+    /* Navigation */
+    nav.gradient-dark {
+      background: linear-gradient(135deg, var(--secondary-gradient-start), var(--secondary-gradient-end));
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      box-shadow: 0 4px 12px rgba(15, 59, 46, 0.1);
     }
-    
-    .reward-card:hover {
-      transform: translateY(-6px);
-      box-shadow: 0 12px 35px rgba(15, 59, 46, 0.2);
+
+    .nav-container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 0 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 4rem;
     }
-    
+
+    .nav-left {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .profile-btn {
+      width: 2.5rem;
+      height: 2.5rem;
+      border-radius: 9999px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 2px solid rgba(212, 225, 87, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .profile-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+      border-color: rgba(212, 225, 87, 0.6);
+    }
+
+    .profile-btn svg {
+      width: 1.5rem;
+      height: 1.5rem;
+      color: var(--accent-yellow);
+    }
+
+    .nav-welcome {
+      display: none;
+    }
+
+    .nav-welcome.show {
+      display: block;
+    }
+
+    .nav-welcome p:first-child {
+      color: rgba(212, 225, 87, 0.7);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .nav-welcome p:last-child {
+      color: white;
+      font-weight: 600;
+      font-size: 0.875rem;
+    }
+
+    .nav-center {
+      display: none;
+    }
+
+    .nav-center.show {
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+    }
+
     .nav-link {
+      color: rgba(255, 255, 255, 0.8);
+      text-decoration: none;
+      font-size: 0.875rem;
+      font-weight: 500;
       position: relative;
       transition: color 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
     }
-    
+
+    .nav-link:hover,
+    .nav-link.active {
+      color: white;
+    }
+
     .nav-link::after {
       content: '';
       position: absolute;
@@ -58,9 +146,111 @@
       background: var(--accent-yellow);
       transition: width 0.3s ease;
     }
-    
+
     .nav-link:hover::after,
-    .nav-link.active::after { width: 100%; }
+    .nav-link.active::after {
+      width: 100%;
+    }
+
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .points-badge {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(212, 225, 87, 0.2);
+      padding: 0.5rem 1rem;
+      border-radius: 9999px;
+      border: 1px solid rgba(212, 225, 87, 0.4);
+    }
+
+    .points-badge span:last-child {
+      color: var(--accent-yellow);
+      font-weight: 700;
+      font-size: 0.875rem;
+    }
+
+    .logout-btn {
+      padding: 0.5rem 1rem;
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 0.875rem;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 9999px;
+      background: transparent;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .logout-btn:hover {
+      color: white;
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.5);
+    }
+
+    .mobile-nav-toggle {
+      display: none;
+    }
+
+    .mobile-nav-panel {
+      display: none;
+    }
+
+    @media (max-width: 768px) {
+      .nav-container {
+        height: auto;
+        min-height: 4rem;
+        padding-top: 0.5rem;
+        padding-bottom: 0.5rem;
+      }
+
+      .mobile-nav-toggle {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 2.25rem;
+        height: 2.25rem;
+        border-radius: 9999px;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        background: transparent;
+        color: rgba(255, 255, 255, 0.8);
+        cursor: pointer;
+      }
+
+      .nav-right {
+        gap: 0.5rem;
+      }
+
+      .points-badge {
+        display: none;
+      }
+
+      .logout-btn {
+        display: none;
+      }
+
+      .nav-center.show {
+        display: none;
+      }
+
+      .nav-welcome.show {
+        display: block;
+      }
+    }
+    
+    .card-shadow { box-shadow: 0 4px 20px rgba(15, 59, 46, 0.12); }
+    
+    .reward-card {
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .reward-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 12px 35px rgba(15, 59, 46, 0.2);
+    }
     
     .details-btn, .transfer-btn, .redeem-btn {
       background: linear-gradient(135deg, var(--card-green), #4CAF50);
@@ -85,16 +275,6 @@
     @keyframes pulse-glow {
       0%, 100% { box-shadow: 0 0 0 0 rgba(212, 225, 87, 0.4); }
       50% { box-shadow: 0 0 20px 4px rgba(212, 225, 87, 0.6); }
-    }
-    
-    .points-badge { animation: pulse-glow 2s ease-in-out infinite; }
-    
-    .mobile-nav-panel { display: none; }
-    
-    @media (max-width: 767px) {
-      .mobile-nav-toggle { display: inline-flex; }
-      .points-badge { display: none; }
-      .mobile-nav-panel[data-open="true"] { display: block; }
     }
     
     .modal-backdrop {
