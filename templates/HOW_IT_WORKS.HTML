@@ -1,0 +1,806 @@
+<!doctype html>
+<html lang="en" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BinTECH - How It Works</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&amp;family=Poppins:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+  <link href="/css/user-footer.css" rel="stylesheet">
+  <style>
+    :root {
+      --primary-dark: #0F3B2E;
+      --secondary-gradient-start: #143D2E;
+      --secondary-gradient-end: #1F4F3B;
+      --accent-yellow: #D4E157;
+      --card-green: #5DAE60;
+      --page-bg: #E8ECEB;
+    }
+    
+    * {
+      box-sizing: border-box;
+    }
+    
+    html, body {
+      height: 100%;
+    }
+    
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-color: var(--page-bg);
+      margin: 0;
+      padding: 0;
+    }
+    
+    .font-playfair {
+      font-family: 'Playfair Display', serif;
+    }
+    
+    .gradient-dark {
+      background: linear-gradient(135deg, var(--secondary-gradient-start), var(--secondary-gradient-end));
+    }
+    
+    .card-shadow {
+      box-shadow: 0 4px 20px rgba(15, 59, 46, 0.12);
+    }
+    
+    .nav-link {
+      position: relative;
+      transition: color 0.3s ease;
+    }
+    
+    .nav-link::after {
+      content: '';
+      position: absolute;
+      bottom: -4px;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: var(--accent-yellow);
+      transition: width 0.3s ease;
+    }
+    
+    .nav-link:hover::after,
+    .nav-link.active::after {
+      width: 100%;
+    }
+    
+    @keyframes pulse-glow {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(212, 225, 87, 0.4); }
+      50% { box-shadow: 0 0 20px 4px rgba(212, 225, 87, 0.6); }
+    }
+    
+    .points-badge {
+      animation: pulse-glow 2s ease-in-out infinite;
+    }
+
+    .scanner-shell {
+      background: radial-gradient(circle at top right, rgba(93, 174, 96, 0.22), rgba(31, 79, 59, 0.09) 40%, rgba(255, 255, 255, 1) 80%);
+      border: 1px solid rgba(15, 59, 46, 0.08);
+    }
+
+    .scanner-view {
+      position: relative;
+      border-radius: 1rem;
+      overflow: hidden;
+      min-height: 300px;
+      background: linear-gradient(180deg, #0f3b2e, #1f4f3b);
+      border: 2px solid rgba(212, 225, 87, 0.45);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08), 0 16px 30px rgba(15, 59, 46, 0.2);
+    }
+
+    .scanner-view::before,
+    .scanner-view::after {
+      content: '';
+      position: absolute;
+      left: 8%;
+      right: 8%;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--accent-yellow), transparent);
+      z-index: 2;
+      pointer-events: none;
+      opacity: 0.7;
+    }
+
+    .scanner-view::before {
+      top: 24%;
+      animation: scanline 2.6s ease-in-out infinite;
+    }
+
+    .scanner-view::after {
+      top: 74%;
+      animation: scanline 2.6s ease-in-out infinite reverse;
+    }
+
+    @keyframes scanline {
+      0% { transform: translateY(-18px); opacity: 0.35; }
+      50% { transform: translateY(18px); opacity: 1; }
+      100% { transform: translateY(-18px); opacity: 0.35; }
+    }
+
+    #qr-reader {
+      width: 100%;
+      height: 100%;
+      min-height: 300px;
+    }
+
+    #qr-reader video {
+      object-fit: cover;
+      border-radius: 0.9rem;
+    }
+
+    #qr-reader__dashboard {
+      padding: 0.75rem;
+      color: #ffffff;
+      font-size: 0.85rem;
+    }
+
+    #qr-reader__dashboard_section_csr {
+      background: rgba(15, 59, 46, 0.65);
+      border-radius: 0.75rem;
+      border: 1px solid rgba(212, 225, 87, 0.2);
+      padding: 0.6rem;
+      margin-top: 0.6rem;
+    }
+
+    #qr-reader select,
+    #qr-reader button,
+    #qr-reader input {
+      border-radius: 0.6rem;
+      border: 1px solid rgba(212, 225, 87, 0.25);
+    }
+
+    .scanner-status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      border-radius: 9999px;
+      padding: 0.35rem 0.8rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .status-idle {
+      background: rgba(15, 59, 46, 0.08);
+      color: rgba(15, 59, 46, 0.8);
+    }
+
+    .status-scanning {
+      background: rgba(93, 174, 96, 0.2);
+      color: #0f3b2e;
+    }
+
+    .status-success {
+      background: rgba(16, 185, 129, 0.2);
+      color: #065f46;
+    }
+
+    .status-error {
+      background: rgba(239, 68, 68, 0.18);
+      color: #991b1b;
+    }
+  </style>
+  <style>body { box-sizing: border-box; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+ </head>
+ <body>
+  <div id="app-wrapper" class="w-full min-h-screen flex flex-col"><!-- Navigation Bar -->
+   <nav class="gradient-dark sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+     <div class="flex items-center justify-between h-16"><!-- Left - User Welcome -->
+      <div class="flex items-center space-x-3">
+      <button onclick="window.location.href='/profile'" class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center overflow-hidden border-2 border-[#D4E157]/30 hover:border-[#D4E157]/60 hover:bg-white/20 transition-all cursor-pointer" title="View Profile">
+        <svg class="w-6 h-6 text-[#D4E157]" fill="currentColor" viewbox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+        </svg>
+       </button>
+       <div class="hidden sm:block">
+        <p class="text-[#D4E157]/70 text-xs uppercase tracking-wider">Welcome Back</p>
+        <p id="nav-user-name" class="text-white font-semibold text-sm">MARIO SALLY</p>
+       </div>
+      </div><!-- Center - Navigation Links -->
+      <div class="hidden md:flex items-center space-x-8"><a href="/dashboard" class="nav-link text-white/80 hover:text-white text-sm font-medium">Dashboard</a> <a href="/rewards" class="nav-link text-white/80 hover:text-white text-sm font-medium">Rewards</a><a href="/history" class="nav-link text-white/80 hover:text-white text-sm font-medium">History</a> <a href="/how-it-works" class="nav-link active text-[#D4E157] text-sm font-medium">How It Works</a> <a href="/qr-scanner" class="nav-link text-white/80 hover:text-white text-sm font-medium flex items-center gap-1"><span>💳</span> Transfer Points</a>
+      </div><!-- Right - Points & Notifications -->
+      <div class="flex items-center space-x-3">
+       <button id="mobile-nav-toggle" type="button" class="mobile-nav-toggle md:hidden p-2 text-white/80 hover:text-[#D4E157] border border-white/30 rounded-full" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="mobile-nav-panel">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
+       </button>
+       <div class="hidden md:flex items-center space-x-4">
+        <div class="points-badge flex items-center space-x-2 bg-[#D4E157]/20 px-4 py-2 rounded-full border border-[#D4E157]/40"><span class="text-lg">✨</span> <span id="nav-points" class="text-[#D4E157] font-bold text-sm">521 Points</span>
+        </div><button onclick="handleLogout()" class="px-2 sm:px-4 py-2 text-white/70 hover:text-white text-xs sm:text-sm border border-white/30 rounded-full hover:bg-white/10 transition-all">
+          Logout
+        </button>
+       </div>
+      </div>
+     </div>
+    </div>
+    <div id="mobile-nav-panel" class="mobile-nav-panel md:hidden border-t border-white/15 bg-[#143D2E]/95 px-4 py-4 space-y-3" data-open="false" style="display:none;">
+      <a href="/dashboard" class="block text-white/90 text-sm font-medium">Dashboard</a>
+      <a href="/rewards" class="block text-white/90 text-sm font-medium">Rewards</a>
+      <a href="/history" class="block text-white/90 text-sm font-medium">History</a>
+      <a href="/how-it-works" class="block text-[#D4E157] text-sm font-medium">How It Works</a>
+      <a href="/qr-scanner" class="block text-white/90 text-sm font-medium">Transfer Points</a>
+      <div class="pt-2 border-t border-white/15 flex items-center justify-between">
+        <span id="mobile-nav-points" class="text-[#D4E157] text-sm font-semibold">521 Points</span>
+        <button onclick="handleLogout()" class="px-3 py-1.5 text-white/80 text-xs border border-white/30 rounded-full hover:bg-white/10">Logout</button>
+      </div>
+    </div>
+   </nav><!-- Main Content -->
+   <main class="flex-grow">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12"><!-- Page Header -->
+     <div class="text-center mb-16">
+      <h1 id="page-title" class="font-playfair text-4xl sm:text-5xl text-[#0F3B2E] mb-3">How It Works</h1>
+      <p id="page-subtitle" class="text-xl text-[#0F3B2E]/80 mb-4">Start earning rewards in three simple steps</p>
+      <p id="page-description" class="text-[#0F3B2E]/70 max-w-2xl mx-auto">BinTECH is an intelligent waste segregation system designed to encourage responsible disposal habits on campus. By properly sorting waste using the smart kiosks, students earn EcoPoints that can be redeemed for useful campus rewards.</p>
+     </div><!-- Steps Section -->
+     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16"><!-- Step 1 -->
+      <div class="bg-white rounded-2xl card-shadow p-8 flex flex-col">
+       <div class="w-16 h-16 rounded-full bg-gradient-to-br from-[#60A5FA]/30 to-[#3B82F6]/20 flex items-center justify-center mb-6"><span class="text-3xl font-bold text-[#0F3B2E]">1</span>
+       </div>
+       <h3 id="step1-title" class="font-playfair text-xl text-[#0F3B2E] mb-3">Register &amp; Get QR Code</h3>
+       <p class="text-[#0F3B2E]/70 text-sm mb-4 flex-grow">Create your BinTECH account using your university email. Once registered, the system generates a unique QR code linked to your account. This QR code will be used to identify you when using the smart waste sorting kiosk.</p>
+       <div class="pt-4 border-t border-[#E8ECEB]">
+        <p class="text-xs text-[#0F3B2E]/60">Students can access their QR code through the BinTECH web platform or mobile interface.</p>
+       </div>
+      </div><!-- Step 2 -->
+      <div class="bg-white rounded-2xl card-shadow p-8 flex flex-col">
+       <div class="w-16 h-16 rounded-full bg-gradient-to-br from-[#F59E0B]/30 to-[#FBBF24]/20 flex items-center justify-center mb-6"><span class="text-3xl font-bold text-[#0F3B2E]">2</span>
+       </div>
+       <h3 id="step2-title" class="font-playfair text-xl text-[#0F3B2E] mb-3">Sort Your Waste</h3>
+       <p class="text-[#0F3B2E]/70 text-sm mb-4 flex-grow">Approach any BinTECH smart waste sorter kiosk located around the campus. Scan your QR code at the kiosk and deposit your waste in the correct category. The system detects and records your disposal activity and verifies that the waste was sorted properly.</p>
+       <div class="pt-4 border-t border-[#E8ECEB]">
+        <p class="text-xs font-semibold text-[#0F3B2E] mb-2">Waste Categories:</p>
+        <ul class="text-xs text-[#0F3B2E]/60 space-y-1">
+         <li>• Plastic</li>
+         <li>• Paper</li>
+         <li>• Metal</li>
+         <li>• Organic waste</li>
+        </ul>
+       </div>
+      </div><!-- Step 3 -->
+      <div class="bg-white rounded-2xl card-shadow p-8 flex flex-col">
+       <div class="w-16 h-16 rounded-full bg-gradient-to-br from-[#10B981]/30 to-[#34D399]/20 flex items-center justify-center mb-6"><span class="text-3xl font-bold text-[#0F3B2E]">3</span>
+       </div>
+       <h3 id="step3-title" class="font-playfair text-xl text-[#0F3B2E] mb-3">Earn &amp; Redeem EcoPoints</h3>
+       <p class="text-[#0F3B2E]/70 text-sm mb-4 flex-grow">Every correct waste disposal earns you EcoPoints. These points are stored in your BinTECH account and can be used to redeem rewards from the Rewards Page.</p>
+       <div class="pt-4 border-t border-[#E8ECEB]">
+        <p class="text-xs font-semibold text-[#0F3B2E] mb-2">Popular Rewards:</p>
+        <ul class="text-xs text-[#0F3B2E]/60 space-y-1">
+         <li>• Free snacks and drinks vouchers</li>
+         <li>• Cafeteria discounts</li>
+         <li>• School supplies vouchers</li>
+         <li>• UMak WiFi access vouchers</li>
+        </ul>
+       </div>
+      </div>
+    </div><!-- Why Participate Section -->
+     <div>
+      <h2 id="benefits-title" class="font-playfair text-3xl text-[#0F3B2E] mb-8 text-center">Why Participate in BinTECH?</h2>
+    <div class="scanner-shell rounded-2xl card-shadow p-6 md:p-8 mb-16">
+     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+      <div>
+       <h2 class="font-playfair text-3xl text-[#0F3B2E] mb-2">How the BinTECH Flow Works</h2>
+       <p class="text-[#0F3B2E]/70 text-sm max-w-2xl">The platform records your sorting session when you scan your QR code at the kiosk, sorts the materials, and updates your points automatically.</p>
+      </div>
+      <a href="/qr-scanner" class="inline-flex items-center justify-center px-5 py-3 rounded-xl bg-[#0F3B2E] text-white text-sm font-semibold hover:bg-[#1F4F3B] transition-colors">Start Earning Points</a>
+     </div>
+
+     <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+      <div class="bg-white rounded-2xl border border-[#0F3B2E]/10 p-6">
+       <div class="w-12 h-12 rounded-xl bg-[#D4E157]/25 flex items-center justify-center mb-4"><span class="text-2xl">1</span></div>
+       <h3 class="font-playfair text-xl text-[#0F3B2E] mb-3">Scan at the kiosk</h3>
+       <p class="text-sm text-[#0F3B2E]/70">Open the QR transfer page, scan your account QR code, and begin a sorting session tied to your profile.</p>
+      </div>
+      <div class="bg-white rounded-2xl border border-[#0F3B2E]/10 p-6">
+       <div class="w-12 h-12 rounded-xl bg-[#5DAE60]/20 flex items-center justify-center mb-4"><span class="text-2xl">2</span></div>
+       <h3 class="font-playfair text-xl text-[#0F3B2E] mb-3">Sort by material</h3>
+       <p class="text-sm text-[#0F3B2E]/70">Place each item into the correct bin category. BinTECH tracks metal, plastic, and paper counts, then updates capacity and session totals in real time.</p>
+      </div>
+      <div class="bg-white rounded-2xl border border-[#0F3B2E]/10 p-6">
+       <div class="w-12 h-12 rounded-xl bg-[#3B82F6]/20 flex items-center justify-center mb-4"><span class="text-2xl">3</span></div>
+       <h3 class="font-playfair text-xl text-[#0F3B2E] mb-3">Earn and redeem</h3>
+       <p class="text-sm text-[#0F3B2E]/70">Your completed session updates your points balance, keeps the session history, and makes your rewards available for redemption.</p>
+      </div>
+     </div>
+    </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12"><!-- Benefit 1 -->
+       <div class="bg-white rounded-2xl card-shadow p-6 text-center hover:shadow-lg transition-shadow">
+        <div class="text-4xl mb-4">
+         🌱
+        </div>
+        <h3 class="font-playfair text-lg text-[#0F3B2E] mb-2">Promote Sustainability</h3>
+        <p class="text-sm text-[#0F3B2E]/70">Help reduce waste pollution and improve recycling practices on campus.</p>
+       </div><!-- Benefit 2 -->
+       <div class="bg-white rounded-2xl card-shadow p-6 text-center hover:shadow-lg transition-shadow">
+        <div class="text-4xl mb-4">
+         🎁
+        </div>
+        <h3 class="font-playfair text-lg text-[#0F3B2E] mb-2">Earn Useful Rewards</h3>
+        <p class="text-sm text-[#0F3B2E]/70">Redeem EcoPoints for campus vouchers and benefits.</p>
+       </div><!-- Benefit 3 -->
+       <div class="bg-white rounded-2xl card-shadow p-6 text-center hover:shadow-lg transition-shadow">
+        <div class="text-4xl mb-4">
+         📊
+        </div>
+        <h3 class="font-playfair text-lg text-[#0F3B2E] mb-2">Track Your Impact</h3>
+        <p class="text-sm text-[#0F3B2E]/70">Monitor your waste sorting activity and EcoPoints through the BinTECH platform.</p>
+       </div><!-- Benefit 4 -->
+       <div class="bg-white rounded-2xl card-shadow p-6 text-center hover:shadow-lg transition-shadow">
+        <div class="text-4xl mb-4">
+         🤝
+        </div>
+        <h3 class="font-playfair text-lg text-[#0F3B2E] mb-2">Community Engagement</h3>
+        <p class="text-sm text-[#0F3B2E]/70">Encourage other students to participate and build a greener campus.</p>
+       </div>
+      </div>
+     </div><!-- CTA Banner -->
+    <div class="bg-gradient-to-r from-[#0F3B2E] to-[#1F4F3B] rounded-2xl p-8 text-center mb-8">
+    <h3 class="font-playfair text-2xl text-white mb-3">Ready to Start Earning Points?</h3>
+    <p class="text-white/80 mb-6">Open the QR scanner, begin a session, and let BinTECH record your contribution automatically.</p><a href="/qr-scanner" class="inline-block bg-[#D4E157] text-[#0F3B2E] px-8 py-3 rounded-lg font-semibold hover:bg-[#D4E157]/90 transition-colors">Start Earning Points</a>
+     </div>
+    </div>
+   </main><!-- Footer -->
+   <footer class="bintech-user-footer flex-shrink-0">
+    <div class="bintech-user-footer__wrap">
+      <div class="bintech-user-footer__grid">
+        <section>
+          <div class="flex items-center gap-3">
+            <span class="bintech-brand-mark" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
+                <path d="M13 3L4 14h6l-1 7 11-13h-6l1-5z" stroke-linecap="round" stroke-linejoin="round"></path>
+              </svg>
+            </span>
+            <p class="bintech-brand-title">Bintech</p>
+          </div>
+          <p class="bintech-brand-copy">Bintech builds secure, intuitive financial technology for modern users, blending speed, trust, and smarter money workflows.</p>
+        </section>
+
+        <nav class="bintech-user-footer__nav" aria-label="Company links">
+          <h4>Company</h4>
+          <ul>
+            <li><a href="#">About</a></li>
+            <li><a href="#">Contact</a></li>
+          </ul>
+        </nav>
+
+        <nav class="bintech-user-footer__nav" aria-label="Products links">
+          <h4>Products</h4>
+          <ul>
+            <li><a href="#">Rewards</a></li>
+          </ul>
+        </nav>
+
+        <nav class="bintech-user-footer__nav" aria-label="Resources links">
+          <h4>Resources</h4>
+          <ul>
+            <li><a href="#">Help Center</a></li>
+            <li><a href="#">Developers</a></li>
+          </ul>
+        </nav>
+
+        <nav class="bintech-user-footer__nav" aria-label="Legal links">
+          <h4>Legal</h4>
+          <ul>
+            <li><a href="#">Terms</a></li>
+            <li><a href="#">Privacy</a></li>
+          </ul>
+        </nav>
+
+        <section class="bintech-user-footer__subscribe bintech-user-footer__glass">
+          <h4>Subscribe To Our Newsletter</h4>
+          <p>Get product releases, security updates, and fintech insights delivered monthly.</p>
+          <form class="bintech-newsletter-form" onsubmit="event.preventDefault();">
+            <input type="email" placeholder="you@domain.com" aria-label="Email address">
+            <button type="submit">Join</button>
+          </form>
+        </section>
+      </div>
+
+      <div class="bintech-footer-bottom">
+        <p>© 2026 Bintech. All rights reserved.</p>
+        <div class="bintech-social-list" aria-label="Social media">
+          <a href="#" aria-label="X">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.901 3H21l-4.588 5.244L21.808 21h-4.226l-3.31-4.889L9.996 21H7.896l4.907-5.609L2.192 3h4.332l2.993 4.422L13.099 3h5.802zm-1.48 16h1.171L7.946 4.89H6.69L17.42 19z"></path></svg>
+          </a>
+          <a href="#" aria-label="LinkedIn">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6.94 8.5A1.55 1.55 0 1 1 6.94 5.4 1.55 1.55 0 0 1 6.94 8.5zM5.62 9.75h2.64V18H5.62V9.75zm4.13 0h2.53v1.13h.03c.35-.67 1.22-1.37 2.5-1.37 2.67 0 3.16 1.76 3.16 4.05V18h-2.64v-3.93c0-.94-.02-2.14-1.3-2.14-1.3 0-1.5 1.02-1.5 2.07V18H9.75V9.75z"></path></svg>
+          </a>
+          <a href="#" aria-label="Instagram">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3.6" y="3.6" width="16.8" height="16.8" rx="4"></rect><circle cx="12" cy="12" r="3.8"></circle><circle cx="17.35" cy="6.65" r="0.9" fill="currentColor" stroke="none"></circle></svg>
+          </a>
+          <a href="#" aria-label="YouTube">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M22 12s0-3.1-.4-4.6c-.2-.8-.8-1.4-1.6-1.6C18.5 5.4 12 5.4 12 5.4s-6.5 0-8 .4c-.8.2-1.4.8-1.6 1.6C2 8.9 2 12 2 12s0 3.1.4 4.6c.2.8.8 1.4 1.6 1.6 1.5.4 8 .4 8 .4s6.5 0 8-.4c.8-.2 1.4-.8 1.6-1.6.4-1.5.4-4.6.4-4.6zM10 15.5V8.5l6 3.5-6 3.5z"></path></svg>
+          </a>
+        </div>
+      </div>
+    </div>
+   </footer>
+
+  </div>
+  <script>
+    const defaultConfig = {
+      background_color: '#E8ECEB',
+      card_surface_color: '#FFFFFF',
+      text_color: '#0F3B2E',
+      primary_action_color: '#5DAE60',
+      accent_color: '#D4E157',
+      font_family: 'Poppins',
+      font_size: 16,
+      user_name: 'MARIO SALLY',
+      current_points: '521',
+      page_title: 'How It Works',
+      page_subtitle: 'Start earning rewards in three simple steps',
+      page_description: 'BinTECH is an intelligent waste segregation system designed to encourage responsible disposal habits on campus. By properly sorting waste using the smart kiosks, students earn EcoPoints that can be redeemed for useful campus rewards.',
+      step1_title: 'Register & Get QR Code',
+      step2_title: 'Sort Your Waste',
+      step3_title: 'Earn & Redeem EcoPoints',
+      kiosk_section_title: 'Smart Waste Kiosk Technology',
+      benefits_section_title: 'Why Participate in BinTECH?'
+    };
+
+    async function onConfigChange(config) {
+      const bgColor = config.background_color || defaultConfig.background_color;
+      const cardColor = config.card_surface_color || defaultConfig.card_surface_color;
+      const textColor = config.text_color || defaultConfig.text_color;
+      const primaryColor = config.primary_action_color || defaultConfig.primary_action_color;
+      const fontFamily = config.font_family || defaultConfig.font_family;
+      const fontSize = config.font_size || defaultConfig.font_size;
+
+      document.getElementById('app-wrapper').style.backgroundColor = bgColor;
+
+      document.querySelectorAll('.bg-white').forEach(card => {
+        card.style.backgroundColor = cardColor;
+      });
+
+      document.querySelectorAll('h1, h2, h3, p').forEach(el => {
+        if (!el.closest('.gradient-dark')) {
+          el.style.color = textColor;
+        }
+      });
+
+      document.body.style.fontFamily = `${fontFamily}, sans-serif`;
+      document.body.style.fontSize = `${fontSize}px`;
+
+      const userName = config.user_name || defaultConfig.user_name;
+      const navUserName = document.getElementById('nav-user-name');
+      if (navUserName) navUserName.textContent = userName;
+
+      const pageTitle = config.page_title || defaultConfig.page_title;
+      const pageTitleEl = document.getElementById('page-title');
+      if (pageTitleEl) pageTitleEl.textContent = pageTitle;
+
+      const pageSubtitle = config.page_subtitle || defaultConfig.page_subtitle;
+      const pageSubtitleEl = document.getElementById('page-subtitle');
+      if (pageSubtitleEl) pageSubtitleEl.textContent = pageSubtitle;
+
+      const pageDesc = config.page_description || defaultConfig.page_description;
+      const pageDescEl = document.getElementById('page-description');
+      if (pageDescEl) pageDescEl.textContent = pageDesc;
+
+      const currentPoints = config.current_points || defaultConfig.current_points;
+      const navPointsEl = document.getElementById('nav-points');
+      if (navPointsEl) navPointsEl.textContent = currentPoints + ' Points';
+
+      const step1Title = config.step1_title || defaultConfig.step1_title;
+      const step1TitleEl = document.getElementById('step1-title');
+      if (step1TitleEl) step1TitleEl.textContent = step1Title;
+
+      const step2Title = config.step2_title || defaultConfig.step2_title;
+      const step2TitleEl = document.getElementById('step2-title');
+      if (step2TitleEl) step2TitleEl.textContent = step2Title;
+
+      const step3Title = config.step3_title || defaultConfig.step3_title;
+      const step3TitleEl = document.getElementById('step3-title');
+      if (step3TitleEl) step3TitleEl.textContent = step3Title;
+
+      const kioskTitle = config.kiosk_section_title || defaultConfig.kiosk_section_title;
+      const kioskTitleEl = document.getElementById('kiosk-title');
+      if (kioskTitleEl) kioskTitleEl.textContent = kioskTitle;
+
+      const benefitsTitle = config.benefits_section_title || defaultConfig.benefits_section_title;
+      const benefitsTitleEl = document.getElementById('benefits-title');
+      if (benefitsTitleEl) benefitsTitleEl.textContent = benefitsTitle;
+    }
+
+    function mapToCapabilities(config) {
+      return {
+        recolorables: [
+          {
+            get: () => config.background_color || defaultConfig.background_color,
+            set: (value) => {
+              config.background_color = value;
+              window.elementSdk.setConfig({ background_color: value });
+            }
+          },
+          {
+            get: () => config.card_surface_color || defaultConfig.card_surface_color,
+            set: (value) => {
+              config.card_surface_color = value;
+              window.elementSdk.setConfig({ card_surface_color: value });
+            }
+          },
+          {
+            get: () => config.text_color || defaultConfig.text_color,
+            set: (value) => {
+              config.text_color = value;
+              window.elementSdk.setConfig({ text_color: value });
+            }
+          },
+          {
+            get: () => config.primary_action_color || defaultConfig.primary_action_color,
+            set: (value) => {
+              config.primary_action_color = value;
+              window.elementSdk.setConfig({ primary_action_color: value });
+            }
+          },
+          {
+            get: () => config.accent_color || defaultConfig.accent_color,
+            set: (value) => {
+              config.accent_color = value;
+              window.elementSdk.setConfig({ accent_color: value });
+            }
+          }
+        ],
+        borderables: [],
+        fontEditable: {
+          get: () => config.font_family || defaultConfig.font_family,
+          set: (value) => {
+            config.font_family = value;
+            window.elementSdk.setConfig({ font_family: value });
+          }
+        },
+        fontSizeable: {
+          get: () => config.font_size || defaultConfig.font_size,
+          set: (value) => {
+            config.font_size = value;
+            window.elementSdk.setConfig({ font_size: value });
+          }
+        }
+      };
+    }
+
+    function mapToEditPanelValues(config) {
+      return new Map([
+        ['user_name', config.user_name || defaultConfig.user_name],
+        ['current_points', config.current_points || defaultConfig.current_points],
+        ['page_title', config.page_title || defaultConfig.page_title],
+        ['page_subtitle', config.page_subtitle || defaultConfig.page_subtitle],
+        ['page_description', config.page_description || defaultConfig.page_description],
+        ['step1_title', config.step1_title || defaultConfig.step1_title],
+        ['step2_title', config.step2_title || defaultConfig.step2_title],
+        ['step3_title', config.step3_title || defaultConfig.step3_title],
+        ['kiosk_section_title', config.kiosk_section_title || defaultConfig.kiosk_section_title],
+        ['benefits_section_title', config.benefits_section_title || defaultConfig.benefits_section_title]
+      ]);
+    }
+
+    if (window.elementSdk) {
+      window.elementSdk.init({
+        defaultConfig,
+        onConfigChange,
+        mapToCapabilities,
+        mapToEditPanelValues
+      });
+    }
+
+    // Update user info from sessionStorage
+    function updateUserInfo() {
+      const userDataStr = sessionStorage.getItem('bintech_user');
+      if (userDataStr) {
+        try {
+          const user = JSON.parse(userDataStr);
+          const navUserName = document.getElementById('nav-user-name');
+          const navPoints = document.getElementById('nav-points');
+          
+          if (navUserName) {
+            navUserName.textContent = (user.full_name || user.email || '').toUpperCase();
+          }
+          if (navPoints && user.points !== undefined) {
+            navPoints.textContent = user.points + ' Points';
+          }
+        } catch (e) {
+          console.error('Error parsing user data:', e);
+        }
+      }
+    }
+
+    function initializeUserMobileMenu() {
+      const toggle = document.getElementById('mobile-nav-toggle');
+      const panel = document.getElementById('mobile-nav-panel');
+      const navPoints = document.getElementById('nav-points');
+      const mobilePoints = document.getElementById('mobile-nav-points');
+
+      if (!toggle || !panel) return;
+
+      const syncPoints = () => {
+        const pointsText = navPoints ? navPoints.textContent : '0 Points';
+        if (mobilePoints) mobilePoints.textContent = pointsText;
+      };
+
+      toggle.addEventListener('click', () => {
+        const isOpen = panel.dataset.open === 'true';
+        panel.dataset.open = String(!isOpen);
+        panel.style.display = isOpen ? 'none' : 'block';
+        toggle.setAttribute('aria-expanded', String(!isOpen));
+        syncPoints();
+      });
+
+      syncPoints();
+    }
+
+    // Route protection - redirect to login if not authenticated
+    function protectRoute() {
+      const user = sessionStorage.getItem('bintech_user');
+      if (!user) {
+        // Don't redirect if we're in the middle of logout
+        if (!window.isLoggingOut) {
+          window.location.replace('/');
+        }
+      }
+    }
+    
+    // Flag to prevent protection interference during logout
+    window.isLoggingOut = false;
+    
+    function handleLogout() {
+      if (confirm('Are you sure you want to logout?')) {
+        // Set logout flag immediately
+        window.isLoggingOut = true;
+        
+        // Close all modals
+        const modals = document.querySelectorAll('.modal-backdrop');
+        modals.forEach(modal => modal.classList.remove('active'));
+        
+        // Disable all interactive elements
+        document.querySelectorAll('button, input, a').forEach(el => {
+          el.disabled = true;
+          el.style.pointerEvents = 'none';
+          el.style.opacity = '0.5';
+        });
+        
+        // Clear session data completely
+        sessionStorage.clear();
+        localStorage.clear();
+        
+        // Redirect after cleanup
+        setTimeout(() => {
+          window.location.replace('/');
+        }, 200);
+      }
+    }
+
+    let qrScanner = null;
+    let scannerRunning = false;
+
+    const scannerStatusEl = document.getElementById('scanner-status');
+    const lastScanValueEl = document.getElementById('last-scan-value');
+    const verifyStatusEl = document.getElementById('verify-status');
+    const startScanBtn = document.getElementById('start-scan-btn');
+    const stopScanBtn = document.getElementById('stop-scan-btn');
+
+    function setScannerStatus(type, message) {
+      if (!scannerStatusEl) return;
+      scannerStatusEl.className = 'scanner-status-pill';
+      if (type === 'scanning') scannerStatusEl.classList.add('status-scanning');
+      else if (type === 'success') scannerStatusEl.classList.add('status-success');
+      else if (type === 'error') scannerStatusEl.classList.add('status-error');
+      else scannerStatusEl.classList.add('status-idle');
+      scannerStatusEl.textContent = message;
+    }
+
+    async function verifyQRCodeWithServer(qrCode) {
+      try {
+        const response = await fetch('/api/qr/verify', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ qrCode })
+        });
+
+        const result = await response.json();
+        if (response.ok && result && result.isValid) {
+          verifyStatusEl.textContent = 'Valid QR code detected.';
+          setScannerStatus('success', '● QR Code Captured');
+        } else {
+          verifyStatusEl.textContent = 'QR code detected but not verified.';
+          setScannerStatus('error', '● Verification Failed');
+        }
+      } catch (error) {
+        // Graceful fallback if backend verify route is unavailable.
+        verifyStatusEl.textContent = 'Scanned locally. Server verification unavailable.';
+        setScannerStatus('success', '● QR Code Captured');
+      }
+    }
+
+    async function stopScanner() {
+      if (!qrScanner || !scannerRunning) {
+        setScannerStatus('idle', '● Camera Idle');
+        return;
+      }
+
+      try {
+        await qrScanner.stop();
+        await qrScanner.clear();
+      } catch (error) {
+        console.warn('Scanner stop warning:', error);
+      }
+
+      scannerRunning = false;
+      setScannerStatus('idle', '● Camera Idle');
+      verifyStatusEl.textContent = 'Camera stopped.';
+    }
+
+    async function startScanner() {
+      if (!window.Html5Qrcode) {
+        setScannerStatus('error', '● Scanner Not Supported');
+        verifyStatusEl.textContent = 'QR scanner library failed to load.';
+        return;
+      }
+
+      if (scannerRunning) {
+        verifyStatusEl.textContent = 'Camera is already active.';
+        return;
+      }
+
+      try {
+        qrScanner = qrScanner || new Html5Qrcode('qr-reader');
+        setScannerStatus('scanning', '● Camera Scanning');
+        verifyStatusEl.textContent = 'Scanning... point camera at a QR code.';
+
+        await qrScanner.start(
+          { facingMode: 'environment' },
+          {
+            fps: 10,
+            qrbox: { width: 250, height: 250 },
+            aspectRatio: 1.333334
+          },
+          async (decodedText) => {
+            if (!decodedText) return;
+            lastScanValueEl.textContent = decodedText;
+            if (navigator.vibrate) navigator.vibrate(100);
+            await verifyQRCodeWithServer(decodedText);
+          },
+          () => {}
+        );
+
+        scannerRunning = true;
+      } catch (error) {
+        console.error('Scanner start failed:', error);
+        scannerRunning = false;
+        setScannerStatus('error', '● Camera Access Denied');
+        verifyStatusEl.textContent = 'Please allow camera access and try again.';
+      }
+    }
+
+    if (startScanBtn) {
+      startScanBtn.addEventListener('click', startScanner);
+    }
+
+    if (stopScanBtn) {
+      stopScanBtn.addEventListener('click', stopScanner);
+    }
+
+    window.addEventListener('beforeunload', () => {
+      stopScanner();
+    });
+
+    // Initialize page load with protection check (only after DOM ready)
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', function() {
+        protectRoute();
+        updateUserInfo();
+        initializeUserMobileMenu();
+      });
+    } else {
+      // Slight delay to ensure everything is ready
+      setTimeout(function() {
+        protectRoute();
+        updateUserInfo();
+        initializeUserMobileMenu();
+      }, 300);
+    }
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9d7dd137063fa9a0',t:'MTc3Mjc2Mjk1NS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>

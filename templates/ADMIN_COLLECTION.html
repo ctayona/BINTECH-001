@@ -1,0 +1,449 @@
+<!doctype html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BinTECH – Collections</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="/js/timestampUtils.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script>tailwind.config={theme:{extend:{colors:{forest:'#1a3a2f',forestLight:'#2d5a47',cream:'#f8f5f0',creamDark:'#ede8e0',teal:'#3d8b7a',tealMuted:'#5a9e8f',moss:'#6b9080',sage:'#a4c3a2'},fontFamily:{sans:['Plus Jakarta Sans','system-ui','sans-serif']}}}}</script>
+  <style>html,body{height:100%;margin:0}.nav-pill{transition:all .2s ease}.nav-pill:hover{background:rgba(255,255,255,.15)}.nav-pill.active{background:rgba(255,255,255,.2)}</style>
+</head>
+<body class="h-full bg-cream font-sans">
+<div class="flex h-full w-full">
+
+  <!-- Sidebar -->
+  <aside class="w-64 bg-forest flex flex-col min-h-full">
+    <div class="flex-1 flex flex-col overflow-auto">
+      <div class="p-6">
+        <div class="flex items-center gap-3 mb-8">
+          <div class="w-10 h-10 bg-teal rounded-xl flex items-center justify-center"><svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg></div>
+          <span class="text-white font-semibold text-lg">BinTECH</span>
+        </div>
+        <nav class="space-y-2">
+          <a href="/admin/dashboard" class="nav-pill flex items-center gap-3 px-4 py-3 rounded-full text-white/70 hover:text-white"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg><span class="font-medium">Dashboard</span></a>
+          <a href="/admin/rewards" class="nav-pill flex items-center gap-3 px-4 py-3 rounded-full text-white/70 hover:text-white"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><span class="font-medium">Rewards &amp; Stores</span></a>
+          <a href="/admin/binmanage" class="nav-pill flex items-center gap-3 px-4 py-3 rounded-full text-white/70 hover:text-white"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg><span class="font-medium">Bin Management</span></a>
+          <a href="/admin/website-logs" class="nav-pill flex items-center gap-3 px-4 py-3 rounded-full text-white/70 hover:text-white"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6M9 8h6M7 4h10a2 2 0 012 2v12a2 2 0 01-2 2H7a2 2 0 01-2-2V6a2 2 0 012-2z"/></svg><span class="font-medium">Website Logs</span></a>
+          <a href="/admin/collection" class="nav-pill active flex items-center gap-3 px-4 py-3 rounded-full text-white"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg><span class="font-medium">Collections</span></a>
+          <a href="/admin/routes" class="nav-pill flex items-center gap-3 px-4 py-3 rounded-full text-white/70 hover:text-white"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg><span class="font-medium">Routes</span></a>
+          <a href="/admin/accounts" class="nav-pill flex items-center gap-3 px-4 py-3 rounded-full text-white/70 hover:text-white"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg><span class="font-medium">Account Management</span></a>
+          <a href="/admin/schedule" class="nav-pill flex items-center gap-3 px-4 py-3 rounded-full text-white/70 hover:text-white"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg><span class="font-medium">Schedule</span></a>
+        </nav>
+      </div>
+    </div>
+    <!-- Profile Card (Pinned to Bottom) -->
+    <div class="p-6 border-t border-forestLight">
+      <div class="bg-forestLight rounded-2xl p-4">
+        <div class="flex items-center gap-3 mb-3">
+          <div class="w-8 h-8 bg-sage rounded-full flex items-center justify-center"><span class="text-forest font-semibold text-sm" id="adminInitials">JD</span></div>
+          <div>
+            <p class="text-white text-sm font-medium" id="adminName">John Doe</p>
+            <p class="text-white/60 text-xs" id="adminEmail">admin@example.com</p>
+          </div>
+        </div>
+        <div class="space-y-2">
+          <a href="/admin/settings" class="w-full text-white/70 hover:text-white hover:bg-forest/30 text-sm flex items-center gap-2 px-3 py-2 rounded-lg transition">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            Settings
+          </a>
+          <button onclick="authHelpers.logout()" class="w-full text-white/70 hover:text-white hover:bg-forest/30 text-sm flex items-center gap-2 px-3 py-2 rounded-lg transition">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+            Logout
+          </button>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="flex-1 overflow-auto p-8">
+    <header class="flex items-center justify-between mb-8">
+      <div>
+        <h1 class="text-2xl font-bold text-forest">Collection Management</h1>
+        <p class="text-moss mt-1">Track and manage all waste collections with admin assignments</p>
+      </div>
+      <button onclick="alert('New collection modal - coming soon')" class="bg-forest hover:bg-forestLight text-white px-6 py-2 rounded-full font-medium transition flex items-center gap-2">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        New Collection
+      </button>
+    </header>
+
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-4 gap-4 mb-8">
+      <div class="bg-white rounded-2xl p-6 shadow-sm">
+        <p class="text-moss text-sm font-medium mb-2">Total Collections</p>
+        <p class="text-3xl font-bold text-forest" id="card-total">0</p>
+        <p class="text-xs text-moss mt-1">All time</p>
+      </div>
+      <div class="bg-white rounded-2xl p-6 shadow-sm">
+        <p class="text-moss text-sm font-medium mb-2">Completed Today</p>
+        <p class="text-3xl font-bold text-teal" id="card-today">0</p>
+        <p class="text-xs text-moss mt-1">Active collections</p>
+      </div>
+      <div class="bg-white rounded-2xl p-6 shadow-sm">
+        <p class="text-moss text-sm font-medium mb-2">Total Waste (kg)</p>
+        <p class="text-3xl font-bold text-sage" id="card-weight">0</p>
+        <p class="text-xs text-moss mt-1">Across all collections</p>
+      </div>
+      <div class="bg-white rounded-2xl p-6 shadow-sm">
+        <p class="text-moss text-sm font-medium mb-2">Points Given</p>
+        <p class="text-3xl font-bold text-forest" id="card-points">0</p>
+        <p class="text-xs text-teal mt-1">Total rewards</p>
+      </div>
+    </div>
+
+    <!-- Collections Table -->
+    <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
+      <div class="p-6 border-b border-creamDark flex items-center justify-between">
+        <h3 class="text-lg font-semibold text-forest">All Collections</h3>
+        <select id="status-filter" onchange="filterRows()" class="px-4 py-2 border border-creamDark rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal/30">
+          <option value="all">All Status</option>
+          <option value="pending">Pending</option>
+          <option value="in_progress">In Progress</option>
+          <option value="completed">Completed</option>
+          <option value="reviewed">Reviewed</option>
+        </select>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full">
+          <thead>
+            <tr class="border-b border-creamDark bg-cream">
+              <th class="px-6 py-4 text-left text-sm font-semibold text-forest">Bin</th>
+              <th class="px-6 py-4 text-left text-sm font-semibold text-forest">Collected By</th>
+              <th class="px-6 py-4 text-left text-sm font-semibold text-forest">Waste Type</th>
+              <th class="px-6 py-4 text-left text-sm font-semibold text-forest">Amount (kg)</th>
+              <th class="px-6 py-4 text-left text-sm font-semibold text-forest">Points</th>
+              <th class="px-6 py-4 text-left text-sm font-semibold text-forest">Date</th>
+              <th class="px-6 py-4 text-left text-sm font-semibold text-forest">Status</th>
+              <th class="px-6 py-4 text-left text-sm font-semibold text-forest">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="collections-tbody">
+            <tr class="border-b border-creamDark">
+              <td class="px-6 py-4 text-sm text-moss" colspan="8">Loading collections...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Waste Statistics -->
+    <div class="mt-8 grid grid-cols-2 gap-6">
+      <div class="bg-white rounded-2xl p-6 shadow-sm">
+        <h3 class="text-lg font-semibold text-forest mb-4">Waste by Type</h3>
+        <div class="space-y-4" id="waste-by-type">
+          <p class="text-moss text-sm">Loading...</p>
+        </div>
+      </div>
+      <div class="bg-white rounded-2xl p-6 shadow-sm">
+        <h3 class="text-lg font-semibold text-forest mb-4">Top Collectors</h3>
+        <div class="space-y-3 text-sm" id="top-collectors">
+          <p class="text-moss text-sm">Loading...</p>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Collection Details Modal -->
+<div id="collectionModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+  <div class="bg-white rounded-2xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+    <div class="sticky top-0 bg-cream border-b border-creamDark p-6 flex items-center justify-between">
+      <h2 class="text-2xl font-bold text-forest">Collection Details</h2>
+      <button onclick="closeModal()" class="text-moss hover:text-forest text-2xl">&times;</button>
+    </div>
+    <div class="p-6 space-y-6">
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <p class="text-xs text-moss font-semibold uppercase">Bin</p>
+          <p class="text-lg font-semibold text-forest" id="modal-bin">--</p>
+        </div>
+        <div>
+          <p class="text-xs text-moss font-semibold uppercase">Collection ID</p>
+          <p class="text-sm font-mono text-teal" id="modal-id">--</p>
+        </div>
+        <div>
+          <p class="text-xs text-moss font-semibold uppercase">Collected By</p>
+          <p class="text-lg font-semibold text-forest" id="modal-collector">--</p>
+          <p class="text-xs text-moss" id="modal-email">--</p>
+        </div>
+        <div>
+          <p class="text-xs text-moss font-semibold uppercase">Date</p>
+          <p class="text-lg font-semibold text-forest" id="modal-date">--</p>
+        </div>
+      </div>
+      <div class="border-t border-creamDark pt-4">
+        <p class="text-xs text-moss font-semibold uppercase mb-3">Waste Details</p>
+        <div class="grid grid-cols-3 gap-4">
+          <div class="bg-cream rounded-lg p-4">
+            <p class="text-xs text-moss mb-1">Type</p>
+            <p class="text-xl font-bold text-forest capitalize" id="modal-type">--</p>
+          </div>
+          <div class="bg-cream rounded-lg p-4">
+            <p class="text-xs text-moss mb-1">Amount</p>
+            <p class="text-xl font-bold text-teal" id="modal-amount">-- kg</p>
+          </div>
+          <div class="bg-cream rounded-lg p-4">
+            <p class="text-xs text-moss mb-1">Points</p>
+            <p class="text-xl font-bold text-sage" id="modal-points">--</p>
+          </div>
+        </div>
+      </div>
+      <div class="border-t border-creamDark pt-4">
+        <p class="text-xs text-moss font-semibold uppercase mb-2">Status</p>
+        <p id="modal-status-badge">--</p>
+      </div>
+      <div class="border-t border-creamDark pt-4">
+        <p class="text-xs text-moss font-semibold uppercase mb-2">Notes</p>
+        <p class="text-sm text-moss" id="modal-notes">--</p>
+      </div>
+    </div>
+    <div class="bg-cream border-t border-creamDark p-6 flex gap-3">
+      <button onclick="closeModal()" class="flex-1 bg-creamDark hover:bg-forest/10 text-forest px-4 py-2 rounded-lg font-medium transition">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Initialize page
+  async function initPage() {
+    await loadCollections();
+    authHelpers.protectAdminPage();
+  }
+
+  // Store all collections for modal access
+  let collectionsData = [];
+
+  // Fetch and display collections
+  async function loadCollections() {
+    try {
+      console.log('[Collections] Loading collections...');
+      const response = await fetch('/api/admin/collections');
+      const result = await response.json();
+      
+      if (!result.success) {
+        console.error('[Collections] Error:', result.message);
+        showCollectionsError(result.message);
+        return;
+      }
+
+      const collections = result.collections || [];
+      console.log(`[Collections] Loaded ${collections.length} collections`);
+      
+      // Render table
+      renderCollectionsTable(collections);
+      
+      // Update summary cards
+      updateSummaryCards(collections);
+      
+      // Update statistics
+      updateStatistics(collections);
+      
+    } catch (error) {
+      console.error('[Collections] Error:', error);
+      showCollectionsError('Failed to load collections: ' + error.message);
+    }
+  }
+
+  function renderCollectionsTable(collections) {
+    // Store for modal access
+    collectionsData = collections;
+    
+    const tbody = document.getElementById('collections-tbody');
+    
+    if (!collections || collections.length === 0) {
+      tbody.innerHTML = `
+        <tr class="border-b border-creamDark">
+          <td class="px-6 py-4 text-sm text-moss text-center" colspan="8">
+            No collections found. Start tracking waste collections to see data here.
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    tbody.innerHTML = collections.map(col => `
+      <tr class="border-b border-creamDark hover:bg-cream" data-status="${col.status || 'pending'}">
+        <td class="px-6 py-4 text-sm font-medium text-forest">${col.bin_name || 'N/A'}</td>
+        <td class="px-6 py-4 text-sm text-moss">${col.collected_by_name || 'Unassigned'}</td>
+        <td class="px-6 py-4 text-sm text-moss">
+          <span class="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-medium">
+            ${col.waste_type ? col.waste_type.charAt(0).toUpperCase() + col.waste_type.slice(1) : 'N/A'}
+          </span>
+        </td>
+        <td class="px-6 py-4 text-sm text-moss">${(col.waste_amount || 0).toFixed(2)}</td>
+        <td class="px-6 py-4 text-sm font-semibold text-teal">${col.eco_points || 0}</td>
+        <td class="px-6 py-4 text-sm text-moss">${new Date(col.collected_at).toLocaleDateString()}</td>
+        <td class="px-6 py-4 text-sm">
+          ${getStatusBadge(col.status || 'pending')}
+        </td>
+        <td class="px-6 py-4 text-sm">
+          <button onclick="viewCollection('${col.id}')" class="text-teal hover:text-tealMuted font-medium">View</button>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  function getStatusBadge(status) {
+    const statusConfig = {
+      'pending': { bg: 'bg-amber-100', text: 'text-amber-700', label: '⏳ Pending' },
+      'in_progress': { bg: 'bg-blue-100', text: 'text-blue-700', label: '🔄 In Progress' },
+      'completed': { bg: 'bg-green-100', text: 'text-green-700', label: '✓ Completed' },
+      'reviewed': { bg: 'bg-purple-100', text: 'text-purple-700', label: '✓ Reviewed' }
+    };
+    
+    const config = statusConfig[status] || statusConfig['pending'];
+    return `<span class="inline-flex items-center px-3 py-1 ${config.bg} ${config.text} rounded-full text-xs font-medium">${config.label}</span>`;
+  }
+
+  function updateSummaryCards(collections) {
+    // Total collections
+    document.getElementById('card-total').textContent = collections.length;
+    
+    // Today's collections
+    const today = new Date().toISOString().split('T')[0];
+    const todayCount = collections.filter(c => c.collected_at.startsWith(today)).length;
+    document.getElementById('card-today').textContent = todayCount;
+    
+    // Total weight
+    const totalWeight = collections.reduce((sum, c) => sum + (parseFloat(c.waste_amount) || 0), 0);
+    document.getElementById('card-weight').textContent = totalWeight.toFixed(0);
+    
+    // Total points
+    const totalPoints = collections.reduce((sum, c) => sum + (parseFloat(c.eco_points) || 0), 0);
+    document.getElementById('card-points').textContent = totalPoints;
+  }
+
+  function updateStatistics(collections) {
+    // Waste by type
+    const wasteByType = {};
+    collections.forEach(col => {
+      const type = col.waste_type || 'unknown';
+      if (!wasteByType[type]) wasteByType[type] = { count: 0, weight: 0, points: 0 };
+      wasteByType[type].count++;
+      wasteByType[type].weight += parseFloat(col.waste_amount) || 0;
+      wasteByType[type].points += parseFloat(col.eco_points) || 0;
+    });
+
+    const wasteHtml = Object.entries(wasteByType)
+      .sort((a, b) => b[1].weight - a[1].weight)
+      .map(([type, data]) => `
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-sm font-medium text-moss capitalize">${type}</span>
+            <span class="text-sm font-bold text-forest">${data.weight.toFixed(1)} kg</span>
+          </div>
+          <div class="h-2 bg-creamDark rounded-full overflow-hidden">
+            <div class="h-full rounded-full" style="width:${Math.min((data.weight / Math.max(...Object.values(wasteByType).map(d => d.weight), 1)) * 100, 100)}%; background: ${getWasteColor(type)}"></div>
+          </div>
+          <p class="text-xs text-moss mt-1">${data.points} points from ${data.count} collection${data.count !== 1 ? 's' : ''}</p>
+        </div>
+      `).join('');
+    
+    document.getElementById('waste-by-type').innerHTML = wasteHtml || '<p class="text-moss text-sm">No waste data yet</p>';
+
+    // Top collectors with email
+    const collectorStats = {};
+    collections.forEach(col => {
+      const name = col.collected_by_name || 'Unassigned';
+      const email = col.collected_by_email || 'N/A';
+      if (!collectorStats[name]) {
+        collectorStats[name] = { count: 0, email: email };
+      }
+      collectorStats[name].count++;
+    });
+
+    const topHtml = Object.entries(collectorStats)
+      .sort((a, b) => b[1].count - a[1].count)
+      .slice(0, 5)
+      .map(([name, data]) => `
+        <div class="flex items-start justify-between pb-3 border-b border-creamDark">
+          <div>
+            <p class="text-sm font-semibold text-forest">${name}</p>
+            <p class="text-xs text-moss">${data.email}</p>
+          </div>
+          <span class="font-semibold text-teal">${data.count}</span>
+        </div>
+      `).join('');
+    
+    document.getElementById('top-collectors').innerHTML = topHtml || '<p class="text-moss text-sm">No collection data yet</p>';
+  }
+
+  function getWasteColor(type) {
+    const colors = {
+      'plastic': '#3d8b7a',
+      'paper': '#6b9080',
+      'metal': '#a4c3a2',
+      'glass': '#5a9e8f',
+      'organic': '#7fb77e'
+    };
+    return colors[type] || '#3d8b7a';
+  }
+
+  function filterRows() {
+    const val = document.getElementById('status-filter').value;
+    document.querySelectorAll('#collections-tbody tr').forEach(row => {
+      row.style.display = (val === 'all' || row.dataset.status === val) ? '' : 'none';
+    });
+  }
+
+  function viewCollection(id) {
+    console.log('[Collections] View collection:', id);
+    const collection = collectionsData.find(c => c.id === id);
+    if (!collection) {
+      alert('Collection not found');
+      return;
+    }
+    
+    // Populate modal
+    document.getElementById('modal-id').textContent = collection.id;
+    document.getElementById('modal-bin').textContent = collection.bin_name || 'N/A';
+    document.getElementById('modal-collector').textContent = collection.collected_by_name || 'Unassigned';
+    document.getElementById('modal-email').textContent = collection.collected_by_email || 'N/A';
+    document.getElementById('modal-date').textContent = new Date(collection.collected_at).toLocaleString();
+    document.getElementById('modal-type').textContent = collection.waste_type || 'N/A';
+    document.getElementById('modal-amount').textContent = (collection.waste_amount || 0).toFixed(2) + ' kg';
+    document.getElementById('modal-points').textContent = collection.eco_points || 0;
+    document.getElementById('modal-notes').textContent = collection.notes || 'No notes';
+    document.getElementById('modal-status-badge').innerHTML = getStatusBadge(collection.status || 'pending');
+    
+    // Show modal
+    document.getElementById('collectionModal').classList.remove('hidden');
+  }
+
+  function closeModal() {
+    document.getElementById('collectionModal').classList.add('hidden');
+  }
+
+  function showCollectionsError(message) {
+    const tbody = document.getElementById('collections-tbody');
+    tbody.innerHTML = `
+      <tr class="border-b border-creamDark">
+        <td class="px-6 py-4 text-sm text-red-600 text-center" colspan="8">
+          ❌ Error: ${message}
+        </td>
+      </tr>
+    `;
+    
+    // Update cards with 0
+    document.getElementById('card-total').textContent = '0';
+    document.getElementById('card-today').textContent = '0';
+    document.getElementById('card-weight').textContent = '0';
+    document.getElementById('card-points').textContent = '0';
+  }
+
+  // Close modal when clicking outside
+  document.addEventListener('click', function(e) {
+    const modal = document.getElementById('collectionModal');
+    if (e.target === modal) {
+      closeModal();
+    }
+  });
+
+  // Initialize page
+  document.addEventListener('DOMContentLoaded', initPage);
+</script>
+<script src="/js/admin.js"></script>
+</body>
+</html>

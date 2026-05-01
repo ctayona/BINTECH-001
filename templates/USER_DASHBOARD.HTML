@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BinTECH - Rewards Dashboard</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="/js/timestampUtils.js"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&amp;family=Poppins:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+  <link href="/css/user-footer.css" rel="stylesheet">
+  <style>
+    :root {
+      --primary-dark: #0F3B2E;
+      --secondary-gradient-start: #143D2E;
+      --secondary-gradient-end: #1F4F3B;
+      --accent-yellow: #D4E157;
+      --card-green: #5DAE60;
+      --page-bg: #E8ECEB;
+    }
+    
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-color: var(--page-bg);
+    }
+    
+    .font-playfair {
+      font-family: 'Playfair Display', serif;
+    }
+    
+    .gradient-dark {
+      background: linear-gradient(135deg, var(--secondary-gradient-start), var(--secondary-gradient-end));
+    }
+    
+    .card-shadow {
+      box-shadow: 0 4px 20px rgba(15, 59, 46, 0.12);
+    }
+    
+    .reward-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 30px rgba(15, 59, 46, 0.2);
+    }
+    
+    .nav-link {
+      position: relative;
+      transition: color 0.3s ease;
+    }
+    
+    .nav-link::after {
+      content: '';
+      position: absolute;
+      bottom: -4px;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: var(--accent-yellow);
+      transition: width 0.3s ease;
+    }
+    
+    .nav-link:hover::after,
+    .nav-link.active::after {
+      width: 100%;
+    }
+    
+    .progress-bar {
+      background: linear-gradient(90deg, var(--card-green), var(--accent-yellow));
+    }
+    
+    .stat-card {
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .stat-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 24px rgba(15, 59, 46, 0.15);
+    }
+    
+    .claim-btn {
+      background: linear-gradient(135deg, var(--card-green), #4CAF50);
+      transition: all 0.3s ease;
+    }
+    
+    .claim-btn:hover {
+      background: linear-gradient(135deg, #4CAF50, var(--card-green));
+      transform: scale(1.02);
+    }
+    
+    @keyframes pulse-glow {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(212, 225, 87, 0.4); }
+      50% { box-shadow: 0 0 20px 4px rgba(212, 225, 87, 0.6); }
+    }
+    
+    .points-badge {
+      animation: pulse-glow 2s ease-in-out infinite;
+    }
+
+    .mobile-nav-panel {
+      display: none;
+    }
+
+    @media (max-width: 767px) {
+      .mobile-nav-toggle {
+        display: inline-flex;
+      }
+
+      .points-badge {
+        display: none;
+      }
+
+      .mobile-nav-panel[data-open="true"] {
+        display: block;
+      }
+    }
+    
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-6px); }
+    }
+    
+    .float-animation {
+      animation: float 3s ease-in-out infinite;
+    }
+
+    .activity-card {
+      position: relative;
+      overflow: hidden;
+      border: 1px solid rgba(15, 59, 46, 0.08);
+    }
+
+    .activity-card::after {
+      content: '';
+      position: absolute;
+      inset: auto -18% -18% auto;
+      width: 120px;
+      height: 120px;
+      border-radius: 9999px;
+      background: radial-gradient(circle, rgba(212, 225, 87, 0.16), transparent 70%);
+      pointer-events: none;
+    }
+    
+    /* Full-width points summary card styling - adjusted for single column */
+    .points-summary-full {
+      width: 100%;
+    }
+    
+    .points-summary-full .progress-section {
+      max-width: 500px;
+    }
+    
+    @media (max-width: 640px) {
+      .points-summary-full .stat-value {
+        font-size: 2.5rem;
+      }
+    }
+  </style>
+  <style>body { box-sizing: border-box; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+</head>
+<body class="h-full">
+  <div id="app-wrapper" class="w-full min-h-screen flex flex-col"><!-- Navigation Bar -->
+   <nav class="gradient-dark sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+     <div class="flex items-center justify-between h-16"><!-- Left - User Welcome -->
+      <div class="flex items-center space-x-3">
+       <button onclick="window.location.href='/profile'" class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center overflow-hidden border-2 border-[#D4E157]/30 hover:border-[#D4E157]/60 hover:bg-white/20 transition-all cursor-pointer" title="View Profile">
+        <svg class="w-6 h-6 text-[#D4E157]" fill="currentColor" viewbox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+        </svg>
+       </button>
+       <div class="hidden sm:block">
+        <p class="text-[#D4E157]/70 text-xs uppercase tracking-wider">Welcome Back</p>
+        <p id="nav-user-name" class="text-white font-semibold text-sm">MARIO SALLY</p>
+       </div>
+      </div><!-- Center - Navigation Links -->
+      <div class="hidden md:flex items-center space-x-8"> <a href="/dashboard" class="nav-link active text-[#D4E157] text-sm font-medium">Dashboard</a><a href="/rewards" class="nav-link text-white/80 hover:text-white text-sm font-medium">Rewards</a> <a href="/history" class="nav-link text-white/80 hover:text-white text-sm font-medium">History</a> <a href="/how-it-works" class="nav-link text-white/80 hover:text-white text-sm font-medium">How It Works</a> <a href="/qr-scanner" class="nav-link text-white/80 hover:text-white text-sm font-medium flex items-center gap-1"><span>💳</span> Transfer Points</a>
+      </div><!-- Right - Points & Notifications -->
+      <div class="flex items-center space-x-3">
+      <button id="mobile-nav-toggle" type="button" class="mobile-nav-toggle md:hidden p-2 text-white/80 hover:text-[#D4E157] border border-white/30 rounded-full" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="mobile-nav-panel">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
+       </button>
+       <div class="hidden md:flex items-center space-x-4">
+        <div class="points-badge flex items-center space-x-2 bg-[#D4E157]/20 px-4 py-2 rounded-full border border-[#D4E157]/40"><span class="text-lg">✨</span> <span id="nav-points" class="text-[#D4E157] font-bold text-sm">521 Points</span>
+        </div>       <button onclick="handleLogout()" class="px-2 sm:px-4 py-2 text-white/70 hover:text-white text-xs sm:text-sm border border-white/30 rounded-full hover:bg-white/10 transition-all">
+         Logout
+        </button>
+       </div>
+      </div>
+     </div>
+    </div>
+    <div id="mobile-nav-panel" class="mobile-nav-panel md:hidden border-t border-white/15 bg-[#143D2E]/95 px-4 py-4 space-y-3" data-open="false" style="display:none;">
+      <a href="/dashboard" class="block text-[#D4E157] text-sm font-medium">Dashboard</a>
+      <a href="/profile" class="block text-white/90 text-sm font-medium">Profile</a>
+      <a href="/rewards" class="block text-white/90 text-sm font-medium">Rewards</a>
+      <a href="/history" class="block text-white/90 text-sm font-medium">History</a>
+      <a href="/how-it-works" class="block text-white/90 text-sm font-medium">How It Works</a>
+      <a href="/qr-scanner" class="block text-white/90 text-sm font-medium">Transfer Points</a>
+      <div class="pt-2 border-t border-white/15 flex items-center justify-between">
+        <span id="mobile-nav-points" class="text-[#D4E157] text-sm font-semibold">0 Points</span>
+        <button onclick="handleLogout()" class="px-3 py-1.5 text-white/80 text-xs border border-white/30 rounded-full hover:bg-white/10">Logout</button>
+      </div>
+    </div>
+   </nav><!-- Main Content -->
+   <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full"><!-- Page Header -->
+    <div class="mb-8">
+     <h1 class="font-playfair text-3xl sm:text-4xl text-[#0F3B2E] mb-2">Rewards Dashboard</h1>
+     <p class="text-[#0F3B2E]/60">Track your eco-journey and redeem amazing rewards</p>
+    </div>
+    
+    <!-- Section 1: Points Overview - FULL WIDTH CARD (layout adjusted - removed the old grid that caused empty space) -->
+    <div class="mb-8 w-full">
+     <!-- Points Summary Card - Now spans full width, properly fills the removed column space -->
+     <div class="bg-[#5DAE60] rounded-2xl p-6 card-shadow text-white relative overflow-hidden points-summary-full">
+      <div class="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+      <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2"></div>
+      <div class="relative z-10">
+       <div class="flex items-center space-x-2 mb-4">
+        <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center"><span class="text-2xl">🌱</span>
+        </div>
+        <h2 class="text-lg font-semibold uppercase tracking-wider opacity-90">Your Points</h2>
+       </div>
+       <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-6">
+        <div>
+         <p id="total-points" class="text-6xl font-bold font-playfair stat-value">1,247</p>
+         <p id="rank-display" class="text-white/80 mt-1">Rank: #42 of 1,823</p>
+        </div>
+        <div class="progress-section w-full md:w-2/3">
+         <div class="bg-white/20 rounded-xl p-4">
+          <div class="flex justify-between items-center mb-2"><span class="text-sm font-medium">Progress to Gold Status</span> <span class="text-[#D4E157] font-bold">⭐</span>
+          </div>
+          <div class="w-full bg-white/30 rounded-full h-3 overflow-hidden">
+           <div class="progress-bar h-full rounded-full" style="width: 68%"></div>
+          </div>
+          <p class="text-sm mt-2 opacity-80">583 points to Gold Status</p>
+         </div>
+        </div>
+       </div>
+      </div>
+     </div>
+    </div>
+
+    <!-- Section 2: Activity Statistics -->
+    <div class="mt-10 mb-8">
+     <div class="flex items-end justify-between gap-4 mb-4">
+      <div>
+       <h2 class="font-playfair text-2xl text-[#0F3B2E] mb-1">Activity Statistics</h2>
+       <p class="text-sm text-[#0F3B2E]/60">Your sorting progress, updated from live account data</p>
+      </div>
+     </div>
+     <div class="grid grid-cols-2 lg:grid-cols-5 gap-4"><!-- Stat Card 1 -->
+      <div class="activity-card stat-card bg-white rounded-2xl p-5 card-shadow">
+       <div class="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center mb-3"><span class="text-2xl">💰</span>
+       </div>
+       <p id="stat-current-points" class="text-3xl font-bold text-[#0F3B2E]">0</p>
+       <p class="text-[#0F3B2E]/60 text-sm font-medium">Current Points</p>
+      </div><!-- Stat Card 2 -->
+      <div class="activity-card stat-card bg-white rounded-2xl p-5 card-shadow">
+       <div class="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center mb-3"><span class="text-2xl">🏆</span>
+       </div>
+       <p id="stat-total-earned-points" class="text-3xl font-bold text-[#0F3B2E]">0</p>
+       <p class="text-[#0F3B2E]/60 text-sm font-medium">Total Points Earned</p>
+      </div><!-- Stat Card 3 -->
+      <div class="activity-card stat-card bg-white rounded-2xl p-5 card-shadow">
+       <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mb-3"><span class="text-2xl">♻️</span>
+       </div>
+       <p id="stat-plastic" class="text-3xl font-bold text-[#0F3B2E]">0</p>
+       <p class="text-[#0F3B2E]/60 text-sm font-medium">Plastic Items</p>
+      </div><!-- Stat Card 4 -->
+      <div class="activity-card stat-card bg-white rounded-2xl p-5 card-shadow">
+       <div class="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center mb-3"><span class="text-2xl">📄</span>
+       </div>
+       <p id="stat-paper" class="text-3xl font-bold text-[#0F3B2E]">0</p>
+       <p class="text-[#0F3B2E]/60 text-sm font-medium">Paper Items</p>
+      </div><!-- Stat Card 5 -->
+      <div class="activity-card stat-card bg-white rounded-2xl p-5 card-shadow">
+       <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center mb-3"><span class="text-2xl">🔩</span>
+       </div>
+       <p id="stat-metal" class="text-3xl font-bold text-[#0F3B2E]">0</p>
+       <p class="text-[#0F3B2E]/60 text-sm font-medium">Metal Items</p>
+      </div><!-- Stat Card 6 -->
+      <div class="activity-card stat-card bg-white rounded-2xl p-5 card-shadow">
+       <div class="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center mb-3"><span class="text-2xl">🔥</span>
+       </div>
+       <p id="stat-total-sorted" class="text-3xl font-bold text-[#0F3B2E]">0</p>
+       <p class="text-[#0F3B2E]/60 text-sm font-medium">Total Sorted</p>
+      </div><!-- Stat Card 7 -->
+      <div class="activity-card stat-card bg-white rounded-2xl p-5 card-shadow">
+       <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center mb-3"><span class="text-2xl">⏱️</span>
+       </div>
+       <p id="stat-total-sessions" class="text-3xl font-bold text-[#0F3B2E]">0</p>
+       <p class="text-[#0F3B2E]/60 text-sm font-medium">Machine Sessions</p>
+      </div><!-- Stat Card 8 -->
+      <div class="activity-card stat-card bg-white rounded-2xl p-5 card-shadow">
+       <div class="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center mb-3"><span class="text-2xl">📤</span>
+       </div>
+       <p id="stat-points-transfer-spent" class="text-3xl font-bold text-[#0F3B2E]">0</p>
+       <p class="text-[#0F3B2E]/60 text-sm font-medium">Points Spent on Transfers</p>
+      </div><!-- Stat Card 9 -->
+      <div class="activity-card stat-card bg-white rounded-2xl p-5 card-shadow">
+       <div class="w-12 h-12 bg-rose-100 rounded-xl flex items-center justify-center mb-3"><span class="text-2xl">🎁</span>
+       </div>
+       <p id="stat-points-redeem-spent" class="text-3xl font-bold text-[#0F3B2E]">0</p>
+       <p class="text-[#0F3B2E]/60 text-sm font-medium">Points Spent on Redeems</p>
+      </div><!-- Stat Card 10 -->
+      <div class="activity-card stat-card bg-white rounded-2xl p-5 card-shadow">
+       <div class="w-12 h-12 bg-cyan-100 rounded-xl flex items-center justify-center mb-3"><span class="text-2xl">🧾</span>
+       </div>
+       <p id="stat-total-redeemed-rewards" class="text-3xl font-bold text-[#0F3B2E]">0</p>
+       <p class="text-[#0F3B2E]/60 text-sm font-medium">Total Rewards Redeemed</p>
+      </div>
+     </div>
+    </div><!-- Quick Actions -->
+    <div class="bg-gradient-to-r from-[#0F3B2E] to-[#1F4F3B] rounded-2xl p-6 card-shadow">
+     <div class="flex flex-col md:flex-row items-center justify-between">
+      <div class="text-white mb-4 md:mb-0">
+       <h3 class="font-playfair text-xl mb-1">Ready to earn more points?</h3>
+       <p class="text-white/70 text-sm">Scan your next waste item and contribute to a greener campus!</p>
+      </div><button type="button" onclick="window.location.href='/qr-scanner'" class="bg-[#D4E157] text-[#0F3B2E] px-6 py-3 rounded-xl font-semibold hover:bg-[#D4E157]/90 transition-colors flex items-center space-x-2"> <span>Start Scanning</span>
+       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+       </svg></button>
+     </div>
+    </div>
+   </main><!-- Footer -->
+   <footer class="bintech-user-footer flex-shrink-0">
+    <div class="bintech-user-footer__wrap">
+      <div class="bintech-user-footer__grid">
+        <section>
+          <div class="flex items-center gap-3">
+            <span class="bintech-brand-mark" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
+                <path d="M13 3L4 14h6l-1 7 11-13h-6l1-5z" stroke-linecap="round" stroke-linejoin="round"></path>
+              </svg>
+            </span>
+            <p class="bintech-brand-title">Bintech</p>
+          </div>
+          <p class="bintech-brand-copy">Bintech builds secure, intuitive financial technology for modern users, blending speed, trust, and smarter money workflows.</p>
+        </section>
+
+        <nav class="bintech-user-footer__nav" aria-label="Company links">
+          <h4>Company</h4>
+          <ul>
+            <li><a href="#">About</a></li>
+            <li><a href="#">Contact</a></li>
+          </ul>
+        </nav>
+
+        <nav class="bintech-user-footer__nav" aria-label="Products links">
+          <h4>Products</h4>
+          <ul>
+            <li><a href="#">Rewards</a></li>
+          </ul>
+        </nav>
+
+        <nav class="bintech-user-footer__nav" aria-label="Resources links">
+          <h4>Resources</h4>
+          <ul>
+            <li><a href="#">Help Center</a></li>
+            <li><a href="#">Developers</a></li>
+          </ul>
+        </nav>
+
+        <nav class="bintech-user-footer__nav" aria-label="Legal links">
+          <h4>Legal</h4>
+          <ul>
+            <li><a href="#">Terms</a></li>
+            <li><a href="#">Privacy</a></li>
+          </ul>
+        </nav>
+
+        <section class="bintech-user-footer__subscribe bintech-user-footer__glass">
+          <h4>Subscribe To Our Newsletter</h4>
+          <p>Get product releases, security updates, and fintech insights delivered monthly.</p>
+          <form class="bintech-newsletter-form" onsubmit="event.preventDefault();">
+            <input type="email" placeholder="you@domain.com" aria-label="Email address">
+            <button type="submit">Join</button>
+          </form>
+        </section>
+      </div>
+
+      <div class="bintech-footer-bottom">
+        <p>© 2026 Bintech. All rights reserved.</p>
+        <div class="bintech-social-list" aria-label="Social media">
+          <a href="#" aria-label="X">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.901 3H21l-4.588 5.244L21.808 21h-4.226l-3.31-4.889L9.996 21H7.896l4.907-5.609L2.192 3h4.332l2.993 4.422L13.099 3h5.802zm-1.48 16h1.171L7.946 4.89H6.69L17.42 19z"></path></svg>
+          </a>
+          <a href="#" aria-label="LinkedIn">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6.94 8.5A1.55 1.55 0 1 1 6.94 5.4 1.55 1.55 0 0 1 6.94 8.5zM5.62 9.75h2.64V18H5.62V9.75zm4.13 0h2.53v1.13h.03c.35-.67 1.22-1.37 2.5-1.37 2.67 0 3.16 1.76 3.16 4.05V18h-2.64v-3.93c0-.94-.02-2.14-1.3-2.14-1.3 0-1.5 1.02-1.5 2.07V18H9.75V9.75z"></path></svg>
+          </a>
+          <a href="#" aria-label="Instagram">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3.6" y="3.6" width="16.8" height="16.8" rx="4"></rect><circle cx="12" cy="12" r="3.8"></circle><circle cx="17.35" cy="6.65" r="0.9" fill="currentColor" stroke="none"></circle></svg>
+          </a>
+          <a href="#" aria-label="YouTube">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M22 12s0-3.1-.4-4.6c-.2-.8-.8-1.4-1.6-1.6C18.5 5.4 12 5.4 12 5.4s-6.5 0-8 .4c-.8.2-1.4.8-1.6 1.6C2 8.9 2 12 2 12s0 3.1.4 4.6c.2.8.8 1.4 1.6 1.6 1.5.4 8 .4 8 .4s6.5 0 8-.4c.8-.2 1.4-.8 1.6-1.6.4-1.5.4-4.6.4-4.6zM10 15.5V8.5l6 3.5-6 3.5z"></path></svg>
+          </a>
+        </div>
+      </div>
+    </div>
+   </footer>
+
+  </div>
+  <script>
+    const defaultConfig = {
+      background_color: '#E8ECEB',
+      card_surface_color: '#FFFFFF',
+      text_color: '#0F3B2E',
+      primary_action_color: '#5DAE60',
+      accent_color: '#D4E157',
+      font_family: 'Poppins',
+      font_size: 16,
+      user_name: 'MARIO SALLY',
+      points_display: '1,247',
+      rank_text: '#42 of 1,823',
+      challenge_title: 'Earth Week Sprint',
+      challenge_timer: '2d 14h left'
+    };
+    
+    async function onConfigChange(config) {
+      const bgColor = config.background_color || defaultConfig.background_color;
+      const cardColor = config.card_surface_color || defaultConfig.card_surface_color;
+      const textColor = config.text_color || defaultConfig.text_color;
+      const primaryColor = config.primary_action_color || defaultConfig.primary_action_color;
+      const accentColor = config.accent_color || defaultConfig.accent_color;
+      const fontFamily = config.font_family || defaultConfig.font_family;
+      const fontSize = config.font_size || defaultConfig.font_size;
+      
+      // Apply background color
+      document.getElementById('app-wrapper').style.backgroundColor = bgColor;
+      
+      // Apply card colors
+      document.querySelectorAll('.stat-card, .reward-card').forEach(card => {
+        card.style.backgroundColor = cardColor;
+      });
+      
+      // Apply text color
+      document.querySelectorAll('h1, h2, h3, p').forEach(el => {
+        if (!el.closest('.gradient-dark') && !el.closest('.bg-\\[\\#5DAE60\\]')) {
+          el.style.color = textColor;
+        }
+      });
+      
+      // Apply primary action color to claim buttons
+      document.querySelectorAll('.claim-btn').forEach(btn => {
+        btn.style.background = `linear-gradient(135deg, ${primaryColor}, #4CAF50)`;
+      });
+      
+      // Apply font family
+      document.body.style.fontFamily = `${fontFamily}, sans-serif`;
+      
+      // Apply font size scaling
+      document.body.style.fontSize = `${fontSize}px`;
+      
+      // Update editable text content
+      const userName = config.user_name || defaultConfig.user_name;
+      const navUserName = document.getElementById('nav-user-name');
+      if (navUserName) navUserName.textContent = userName;
+      
+      const totalPoints = config.points_display || defaultConfig.points_display;
+      const totalPointsEl = document.getElementById('total-points');
+      if (totalPointsEl) totalPointsEl.textContent = totalPoints;
+      
+      const rankText = config.rank_text || defaultConfig.rank_text;
+      const rankDisplay = document.getElementById('rank-display');
+      if (rankDisplay) rankDisplay.textContent = `Rank: ${rankText}`;
+      
+      const challengeTitle = config.challenge_title || defaultConfig.challenge_title;
+      const challengeName = document.getElementById('challenge-name');
+      if (challengeName) challengeName.textContent = challengeTitle;
+      
+      const challengeTimer = config.challenge_timer || defaultConfig.challenge_timer;
+      const timeRemaining = document.getElementById('time-remaining');
+      if (timeRemaining) timeRemaining.textContent = challengeTimer;
+    }
+    
+    function mapToCapabilities(config) {
+      return {
+        recolorables: [
+          {
+            get: () => config.background_color || defaultConfig.background_color,
+            set: (value) => {
+              config.background_color = value;
+              window.elementSdk.setConfig({ background_color: value });
+            }
+          },
+          {
+            get: () => config.card_surface_color || defaultConfig.card_surface_color,
+            set: (value) => {
+              config.card_surface_color = value;
+              window.elementSdk.setConfig({ card_surface_color: value });
+            }
+          },
+          {
+            get: () => config.text_color || defaultConfig.text_color,
+            set: (value) => {
+              config.text_color = value;
+              window.elementSdk.setConfig({ text_color: value });
+            }
+          },
+          {
+            get: () => config.primary_action_color || defaultConfig.primary_action_color,
+            set: (value) => {
+              config.primary_action_color = value;
+              window.elementSdk.setConfig({ primary_action_color: value });
+            }
+          },
+          {
+            get: () => config.accent_color || defaultConfig.accent_color,
+            set: (value) => {
+              config.accent_color = value;
+              window.elementSdk.setConfig({ accent_color: value });
+            }
+          }
+        ],
+        borderables: [],
+        fontEditable: {
+          get: () => config.font_family || defaultConfig.font_family,
+          set: (value) => {
+            config.font_family = value;
+            window.elementSdk.setConfig({ font_family: value });
+          }
+        },
+        fontSizeable: {
+          get: () => config.font_size || defaultConfig.font_size,
+          set: (value) => {
+            config.font_size = value;
+            window.elementSdk.setConfig({ font_size: value });
+          }
+        }
+      };
+    }
+    
+    function mapToEditPanelValues(config) {
+      return new Map([
+        ['user_name', config.user_name || defaultConfig.user_name],
+        ['points_display', config.points_display || defaultConfig.points_display],
+        ['rank_text', config.rank_text || defaultConfig.rank_text],
+        ['challenge_title', config.challenge_title || defaultConfig.challenge_title],
+        ['challenge_timer', config.challenge_timer || defaultConfig.challenge_timer]
+      ]);
+    }
+    
+    // Initialize SDK
+    if (window.elementSdk) {
+      window.elementSdk.init({
+        defaultConfig,
+        onConfigChange,
+        mapToCapabilities,
+        mapToEditPanelValues
+      });
+    }
+    
+    // Claim button interactions
+    document.querySelectorAll('.claim-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const card = this.closest('.reward-card');
+        if(!card) return;
+        const rewardName = card.querySelector('h3')?.textContent || 'reward';
+        const pointsCost = card.querySelector('span[class*="rounded-full"]')?.textContent || '0 pts';
+        
+        this.textContent = 'CLAIMED!';
+        this.style.background = 'linear-gradient(135deg, #0F3B2E, #1F4F3B)';
+        this.disabled = true;
+        
+        setTimeout(() => {
+          this.textContent = 'CLAIM NOW';
+          this.style.background = 'linear-gradient(135deg, #5DAE60, #4CAF50)';
+          this.disabled = false;
+        }, 2000);
+      });
+    });
+  </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9d7da4cc55f8b489',t:'MTc3Mjc2MTEzNi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><!--User Protection & Account Info Script-->
+<script>
+  function formatPointsDisplay(value) {
+    const numeric = Number(value || 0);
+    return Number.isFinite(numeric) ? numeric.toLocaleString() : '0';
+  }
+
+  async function loadDashboardStatsFromSql(user) {
+    try {
+      if (!user || !user.id) {
+        return;
+      }
+
+      const query = new URLSearchParams({
+        userId: String(user.id),
+        email: String(user.email || '')
+      });
+
+      const response = await fetch(`/api/dashboard/stats?${query.toString()}`);
+      if (!response.ok) {
+        return;
+      }
+
+      const payload = await response.json();
+      if (!payload?.success || !payload?.stats) {
+        return;
+      }
+
+      const categories = payload.stats.categories || {};
+      const plasticEl = document.getElementById('stat-plastic');
+      if (plasticEl) {
+        plasticEl.textContent = formatPointsDisplay(categories.Plastic || 0);
+      }
+
+      const paperEl = document.getElementById('stat-paper');
+      if (paperEl) {
+        paperEl.textContent = formatPointsDisplay(categories.Paper || 0);
+      }
+
+      const metalEl = document.getElementById('stat-metal');
+      if (metalEl) {
+        metalEl.textContent = formatPointsDisplay(categories.Metal || 0);
+      }
+
+      const totalSortedEl = document.getElementById('stat-total-sorted');
+      if (totalSortedEl) {
+        const totalSorted = Number(categories.Plastic || 0) + Number(categories.Paper || 0) + Number(categories.Metal || 0);
+        totalSortedEl.textContent = formatPointsDisplay(totalSorted);
+      }
+
+      const rankEl = document.getElementById('rank-display');
+      if (rankEl && Number(payload.stats.leaderboardPosition || 0) > 0) {
+        rankEl.textContent = `Rank: #${payload.stats.leaderboardPosition}`;
+      }
+    } catch (error) {
+      console.warn('Failed to load dashboard stats:', error);
+    }
+  }
+
+  async function loadUserPointsFromAccountPoints(user) {
+    try {
+      const effectiveUserId = user?.id || user?.system_id || user?.campus_id;
+      if (!effectiveUserId && !user?.email) {
+        return;
+      }
+
+      const query = new URLSearchParams({
+        userId: String(effectiveUserId || ''),
+        email: String(user.email || '')
+      });
+
+      const response = await fetch(`/api/dashboard/points?${query.toString()}`);
+      if (!response.ok) {
+        return;
+      }
+
+      const payload = await response.json();
+      if (!payload?.success || !payload?.user) {
+        return;
+      }
+
+      const pointsValue = Number(payload.user.points || 0);
+
+      const navPointsEl = document.getElementById('nav-points');
+      if (navPointsEl) {
+        navPointsEl.textContent = `${formatPointsDisplay(pointsValue)} Points`;
+      }
+
+      const totalPointsEl = document.getElementById('total-points');
+      if (totalPointsEl) {
+        totalPointsEl.textContent = formatPointsDisplay(pointsValue);
+      }
+
+      // Update rank display
+      if (payload.rank) {
+        const rankEl = document.getElementById('rank-display');
+        if (rankEl) {
+          rankEl.textContent = `Rank: #${payload.rank.rank}`;
+          rankEl.title = `You are in the top ${payload.rank.percentile}% of users`;
+        }
+      }
+
+      const sessionUser = JSON.parse(sessionStorage.getItem('bintech_user') || 'null');
+      if (sessionUser) {
+        sessionUser.points = pointsValue;
+        if (payload.rank) {
+          sessionUser.rank = payload.rank.rank;
+          sessionUser.totalUsers = payload.rank.totalUsers;
+          sessionUser.percentile = payload.rank.percentile;
+        }
+        sessionStorage.setItem('bintech_user', JSON.stringify(sessionUser));
+      }
+    } catch (error) {
+      console.warn('Failed to load account points:', error);
+    }
+  }
+
+  async function loadAccountActivityOverview(user) {
+    try {
+      const effectiveUserId = user?.id || user?.system_id || user?.campus_id;
+      if (!effectiveUserId && !user?.email) {
+        return;
+      }
+
+      const query = new URLSearchParams({
+        userId: String(effectiveUserId || ''),
+        email: String(user.email || '')
+      });
+
+      const response = await fetch(`/api/dashboard/activity-overview?${query.toString()}`);
+      if (!response.ok) {
+        return;
+      }
+
+      const payload = await response.json();
+      if (!payload?.success || !payload?.summary) {
+        return;
+      }
+
+      const summary = payload.summary;
+      const setText = (id, value) => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.textContent = formatPointsDisplay(value);
+        }
+      };
+
+      setText('stat-current-points', Number(summary.totalPoints || 0));
+      setText('stat-total-earned-points', Number(summary.totalLifetimePoints || 0));
+      setText('stat-plastic', Number(summary.plasticCount || 0));
+      setText('stat-paper', Number(summary.paperCount || 0));
+      setText('stat-metal', Number(summary.metalCount || 0));
+      setText('stat-total-sorted', Number(summary.totalWaste || 0));
+      setText('stat-total-sessions', Number(summary.totalSessions || 0));
+      setText('stat-points-transfer-spent', Number(summary.pointsSpentOnTransfers || 0));
+      setText('stat-points-redeem-spent', Number(summary.pointsSpentOnRedeems || 0));
+      setText('stat-total-redeemed-rewards', Number(summary.totalRewardsRedeemed || 0));
+
+      const currentPoints = Number(summary.totalPoints || 0);
+      const navPointsEl = document.getElementById('nav-points');
+      if (navPointsEl) {
+        navPointsEl.textContent = `${formatPointsDisplay(currentPoints)} Points`;
+      }
+
+      const totalPointsEl = document.getElementById('total-points');
+      if (totalPointsEl) {
+        totalPointsEl.textContent = formatPointsDisplay(currentPoints);
+      }
+    } catch (error) {
+      console.warn('Failed to load account activity overview:', error);
+    }
+  }
+
+  function protectUserPage() {
+    console.log('User page protection loading...');
+    
+    const user = JSON.parse(sessionStorage.getItem('bintech_user') || 'null');
+    console.log('User from session:', user);
+    
+    if (!user) {
+      console.log('No user found, redirecting to login...');
+      window.location.href = '/';
+      return;
+    }
+    
+    if (user.role === 'admin') {
+      console.log('Admin user detected, redirecting to admin dashboard...');
+      window.location.href = '/admin/dashboard';
+      return;
+    }
+    
+    console.log('Valid user, updating UI with:', user.full_name || user.email);
+    
+    // Update nav-user-name specifically
+    const navUserName = document.getElementById('nav-user-name');
+    if (navUserName) {
+      navUserName.textContent = (user.full_name || user.email || 'User').toUpperCase();
+      console.log('Updated nav-user-name');
+    }
+    
+    // Update points display if available
+    const pointsDisplay = document.getElementById('nav-points');
+    if (pointsDisplay && user.points !== undefined && user.points !== null) {
+      pointsDisplay.textContent = `${formatPointsDisplay(user.points)} Points`;
+      console.log('Updated points display');
+    }
+
+    const totalPointsEl = document.getElementById('total-points');
+    if (totalPointsEl && user.points !== undefined && user.points !== null) {
+      totalPointsEl.textContent = formatPointsDisplay(user.points);
+    }
+    
+    // Update all data attributes
+    document.querySelectorAll('[data-user-name]').forEach(el => {
+      el.textContent = user.full_name || user.email || 'User';
+    });
+    
+    document.querySelectorAll('[data-user-email]').forEach(el => {
+      el.textContent = user.email || '';
+    });
+    
+    // Update initials
+    const initials = (user.First_Name?.charAt(0) || user.full_name?.charAt(0) || 'U') + 
+                     (user.Last_Name?.charAt(0) || user.full_name?.split(' ')[1]?.charAt(0) || '');
+    
+    document.querySelectorAll('[data-user-initials]').forEach(el => {
+      el.textContent = initials.toUpperCase();
+    });
+    
+    loadUserPointsFromAccountPoints(user);
+    loadDashboardStatsFromSql(user);
+    loadAccountActivityOverview(user);
+    console.log('User page initialized successfully');
+  }
+  
+  // Run on page load when DOM is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', protectUserPage);
+  } else {
+    protectUserPage();
+  }
+  
+  // Logout handler
+  // Route protection - redirect to login if not authenticated
+  function protectRoute() {
+    const user = sessionStorage.getItem('bintech_user');
+    if (!user) {
+      // Don't redirect if we're in the middle of logout
+      if (!window.isLoggingOut) {
+        window.location.replace('/');
+      }
+    }
+  }
+  
+  // Flag to prevent protection interference during logout
+  window.isLoggingOut = false;
+  
+  // Only protect after full page load
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', protectRoute);
+  } else {
+    // Slight delay to ensure everything is ready
+    setTimeout(protectRoute, 300);
+  }
+  
+  function handleLogout() {
+    if (confirm('Are you sure you want to logout?')) {
+      // Set logout flag immediately
+      window.isLoggingOut = true;
+      
+      // Close all modals
+      const modals = document.querySelectorAll('.modal-backdrop');
+      modals.forEach(modal => modal.classList.remove('active'));
+      
+      // Disable all interactive elements
+      document.querySelectorAll('button, input, a').forEach(el => {
+        el.disabled = true;
+        el.style.pointerEvents = 'none';
+        el.style.opacity = '0.5';
+      });
+      
+      // Clear session data completely
+      sessionStorage.clear();
+      localStorage.clear();
+      
+      // Redirect after cleanup
+      setTimeout(() => {
+        window.location.replace('/');
+      }, 200);
+    }
+  }
+
+  function initializeUserMobileMenu() {
+    const toggle = document.getElementById('mobile-nav-toggle');
+    const panel = document.getElementById('mobile-nav-panel');
+    const navPoints = document.getElementById('nav-points');
+    const mobilePoints = document.getElementById('mobile-nav-points');
+    if (!toggle || !panel) return;
+
+    const closeMenu = () => {
+      panel.dataset.open = 'false';
+      panel.style.display = 'none';
+      toggle.setAttribute('aria-expanded', 'false');
+    };
+
+    const openMenu = () => {
+      if (mobilePoints && navPoints) {
+        mobilePoints.textContent = navPoints.textContent;
+      }
+      panel.dataset.open = 'true';
+      panel.style.display = 'block';
+      toggle.setAttribute('aria-expanded', 'true');
+    };
+
+    toggle.addEventListener('click', () => {
+      if (panel.dataset.open === 'true') {
+        closeMenu();
+      } else {
+        openMenu();
+      }
+    });
+
+    panel.querySelectorAll('a').forEach((link) => {
+      link.addEventListener('click', closeMenu);
+    });
+
+    window.addEventListener('resize', () => {
+      if (window.innerWidth >= 768) {
+        closeMenu();
+      }
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') {
+        closeMenu();
+      }
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeUserMobileMenu);
+  } else {
+    initializeUserMobileMenu();
+  }
+</script>
+</body>
+</html>

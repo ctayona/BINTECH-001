@@ -1,0 +1,1144 @@
+<!doctype html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BinTECH – Bin Management</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="/js/timestampUtils.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script>tailwind.config={theme:{extend:{colors:{forest:'#1a3a2f',forestLight:'#2d5a47',cream:'#f8f5f0',creamDark:'#ede8e0',teal:'#3d8b7a',tealMuted:'#5a9e8f',moss:'#6b9080',sage:'#a4c3a2'},fontFamily:{sans:['Plus Jakarta Sans','system-ui','sans-serif']}}}}</script>
+  <style>
+    html,body{height:100%;margin:0}
+    .nav-pill{transition:all .2s ease}
+    .nav-pill:hover{background:rgba(255,255,255,.15)}
+    .nav-pill.active{background:rgba(255,255,255,.2)}
+    main{display:flex;flex-direction:column}
+    #recent-alerts{min-height:180px;max-height:320px;overflow-y:auto}
+    
+    /* Delete Modal Animations */
+    #delete-modal{transition:opacity 300ms ease}
+    #delete-modal.hidden{opacity:0;pointer-events:none}
+    #delete-modal:not(.hidden){opacity:1}
+    #delete-modal-content{transition:transform 300ms ease, opacity 300ms ease}
+    
+    /* Smooth transitions for all modals */
+    .fixed.inset-0.bg-black\/50{transition:opacity 300ms ease}
+  </style>
+</head>
+<body class="h-full bg-cream font-sans">
+<div class="flex h-full w-full">
+
+  <!-- Sidebar -->
+  <aside class="w-64 bg-forest flex flex-col min-h-full">
+    <div class="flex-1 flex flex-col overflow-auto">
+      <div class="p-6">
+        <div class="flex items-center gap-3 mb-8">
+          <div class="w-10 h-10 bg-teal rounded-xl flex items-center justify-center"><svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg></div>
+          <span class="text-white font-semibold text-lg">BinTECH</span>
+        </div>
+        <nav class="space-y-2">
+        <a href="/admin/dashboard" class="nav-pill flex items-center gap-3 px-4 py-3 rounded-full text-white/70 hover:text-white"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg><span class="font-medium">Dashboard</span></a>
+        <a href="/admin/rewards" class="nav-pill flex items-center gap-3 px-4 py-3 rounded-full text-white/70 hover:text-white"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><span class="font-medium">Rewards &amp; Stores</span></a>
+        <a href="/admin/binmanage" class="nav-pill active flex items-center gap-3 px-4 py-3 rounded-full text-white"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg><span class="font-medium">Bin Management</span></a>
+        <a href="/admin/website-logs" class="nav-pill flex items-center gap-3 px-4 py-3 rounded-full text-white/70 hover:text-white"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6M9 8h6M7 4h10a2 2 0 012 2v12a2 2 0 01-2 2H7a2 2 0 01-2-2V6a2 2 0 012-2z"/></svg><span class="font-medium">Website Logs</span></a>
+        <a href="/admin/collection" class="nav-pill flex items-center gap-3 px-4 py-3 rounded-full text-white/70 hover:text-white"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg><span class="font-medium">Collections</span></a>
+        <a href="/admin/routes" class="nav-pill flex items-center gap-3 px-4 py-3 rounded-full text-white/70 hover:text-white"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg><span class="font-medium">Routes</span></a>
+        <a href="/admin/accounts" class="nav-pill flex items-center gap-3 px-4 py-3 rounded-full text-white/70 hover:text-white"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg><span class="font-medium">Account Management</span></a>
+        <a href="/admin/schedule" class="nav-pill flex items-center gap-3 px-4 py-3 rounded-full text-white/70 hover:text-white"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg><span class="font-medium">Schedule</span></a>
+        </nav>
+      </div>
+    </div>
+    <!-- Profile Card (Pinned to Bottom) -->
+    <div class="p-6 border-t border-forestLight">
+      <div class="bg-forestLight rounded-2xl p-4">
+        <div class="flex items-center gap-3 mb-3">
+          <div class="w-8 h-8 bg-sage rounded-full flex items-center justify-center"><span class="text-forest font-semibold text-sm" id="adminInitials">--</span></div>
+          <div>
+            <p class="text-white text-sm font-medium" id="adminName">Loading...</p>
+            <p class="text-white/60 text-xs" id="adminEmail">admin@example.com</p>
+          </div>
+        </div>
+        <div class="space-y-2">
+          <a href="/admin/settings" class="w-full text-white/70 hover:text-white hover:bg-forest/30 text-sm flex items-center gap-2 px-3 py-2 rounded-lg transition">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            Settings
+          </a>
+          <button onclick="authHelpers.logout()" class="w-full text-white/70 hover:text-white hover:bg-forest/30 text-sm flex items-center gap-2 px-3 py-2 rounded-lg transition">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+            Logout
+          </button>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="flex-1 overflow-auto p-8">
+    <header class="mb-8 flex items-end justify-between">
+      <div>
+        <h1 class="text-2xl font-bold text-forest">Bin Management</h1>
+        <p class="text-moss mt-1">Monitor system status and individual bin sensor readings</p>
+      </div>
+      <!-- Quick Actions (Top Right) -->
+      <div class="flex items-center gap-3">
+        <button onclick="openAddBinModal()" class="flex items-center gap-2 px-5 py-2.5 bg-forest text-white rounded-lg font-medium hover:bg-forestLight transition shadow-sm">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+          Add Bin
+        </button>
+        <button onclick="openScheduleModal()" class="flex items-center gap-2 px-5 py-2.5 bg-teal text-white rounded-lg font-medium hover:bg-tealMuted transition shadow-sm">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+          Schedule
+        </button>
+        <button onclick="alert('Generating report...')" class="flex items-center gap-2 px-5 py-2.5 bg-white border border-creamDark text-forest rounded-lg font-medium hover:bg-cream transition shadow-sm">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          Report
+        </button>
+      </div>
+    </header>
+
+    <!-- System Status Cards -->
+    <div class="grid grid-cols-4 gap-4 mb-8">
+      <div class="bg-forest rounded-2xl p-6 text-white"><p class="text-white/70 text-sm font-medium mb-2">Total Bins</p><p class="text-3xl font-bold" id="total-bins-count">0</p></div>
+      <div class="bg-forest rounded-2xl p-6 text-white"><p class="text-white/70 text-sm font-medium mb-2">Active Bins</p><p class="text-3xl font-bold" id="active-bins-count">0</p></div>
+      <div class="bg-forest rounded-2xl p-6 text-white"><p class="text-white/70 text-sm font-medium mb-2">In Maintenance</p><p class="text-3xl font-bold" id="maintenance-bins-count">0</p></div>
+      <div class="bg-forest rounded-2xl p-6 text-white"><p class="text-white/70 text-sm font-medium mb-2">Avg Fill Level</p><p class="text-3xl font-bold" id="avg-fill-level">0%</p></div>
+    </div>
+
+    <!-- Sorter Bin Capacity (BINTECH-SORTER-001) -->
+    <div class="bg-white rounded-2xl p-6 shadow-sm mb-8">
+      <div class="flex items-center justify-between mb-5">
+        <div>
+          <h3 class="text-lg font-semibold text-forest">BINTECH-SORTER-001 Capacity</h3>
+          <p class="text-sm text-moss">Live fill status for Metal, Plastic, and Paper bins</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="openSessionLogsModal()" class="text-xs font-semibold text-forest bg-cream border border-creamDark px-3 py-1 rounded-full hover:bg-creamDark transition">Session Logs</button>
+          <span class="text-xs font-semibold text-white bg-teal px-3 py-1 rounded-full">Live</span>
+        </div>
+      </div>
+      <div id="sorter-capacity-grid" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
+    </div>
+
+    <!-- Sorting Totals Tracker -->
+    <div class="bg-white rounded-2xl p-6 shadow-sm mb-8">
+      <div class="flex items-center justify-between mb-5">
+        <div>
+          <h3 class="text-lg font-semibold text-forest">Waste Sorting Totals</h3>
+          <p class="text-sm text-moss">All sessions tracked from the machine sorting pipeline</p>
+        </div>
+        <span class="text-xs font-semibold text-white bg-forest px-3 py-1 rounded-full" id="sorting-updated-at">Updating...</span>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div class="rounded-xl border border-creamDark p-4 bg-cream/40">
+          <p class="text-xs uppercase tracking-wide text-moss">Metal Sorted</p>
+          <p class="text-2xl font-bold text-forest mt-1" id="sort-metric-metal">0</p>
+        </div>
+        <div class="rounded-xl border border-creamDark p-4 bg-cream/40">
+          <p class="text-xs uppercase tracking-wide text-moss">Plastic Sorted</p>
+          <p class="text-2xl font-bold text-forest mt-1" id="sort-metric-plastic">0</p>
+        </div>
+        <div class="rounded-xl border border-creamDark p-4 bg-cream/40">
+          <p class="text-xs uppercase tracking-wide text-moss">Paper Sorted</p>
+          <p class="text-2xl font-bold text-forest mt-1" id="sort-metric-paper">0</p>
+        </div>
+        <div class="rounded-xl border border-creamDark p-4 bg-cream/40">
+          <p class="text-xs uppercase tracking-wide text-moss">Total Waste Sorted</p>
+          <p class="text-2xl font-bold text-forest mt-1" id="sort-metric-total">0</p>
+        </div>
+        <div class="rounded-xl border border-creamDark p-4 bg-cream/40">
+          <p class="text-xs uppercase tracking-wide text-moss">Total Points Generated</p>
+          <p class="text-2xl font-bold text-forest mt-1" id="sort-metric-points">0</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sensors Table -->
+    <div class="bg-white rounded-2xl shadow-sm mb-8" style="display: flex; flex-direction: column; border-radius: 1rem; overflow: visible;">
+      <div class="p-6 border-b border-creamDark"><h3 class="text-lg font-semibold text-forest">Individual Bin Sensors</h3></div>
+      <div style="overflow-x: auto; overflow-y: visible;">
+        <table class="w-full border-collapse">
+          <thead>
+            <tr class="border-b border-creamDark bg-cream">
+              <th class="px-6 py-4 text-left text-sm font-semibold text-forest">Bin Code</th>
+              <th class="px-6 py-4 text-left text-sm font-semibold text-forest">Location</th>
+              <th class="px-6 py-4 text-left text-sm font-semibold text-forest">Fill Level</th>
+              <th class="px-6 py-4 text-left text-sm font-semibold text-forest">Capacity</th>
+              <th class="px-6 py-4 text-left text-sm font-semibold text-forest">Status</th>
+              <th class="px-6 py-4 text-left text-sm font-semibold text-forest">Last Reading</th>
+              <th class="px-6 py-4 text-left text-sm font-semibold text-forest">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="bins-tbody">
+            <!-- Populated by JavaScript -->
+          </tbody>
+        </table>
+      </div>
+      <div id="empty-state" class="p-16 text-center hidden">
+        <div class="w-20 h-20 mx-auto mb-4 bg-forest/10 rounded-full flex items-center justify-center"><svg class="w-10 h-10 text-forest" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/></svg></div>
+        <p class="text-moss text-lg font-medium">No bins available. Create your first bin to get started!</p>
+      </div>
+      <!-- Status Legend (Table Footer) -->
+      <div class="px-6 py-4 bg-cream border-t border-creamDark">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-8 text-xs font-medium text-moss">
+            <div class="flex items-center gap-2">
+              <div class="w-2 h-2 rounded-full bg-green-500"></div>
+              <span>Healthy – All sensors nominal</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <div class="w-2 h-2 rounded-full bg-amber-400"></div>
+              <span>Warning – Capacity >70%</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <div class="w-2 h-2 rounded-full bg-red-500"></div>
+              <span>Critical – Capacity >85%</span>
+            </div>
+          </div>
+          <span class="text-xs font-medium text-moss/60 bg-white px-3 py-1 rounded-full">Live data</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Alerts & System Status -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div class="lg:col-span-2 bg-white rounded-2xl p-6 shadow-sm">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-semibold text-forest flex items-center gap-2">
+            <svg class="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+            Recent Alerts
+          </h3>
+          <span class="text-xs font-semibold text-white bg-teal px-3 py-1 rounded-full">Auto-refresh</span>
+        </div>
+        <div id="recent-alerts" class="space-y-3 text-sm">
+          <!-- Populated by JavaScript -->
+        </div>
+      </div>
+      <div class="bg-white rounded-2xl p-6 shadow-sm">
+        <h3 class="text-lg font-semibold text-forest mb-4">System Health</h3>
+        <div class="space-y-4">
+          <div class="p-4 bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200 rounded-lg">
+            <p class="text-xs font-medium text-green-700 mb-1">✓ All systems operational</p>
+            <p class="text-xs text-green-600">No critical issues detected</p>
+          </div>
+          <div class="p-3 border border-creamDark rounded-lg">
+            <p class="text-xs font-medium text-forest mb-2">Last system check</p>
+            <p class="text-xs text-moss" id="last-check">Just now</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Schedule Modal -->
+<div id="schedule-modal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+  <div class="bg-white rounded-2xl shadow-xl max-w-md w-full mx-4">
+    <div class="p-6 border-b border-creamDark"><h2 class="text-xl font-bold text-forest">Schedule Collection</h2></div>
+    <div class="p-6 space-y-4">
+      <div><label class="block text-sm font-medium text-forest mb-2">Select Bin</label>
+        <select class="w-full px-4 py-2 border border-creamDark rounded-lg focus:outline-none focus:ring-2 focus:ring-teal/30">
+          <option>Loading bins...</option>
+        </select>
+      </div>
+      <div><label class="block text-sm font-medium text-forest mb-2">Collection Date</label><input id="col-date" type="date" class="w-full px-4 py-2 border border-creamDark rounded-lg focus:outline-none focus:ring-2 focus:ring-teal/30"></div>
+      <div><label class="block text-sm font-medium text-forest mb-2">Time Slot</label>
+        <select class="w-full px-4 py-2 border border-creamDark rounded-lg focus:outline-none focus:ring-2 focus:ring-teal/30">
+          <option>08:00 – 10:00</option><option>10:00 – 12:00</option><option>12:00 – 14:00</option><option>14:00 – 16:00</option><option>16:00 – 18:00</option>
+        </select>
+      </div>
+    </div>
+    <div class="p-6 border-t border-creamDark flex gap-3">
+      <button onclick="closeScheduleModal()" class="flex-1 px-4 py-2 border border-creamDark text-forest rounded-lg font-medium hover:bg-cream transition">Cancel</button>
+      <button onclick="confirmSchedule()" class="flex-1 px-4 py-2 bg-forest text-white rounded-lg font-medium hover:bg-forestLight transition">Schedule</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add/Edit Bin Modal -->
+<div id="addbin-modal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+  <div class="bg-white rounded-2xl shadow-xl max-w-md w-full mx-4">
+    <div class="p-6 border-b border-creamDark"><h2 class="text-xl font-bold text-forest" id="modal-title">Add New Bin</h2></div>
+    <form id="bin-form" class="space-y-4 p-6">
+      <input type="hidden" id="bin-id">
+      <div>
+        <label class="block text-sm font-medium text-forest mb-2">Bin Code *</label>
+        <input id="bin-code" type="text" placeholder="e.g., BIN-0001" class="w-full px-4 py-2 border border-creamDark rounded-lg focus:outline-none focus:ring-2 focus:ring-teal/30" required>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-forest mb-2">Location *</label>
+        <input id="bin-location" type="text" placeholder="e.g., Main Lobby - Zone A" class="w-full px-4 py-2 border border-creamDark rounded-lg focus:outline-none focus:ring-2 focus:ring-teal/30" required>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-forest mb-2">Capacity (Liters) *</label>
+        <input id="bin-capacity" type="number" placeholder="e.g., 100" class="w-full px-4 py-2 border border-creamDark rounded-lg focus:outline-none focus:ring-2 focus:ring-teal/30" min="1" required>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-forest mb-2">Fill Level (%) *</label>
+        <input id="bin-fill" type="number" placeholder="e.g., 50" class="w-full px-4 py-2 border border-creamDark rounded-lg focus:outline-none focus:ring-2 focus:ring-teal/30" min="0" max="100" required>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-forest mb-2">Status *</label>
+        <select id="bin-status" class="w-full px-4 py-2 border border-creamDark rounded-lg focus:outline-none focus:ring-2 focus:ring-teal/30" required>
+          <option value="active">Active</option>
+          <option value="maintenance">Maintenance</option>
+          <option value="inactive">Inactive</option>
+        </select>
+      </div>
+    </form>
+    <div class="p-6 border-t border-creamDark flex gap-3">
+      <button onclick="closeAddBinModal()" class="flex-1 px-4 py-2 border border-creamDark text-forest rounded-lg font-medium hover:bg-cream transition">Cancel</button>
+      <button onclick="saveBin()" class="flex-1 px-4 py-2 bg-teal text-white rounded-lg font-medium hover:bg-tealMuted transition">Save Bin</button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="delete-modal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden transition-opacity duration-300" onclick="closeDeleteModal(event)">
+  <div class="bg-forest rounded-2xl shadow-2xl max-w-md w-full mx-4 transform transition-all duration-300 scale-95 opacity-0" id="delete-modal-content" onclick="event.stopPropagation()">
+    <!-- Icon -->
+    <div class="p-6 flex justify-center">
+      <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
+        <svg class="w-8 h-8 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Title & Description -->
+    <div class="px-6 pb-4 text-center">
+      <h2 class="text-2xl font-bold text-white mb-2">Delete Bin</h2>
+      <p class="text-cream text-sm">Are you sure you want to delete <span class="font-semibold" id="delete-bin-name">Bin Name</span>? This action is permanent.</p>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="px-6 py-4 border-t border-forestLight flex gap-3">
+      <button onclick="closeDeleteModal()" class="flex-1 px-4 py-3 bg-forestLight text-white rounded-lg font-medium hover:bg-forest transition">
+        Cancel
+      </button>
+      <button onclick="confirmDeleteBin()" class="flex-1 px-4 py-3 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition">
+        Delete
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Session Logs Modal -->
+<div id="session-logs-modal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50" onclick="closeSessionLogsModal(event)">
+  <div class="bg-white rounded-2xl shadow-xl max-w-5xl w-full mx-4" onclick="event.stopPropagation()">
+    <div class="p-6 border-b border-creamDark flex items-center justify-between">
+      <div>
+        <h2 class="text-xl font-bold text-forest">BINTECH-SORTER-001 Session Logs</h2>
+        <p class="text-sm text-moss">Machine usage history with user email, material counts, points, and timestamps</p>
+      </div>
+      <button onclick="closeSessionLogsModal()" class="px-3 py-2 text-sm text-moss hover:text-forest">Close</button>
+    </div>
+    <div class="p-6">
+      <div class="overflow-x-auto max-h-[420px] overflow-y-auto border border-creamDark rounded-xl">
+        <table class="w-full border-collapse text-sm">
+          <thead class="bg-cream sticky top-0">
+            <tr>
+              <th class="px-4 py-3 text-left text-forest font-semibold">Email</th>
+              <th class="px-4 py-3 text-left text-forest font-semibold">Metal</th>
+              <th class="px-4 py-3 text-left text-forest font-semibold">Plastic</th>
+              <th class="px-4 py-3 text-left text-forest font-semibold">Paper</th>
+              <th class="px-4 py-3 text-left text-forest font-semibold">Points</th>
+              <th class="px-4 py-3 text-left text-forest font-semibold">Start</th>
+              <th class="px-4 py-3 text-left text-forest font-semibold">End</th>
+              <th class="px-4 py-3 text-left text-forest font-semibold">Status</th>
+            </tr>
+          </thead>
+          <tbody id="session-logs-body">
+            <tr><td colspan="8" class="px-4 py-6 text-center text-moss">Loading session logs...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/js/auth-frontend-v2.js"></script>
+<script>
+  let bins = [];
+  let liveRefreshIntervalId = null;
+  let sortingTelemetry = null;
+  let sessionLogsModalOpen = false;
+
+  function getActiveAdminUser() {
+    let sessionUser = null;
+    try {
+      sessionUser = JSON.parse(sessionStorage.getItem('bintech_user') || 'null');
+    } catch (_) {
+      sessionUser = null;
+    }
+
+    const sessionRole = String(sessionUser?.role || '').toLowerCase();
+    if (sessionUser && (sessionRole === 'admin' || sessionRole === 'head')) {
+      return sessionUser;
+    }
+
+    const localUser = window.authHelpers?.getLocalUser?.() || null;
+    const localRole = String(localUser?.role || '').toLowerCase();
+    if (localUser && (localRole === 'admin' || localRole === 'head')) {
+      sessionStorage.setItem('bintech_user', JSON.stringify(localUser));
+      return localUser;
+    }
+
+    return null;
+  }
+
+  function hydrateAdminProfile() {
+    const user = getActiveAdminUser();
+    if (!user) return;
+
+    const displayName =
+      user.full_name ||
+      [user.first_name || user.First_Name, user.middle_name || user.Middle_Name, user.last_name || user.Last_Name]
+        .filter(Boolean)
+        .join(' ') ||
+      user.email ||
+      'Administrator';
+
+    const firstName = user.first_name || user.First_Name || displayName.split(' ')[0] || 'A';
+    const lastName = user.last_name || user.Last_Name || displayName.split(' ')[1] || '';
+    const initials = `${String(firstName).charAt(0)}${String(lastName).charAt(0)}`.toUpperCase() || 'A';
+
+    const nameEl = document.getElementById('adminName');
+    const initialsEl = document.getElementById('adminInitials');
+    if (nameEl) nameEl.textContent = displayName;
+    if (initialsEl) initialsEl.textContent = initials;
+  }
+  
+  // Delete Modal State
+  let deleteModalState = {
+    isOpen: false,
+    binId: null,
+    binCode: null
+  };
+
+  // ============================================
+  // Initialize
+  // ============================================
+  async function initPage() {
+    console.log('Initializing bins management page...');
+    hydrateAdminProfile();
+    await loadBins();
+    await loadSortingOverview();
+
+    if (!liveRefreshIntervalId) {
+      liveRefreshIntervalId = setInterval(async () => {
+        await Promise.all([loadBins(), loadSortingOverview()]);
+      }, 5000);
+    }
+  }
+
+  async function loadSortingOverview() {
+    const urls = ['/api/waste-sorter/analytics/overview', '/api/admin/sorting-overview'];
+    let payload = null;
+
+    try {
+      for (const url of urls) {
+        const response = await fetch(url, {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' }
+        });
+
+        if (response.ok) {
+          payload = await response.json();
+          break;
+        }
+      }
+
+      if (!payload) {
+        throw new Error('Failed to fetch sorting overview from available endpoints');
+      }
+
+      const summary = payload.summary || {};
+      sortingTelemetry = summary;
+
+      document.getElementById('sort-metric-metal').textContent = Number(summary.metalCount || 0).toLocaleString();
+      document.getElementById('sort-metric-plastic').textContent = Number(summary.plasticCount || 0).toLocaleString();
+      document.getElementById('sort-metric-paper').textContent = Number(summary.paperCount || 0).toLocaleString();
+      document.getElementById('sort-metric-total').textContent = Number(summary.totalWasteSorted || 0).toLocaleString();
+      document.getElementById('sort-metric-points').textContent = Number(summary.totalPointsGenerated || 0).toLocaleString(undefined, {
+        minimumFractionDigits: 1,
+        maximumFractionDigits: 1
+      });
+
+      const updatedAtEl = document.getElementById('sorting-updated-at');
+      if (updatedAtEl) {
+        updatedAtEl.textContent = 'Updated ' + new Date(summary.updatedAt || Date.now()).toLocaleTimeString();
+      }
+
+      renderSorterCapacity();
+    } catch (error) {
+      console.error('Error loading sorting overview:', error);
+    }
+  }
+
+  function formatSessionTimestamp(value) {
+    if (!value) return 'N/A';
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return 'N/A';
+    return d.toLocaleString();
+  }
+
+  async function openSessionLogsModal() {
+    const modal = document.getElementById('session-logs-modal');
+    const body = document.getElementById('session-logs-body');
+    if (!modal || !body) return;
+
+    modal.classList.remove('hidden');
+    sessionLogsModalOpen = true;
+    body.innerHTML = '<tr><td colspan="8" class="px-4 py-6 text-center text-moss">Loading session logs...</td></tr>';
+
+    try {
+      const response = await fetch('/api/admin/machine-sessions/BINTECH-SORTER-001/logs?limit=100', {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch logs: ${response.status}`);
+      }
+
+      const payload = await response.json();
+      const logs = payload.logs || [];
+
+      if (!logs.length) {
+        body.innerHTML = '<tr><td colspan="8" class="px-4 py-6 text-center text-moss">No machine session logs found.</td></tr>';
+        return;
+      }
+
+      body.innerHTML = logs.map((log) => {
+        const status = String(log.status || '').toLowerCase();
+        const statusClass = status === 'completed'
+          ? 'bg-emerald-100 text-emerald-700'
+          : status === 'active'
+            ? 'bg-teal/20 text-teal'
+            : 'bg-creamDark text-moss';
+
+        return `
+          <tr class="border-t border-creamDark hover:bg-cream/50">
+            <td class="px-4 py-3 text-forest">${log.email || 'Unknown'}</td>
+            <td class="px-4 py-3 text-moss">${Number(log.metalCount || 0).toLocaleString()}</td>
+            <td class="px-4 py-3 text-moss">${Number(log.plasticCount || 0).toLocaleString()}</td>
+            <td class="px-4 py-3 text-moss">${Number(log.paperCount || 0).toLocaleString()}</td>
+            <td class="px-4 py-3 text-forest font-semibold">${Number(log.totalPoints || 0).toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</td>
+            <td class="px-4 py-3 text-moss">${formatSessionTimestamp(log.startedAt)}</td>
+            <td class="px-4 py-3 text-moss">${formatSessionTimestamp(log.endedAt)}</td>
+            <td class="px-4 py-3"><span class="inline-flex items-center px-2 py-1 text-xs rounded-full font-semibold ${statusClass}">${log.status || 'unknown'}</span></td>
+          </tr>`;
+      }).join('');
+    } catch (error) {
+      console.error('Error loading machine session logs:', error);
+      body.innerHTML = `<tr><td colspan="8" class="px-4 py-6 text-center text-red-600">${error.message}</td></tr>`;
+    }
+  }
+
+  function closeSessionLogsModal(event) {
+    if (event && event.target && event.target.id !== 'session-logs-modal') {
+      return;
+    }
+    const modal = document.getElementById('session-logs-modal');
+    if (!modal) return;
+    modal.classList.add('hidden');
+    sessionLogsModalOpen = false;
+  }
+
+  // ============================================
+  // Load Bins from Database
+  // ============================================
+  async function loadBins() {
+    try {
+      const response = await fetch('/api/admin/bins', {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch bins: ${response.status}`);
+      }
+
+      const data = await response.json();
+      bins = data.bins || [];
+      console.log('📦 Loaded bins:', bins.length);
+      console.log('Bins data:', bins.map(b => ({
+        id: b.id,
+        code: b.code,
+        location: b.location,
+        status: b.status
+      })));
+      renderBins();
+      updateStats();
+    } catch (error) {
+      console.error('Error loading bins:', error);
+      showError('Failed to load bins: ' + error.message);
+      bins = [];
+      renderBins();
+    }
+  }
+
+  // ============================================
+  // Render Bins Table
+  // ============================================
+  function renderBins() {
+    const tbody = document.getElementById('bins-tbody');
+    const empty = document.getElementById('empty-state');
+
+    if (!bins.length) {
+      tbody.innerHTML = '';
+      empty.classList.remove('hidden');
+      return;
+    }
+
+    empty.classList.add('hidden');
+    tbody.innerHTML = bins.map(bin => {
+      const fillPercent = Math.max(0, Math.min(100, parseFloat(bin.filled_percentage) || 0));
+      const statusColor = getStatusColor(fillPercent, bin.status);
+      const statusLabel = getStatusLabel(fillPercent, bin.status);
+      const barColor = getBarColor(fillPercent);
+      const lastReadingTime = formatLastReading(bin.last_collected_at);
+
+      return `
+      <tr class="border-b border-creamDark hover:bg-cream transition-colors" style="height: auto; min-height: 60px;" data-bin-id="${bin.id}">
+        <td class="px-6 py-4 text-sm font-medium text-forest whitespace-nowrap">${bin.code || 'N/A'}</td>
+        <td class="px-6 py-4 text-sm text-moss whitespace-nowrap">${bin.location || 'No location'}</td>
+        <td class="px-6 py-4 text-sm text-moss">
+          <div class="flex items-center gap-2 whitespace-nowrap">
+            <div class="w-24 h-2 bg-creamDark rounded-full overflow-hidden flex-shrink-0">
+              <div class="h-full rounded-full" style="width:${fillPercent}%; background-color:${barColor}"></div>
+            </div>
+            <span>${fillPercent.toFixed(1)}%</span>
+          </div>
+        </td>
+        <td class="px-6 py-4 text-sm text-moss whitespace-nowrap">${bin.capacity || 0} L</td>
+        <td class="px-6 py-4 text-sm whitespace-nowrap"><span class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium ${statusColor}">
+          ${getStatusIcon(statusLabel)}${statusLabel}
+        </span></td>
+        <td class="px-6 py-4 text-sm text-moss whitespace-nowrap">${lastReadingTime}</td>
+        <td class="px-6 py-4 text-sm">
+          <div class="flex items-center gap-2 whitespace-nowrap">
+            <button class="edit-btn px-3 py-1 text-xs font-medium text-teal hover:bg-teal/10 rounded transition" data-bin-id="${bin.id}">
+              Edit
+            </button>
+            <button class="delete-btn px-3 py-1 text-xs font-medium text-red-500 hover:bg-red-50 rounded transition" data-bin-id="${bin.id}" data-bin-code="${bin.code || 'Unknown'}">
+              Delete
+            </button>
+          </div>
+        </td>
+      </tr>
+      `;
+    }).join('');
+    
+    // Add event listeners to delete buttons
+    setTimeout(() => {
+      document.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+          e.preventDefault();
+          const binId = this.getAttribute('data-bin-id');
+          const binCode = this.getAttribute('data-bin-code');
+          console.log('Delete button clicked. BinId:', binId, 'BinCode:', binCode);
+          deleteByIdFromButton(binId, binCode);
+        });
+      });
+      
+      // Add event listeners to edit buttons
+      document.querySelectorAll('.edit-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+          e.preventDefault();
+          const binId = this.getAttribute('data-bin-id');
+          const bin = bins.find(b => b.id == binId);
+          console.log('Edit button clicked. Bin:', bin);
+          if (bin) {
+            openEditBinModal(bin);
+          }
+        });
+      });
+    }, 0);
+  }
+
+  // ============================================
+  // Update Statistics
+  // ============================================
+  function updateStats() {
+    const totalBins = bins.length;
+    const activeBins = bins.filter(b => b.status === 'active').length;
+    const maintenanceBins = bins.filter(b => b.status === 'maintenance').length;
+    const avgFill = bins.length > 0 
+      ? (bins.reduce((sum, b) => sum + (parseFloat(b.filled_percentage) || 0), 0) / bins.length).toFixed(1)
+      : 0;
+
+    document.getElementById('total-bins-count').textContent = totalBins;
+    document.getElementById('active-bins-count').textContent = activeBins;
+    document.getElementById('maintenance-bins-count').textContent = maintenanceBins;
+    document.getElementById('avg-fill-level').textContent = avgFill + '%';
+
+    renderSorterCapacity();
+    updateAlerts();
+    populateScheduleModal();
+  }
+
+  function renderSorterCapacity() {
+    const grid = document.getElementById('sorter-capacity-grid');
+    if (!grid) return;
+
+    const items = [
+      { key: 'metal', label: 'Metal', ring: '#475569', statusKey: 'metalStatus', fillKey: 'metalFillPercentage' },
+      { key: 'plastic', label: 'Plastic', ring: '#0ea5e9', statusKey: 'plasticStatus', fillKey: 'plasticFillPercentage' },
+      { key: 'paper', label: 'Paper', ring: '#f59e0b', statusKey: 'paperStatus', fillKey: 'paperFillPercentage' }
+    ];
+
+    const telemetry = sortingTelemetry || {};
+
+    grid.innerHTML = items.map((item) => {
+      const fill = Math.max(0, Math.min(100, Number(telemetry[item.fillKey] || 0)));
+      const status = String(telemetry[item.statusKey] || '').toUpperCase();
+      const isFull = status === 'FULL' || fill >= 100;
+      const ringStyle = `background: conic-gradient(${item.ring} ${fill}%, #e5e7eb ${fill}% 100%);`;
+      const statusPill = isFull
+        ? '<span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-red-100 text-red-700">FULL</span>'
+        : `<span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">${(100 - fill).toFixed(0)}% free</span>`;
+
+      return `
+        <div class="border border-creamDark rounded-xl p-4 bg-cream/40">
+          <div class="flex items-center justify-between mb-3">
+            <p class="text-sm font-semibold text-forest">${item.label}</p>
+            ${statusPill}
+          </div>
+          <div class="flex items-center gap-4">
+            <div class="w-20 h-20 rounded-full p-1.5" style="${ringStyle}">
+              <div class="w-full h-full rounded-full bg-white flex flex-col items-center justify-center border border-creamDark">
+                <span class="text-lg font-bold text-forest">${fill.toFixed(0)}%</span>
+              </div>
+            </div>
+            <div class="text-xs text-moss">
+              <p><span class="font-semibold text-forest">Machine:</span> ${telemetry.machineId || 'BINTECH-SORTER-001'}</p>
+              <p><span class="font-semibold text-forest">State:</span> ${status || 'ACTIVE'}</p>
+              <p><span class="font-semibold text-forest">Updated:</span> ${telemetry.updatedAt ? formatLastReading(telemetry.updatedAt) : 'Waiting...'}</p>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // ============================================
+  // Helper Functions
+  // ============================================
+  function updateAlerts() {
+    const alertsContainer = document.getElementById('recent-alerts');
+    const criticalBins = bins.filter(b => parseFloat(b.filled_percentage) >= 85);
+    const warningBins = bins.filter(b => parseFloat(b.filled_percentage) >= 70 && parseFloat(b.filled_percentage) < 85);
+    const maintenanceBins = bins.filter(b => b.status === 'maintenance');
+
+    let alertsHtml = '';
+
+    if (criticalBins.length > 0) {
+      criticalBins.slice(0, 2).forEach(bin => {
+        alertsHtml += `<div class="p-3 bg-red-50 border-l-4 border-red-500 rounded"><p class="text-sm font-medium text-red-700">${bin.code}</p><p class="text-xs text-red-600">Critical capacity (${parseFloat(bin.filled_percentage).toFixed(1)}%)</p></div>`;
+      });
+    }
+
+    if (warningBins.length > 0) {
+      warningBins.slice(0, 1).forEach(bin => {
+        alertsHtml += `<div class="p-3 bg-amber-50 border-l-4 border-amber-500 rounded"><p class="text-sm font-medium text-amber-700">${bin.code}</p><p class="text-xs text-amber-600">Approaching full (${parseFloat(bin.filled_percentage).toFixed(1)}%)</p></div>`;
+      });
+    }
+
+    if (maintenanceBins.length > 0) {
+      maintenanceBins.slice(0, 1).forEach(bin => {
+        alertsHtml += `<div class="p-3 bg-blue-50 border-l-4 border-blue-500 rounded"><p class="text-sm font-medium text-blue-700">${bin.code}</p><p class="text-xs text-blue-600">In maintenance mode</p></div>`;
+      });
+    }
+
+    if (!alertsHtml) {
+      alertsHtml = '<div class="p-4 bg-green-50 border border-green-200 rounded-lg text-center"><p class="text-sm font-medium text-green-700">✓ All systems operating normally</p><p class="text-xs text-green-600 mt-1">No critical alerts</p></div>';
+    }
+
+    alertsContainer.innerHTML = alertsHtml;
+  }
+
+  function populateScheduleModal() {
+    const select = document.querySelector('#schedule-modal select');
+    if (!select) return;
+
+    const currentValue = select.value;
+    select.innerHTML = bins.map(bin => 
+      `<option value="${bin.id}">${bin.code} – ${bin.location || 'No location'}</option>`
+    ).join('');
+
+    if (currentValue && select.querySelector(`option[value="${currentValue}"]`)) {
+      select.value = currentValue;
+    }
+  }
+  function getStatusColor(fillPercent, status) {
+    if (status === 'full' || fillPercent >= 100) return 'bg-red-100 text-red-700';
+    if (status === 'maintenance') return 'bg-blue-100 text-blue-700';
+    if (status === 'inactive') return 'bg-gray-100 text-gray-700';
+    if (status === 'active') return 'bg-green-100 text-green-700';
+    if (fillPercent >= 85) return 'bg-red-100 text-red-700';
+    if (fillPercent >= 70) return 'bg-amber-100 text-amber-700';
+    return 'bg-green-100 text-green-700';
+  }
+
+  function getStatusLabel(fillPercent, status) {
+    if (status === 'full' || fillPercent >= 100) return 'Full';
+    if (status === 'maintenance') return 'Maintenance';
+    if (status === 'inactive') return 'Inactive';
+    if (status === 'active') return 'Active';
+    // Fallback to health status if no explicit status
+    if (fillPercent >= 85) return 'Critical';
+    if (fillPercent >= 70) return 'Warning';
+    return 'Healthy';
+  }
+
+  function getStatusIcon(label) {
+    const icons = {
+      'Full': '<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm4-8a4 4 0 11-8 0 4 4 0 018 0zm-4 2a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/></svg>',
+      'Active': '<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>',
+      'Healthy': '<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>',
+      'Warning': '<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>',
+      'Critical': '<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>',
+      'Maintenance': '<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/></svg>',
+      'Inactive': '<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>'
+    };
+    return icons[label] || '';
+  }
+
+  function getBarColor(fillPercent) {
+    if (fillPercent >= 85) return '#ef4444'; // red
+    if (fillPercent >= 70) return '#f59e0b'; // amber
+    return '#3d8b7a'; // teal
+  }
+
+  function formatLastReading(timestamp) {
+    if (!timestamp) return 'Never';
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return diffMins + ' min ago';
+    if (diffHours < 24) return diffHours + ' hour' + (diffHours > 1 ? 's' : '') + ' ago';
+    if (diffDays < 7) return diffDays + ' day' + (diffDays > 1 ? 's' : '') + ' ago';
+    return date.toLocaleDateString();
+  }
+
+  function showError(message) {
+    const notification = document.createElement('div');
+    notification.className = 'fixed top-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg';
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    setTimeout(() => notification.remove(), 3000);
+  }
+
+  // ============================================
+  // Modal Functions
+  // ============================================
+  function openScheduleModal() { document.getElementById('schedule-modal').classList.remove('hidden'); }
+  function closeScheduleModal() { document.getElementById('schedule-modal').classList.add('hidden'); }
+  
+  function openAddBinModal() {
+    document.getElementById('bin-id').value = '';
+    document.getElementById('bin-code').value = '';
+    document.getElementById('bin-location').value = '';
+    document.getElementById('bin-capacity').value = '';
+    document.getElementById('bin-fill').value = '';
+    document.getElementById('bin-status').value = 'active';
+    document.getElementById('modal-title').textContent = 'Add New Bin';
+    document.getElementById('addbin-modal').classList.remove('hidden');
+  }
+
+  function openEditBinModal(bin) {
+    document.getElementById('bin-id').value = bin.id || '';
+    document.getElementById('bin-code').value = bin.code || '';
+    document.getElementById('bin-location').value = bin.location || '';
+    document.getElementById('bin-capacity').value = bin.capacity || '';
+    document.getElementById('bin-fill').value = bin.filled_percentage || '';
+    document.getElementById('bin-status').value = bin.status || 'active';
+    document.getElementById('modal-title').textContent = 'Edit Bin: ' + (bin.code || 'Unknown');
+    document.getElementById('addbin-modal').classList.remove('hidden');
+  }
+
+  function closeAddBinModal() {
+    document.getElementById('addbin-modal').classList.add('hidden');
+    // Clear all fields when closing
+    document.getElementById('bin-id').value = '';
+    document.getElementById('bin-code').value = '';
+    document.getElementById('bin-location').value = '';
+    document.getElementById('bin-capacity').value = '';
+    document.getElementById('bin-fill').value = '';
+    document.getElementById('bin-status').value = 'active';
+  }
+
+  async function saveBin() {
+    const binId = document.getElementById('bin-id').value;
+    const binCode = document.getElementById('bin-code').value.trim();
+    const binLocation = document.getElementById('bin-location').value.trim();
+    const binCapacityInput = document.getElementById('bin-capacity').value.trim();
+    const binFillInput = document.getElementById('bin-fill').value.trim();
+    const binStatus = document.getElementById('bin-status').value;
+
+    // Validate all fields are not empty
+    if (!binCode || !binLocation || !binCapacityInput || !binFillInput) {
+      alert('Please fill in all required fields');
+      return;
+    }
+
+    const binCapacity = parseFloat(binCapacityInput);
+    const binFill = parseFloat(binFillInput);
+
+    // Validate numeric values
+    if (isNaN(binCapacity) || isNaN(binFill)) {
+      alert('Capacity and Fill Level must be valid numbers');
+      return;
+    }
+
+    if (binCapacity <= 0) {
+      alert('Capacity must be greater than 0');
+      return;
+    }
+
+    if (binFill < 0 || binFill > 100) {
+      alert('Fill level must be between 0 and 100');
+      return;
+    }
+
+    try {
+      const isUpdate = !!binId;
+      const method = isUpdate ? 'PUT' : 'POST';
+      const url = isUpdate ? `/api/admin/bins/${binId}` : '/api/admin/bins';
+      
+      const response = await fetch(url, {
+        method: method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          code: binCode,
+          location: binLocation,
+          capacity: binCapacity,
+          filled_percentage: binFill,
+          status: binStatus
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to save bin: ${response.status}`);
+      }
+
+      showSuccess(isUpdate ? 'Bin updated successfully!' : 'Bin created successfully!');
+      closeAddBinModal();
+      await loadBins();
+    } catch (error) {
+      console.error('Error saving bin:', error);
+      showError('Failed to save bin: ' + error.message);
+    }
+  }
+
+  // ============================================
+  // Delete Bin Functions
+  // ============================================
+  
+  function deleteByIdFromButton(binId, binCode) {
+    console.log('🗑️ Delete requested - BinId:', binId, 'BinCode:', binCode);
+    
+    // Store in state
+    deleteModalState.binId = binId;
+    deleteModalState.binCode = binCode || 'Unknown';
+    
+    // Open modal
+    openDeleteModal();
+  }
+
+  async function deleteBin(binId) {
+    // Convert to number if it's a string
+    const numericId = typeof binId === 'string' ? parseInt(binId, 10) : binId;
+    console.log('Opening delete modal for bin ID:', numericId, 'Original:', binId);
+    
+    const bin = bins.find(b => {
+      console.log('Checking bin:', b.id, 'vs', numericId, '- Match:', b.id === numericId);
+      return b.id === numericId || String(b.id) === String(binId);
+    });
+    
+    console.log('Found bin:', bin);
+    
+    if (!bin) {
+      console.error('Bin not found with ID:', binId, 'Available bins:', bins.map(b => ({id: b.id, code: b.code})));
+      showError('Bin not found');
+      return;
+    }
+    
+    // Store in state and open modal
+    deleteModalState.binId = bin.id;
+    deleteModalState.binCode = String(bin.code || 'Unknown');
+    
+    console.log('Delete modal state set:', deleteModalState);
+    openDeleteModal();
+  }
+
+  function openDeleteModal() {
+    const modal = document.getElementById('delete-modal');
+    const modalContent = document.getElementById('delete-modal-content');
+    const binNameEl = document.getElementById('delete-bin-name');
+    
+    // Update content
+    const displayName = deleteModalState.binCode || 'Unknown Bin';
+    console.log('Opening modal with bin name:', displayName);
+    binNameEl.textContent = displayName;
+    
+    // Show modal
+    modal.classList.remove('hidden');
+    deleteModalState.isOpen = true;
+    
+    // Trigger animation
+    setTimeout(() => {
+      if (modalContent) {
+        modalContent.classList.remove('scale-95', 'opacity-0');
+        modalContent.classList.add('scale-100', 'opacity-100');
+      }
+    }, 10);
+  }
+
+  function closeDeleteModal(event) {
+    // If event provided, check if clicking backdrop
+    if (event && event.target && event.target.id !== 'delete-modal') {
+      return;
+    }
+    
+    const modal = document.getElementById('delete-modal');
+    const modalContent = document.getElementById('delete-modal-content');
+    
+    if (!modal) return;
+    
+    // Trigger animation
+    if (modalContent) {
+      modalContent.classList.remove('scale-100', 'opacity-100');
+      modalContent.classList.add('scale-95', 'opacity-0');
+    }
+    
+    // Hide after animation
+    setTimeout(() => {
+      modal.classList.add('hidden');
+      deleteModalState.isOpen = false;
+      deleteModalState.binId = null;
+      deleteModalState.binCode = null;
+    }, 300);
+  }
+
+  async function confirmDeleteBin() {
+    console.log('Confirm delete called. State:', deleteModalState);
+    
+    const binId = deleteModalState.binId;
+    const binCode = deleteModalState.binCode;
+    
+    if (!binId) {
+      console.error('No bin ID in delete state');
+      showError('Error: No bin selected for deletion');
+      return;
+    }
+
+    // Close modal first
+    closeDeleteModal();
+
+    try {
+      const url = `/api/admin/bins/${binId}`;
+      console.log('Deleting bin:', binId, 'Code:', binCode);
+      
+      const response = await fetch(url, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      console.log('Delete response status:', response.status);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Delete error response:', errorText);
+        throw new Error(`Failed to delete bin: ${response.status} - ${errorText}`);
+      }
+
+      // Parse response if there's content
+      let responseData = null;
+      try {
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          responseData = await response.json();
+        }
+      } catch (e) {
+        console.log('No JSON response body');
+      }
+
+      console.log('Delete successful:', responseData);
+      showSuccess(`Bin ${binCode} deleted successfully!`);
+      
+      // Clear state
+      deleteModalState.binId = null;
+      deleteModalState.binCode = null;
+      
+      await loadBins();
+    } catch (error) {
+      console.error('Error deleting bin:', error);
+      showError('Failed to delete bin: ' + error.message);
+    }
+  }
+
+  function showSuccess(message) {
+    // Top notification
+    const notification = document.createElement('div');
+    notification.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg animate-pulse';
+    notification.innerHTML = `
+      <div class="flex items-center gap-2">
+        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+        <span>${message}</span>
+      </div>
+    `;
+    document.body.appendChild(notification);
+    setTimeout(() => notification.remove(), 4000);
+
+    // Also show a centered card notification briefly
+    const card = document.createElement('div');
+    card.className = 'fixed inset-0 flex items-center justify-center pointer-events-none z-40';
+    card.innerHTML = `
+      <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-sm mx-4 animate-bounce">
+        <div class="flex items-center justify-center mb-4">
+          <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+            <svg class="w-8 h-8 text-green-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+          </div>
+        </div>
+        <p class="text-center text-lg font-bold text-forest mb-2">${message}</p>
+        <p class="text-center text-sm text-moss">Changes have been saved</p>
+      </div>
+    `;
+    document.body.appendChild(card);
+    setTimeout(() => card.remove(), 2500);
+  }
+
+  function confirmSchedule() {
+    const d = document.getElementById('col-date').value;
+    if (!d) { alert('Please select a date'); return; }
+    alert('Collection scheduled for ' + d);
+    closeScheduleModal();
+  }
+
+  // ============================================
+  // Event Listeners
+  // ============================================
+  document.addEventListener('keydown', e => { 
+    if (e.key === 'Escape') {
+      closeScheduleModal();
+      closeAddBinModal();
+      if (deleteModalState.isOpen) {
+        closeDeleteModal();
+      }
+      if (sessionLogsModalOpen) {
+        closeSessionLogsModal();
+      }
+    }
+  });
+  document.addEventListener('DOMContentLoaded', initPage);
+</script>
+<script src="/js/admin.js"></script>
+</body>
+</html>

@@ -1,0 +1,642 @@
+<!doctype html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BinTECH – Admin Profile Management</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="/js/timestampUtils.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script>tailwind.config={theme:{extend:{colors:{forest:'#1a3a2f',forestLight:'#2d5a47',cream:'#f8f5f0',creamDark:'#ede8e0',teal:'#3d8b7a',tealMuted:'#5a9e8f',moss:'#6b9080',sage:'#a4c3a2'},fontFamily:{sans:['Plus Jakarta Sans','system-ui','sans-serif']}}}}</script>
+  <style>
+    html,body{height:100%;margin:0;background:#f8f5f0}
+    .nav-pill{transition:all .2s ease}.nav-pill:hover{background:rgba(255,255,255,.15)}.nav-pill.active{background:rgba(255,255,255,.2)}
+    .main-surface{position:relative;overflow:hidden;background:linear-gradient(145deg,#f6f3ed 0%,#efebe3 35%,#f7f6f1 100%)}
+    .main-surface::before{content:'';position:absolute;inset:-140px -120px auto auto;width:430px;height:430px;background:radial-gradient(circle at center,rgba(61,139,122,.18),rgba(61,139,122,0) 65%);pointer-events:none}
+    .main-surface::after{content:'';position:absolute;inset:auto auto -160px -120px;width:420px;height:420px;background:radial-gradient(circle at center,rgba(164,195,162,.32),rgba(164,195,162,0) 68%);pointer-events:none}
+    
+    /* Professional Card Styling */
+    .profile-card{position:relative;background:linear-gradient(180deg,rgba(255,255,255,.99),rgba(255,255,255,.96));border:1px solid rgba(210,225,217,.95);box-shadow:0 24px 60px rgba(15,51,41,.1);backdrop-filter:blur(10px);border-radius:1.75rem;overflow:hidden}
+    .profile-card::before{content:'';position:absolute;left:0;top:0;height:6px;width:100%;background:linear-gradient(90deg,#3d8b7a 0%,#6b9080 45%,#a4c3a2 100%);border-top-left-radius:1.75rem;border-top-right-radius:1.75rem;opacity:1}
+    
+    /* Section Styling */
+    .section-header{display:flex;align-items:center;gap:.8rem;margin-bottom:1.5rem;padding-bottom:1rem;border-bottom:2px solid rgba(210,225,217,.6)}
+    .section-title{font-size:1.3rem;font-weight:800;color:#173b30;letter-spacing:-.01em}
+    .section-dot{width:.75rem;height:.75rem;border-radius:9999px;background:linear-gradient(135deg,#3d8b7a,#6b9080);box-shadow:0 0 0 10px rgba(61,139,122,.15)}
+    
+    /* Form Fields */
+    .input-field{width:100%;border:1px solid #d6e2db;border-radius:1rem;padding:1rem;background:linear-gradient(180deg,#ffffff,#fbfdfc);transition:box-shadow .2s ease,border-color .2s ease,transform .2s ease;color:#173b30;font-size:1rem}
+    .input-field::placeholder{color:#8aa197}
+    .input-field:hover{border-color:#bfd1c7}
+    .input-field:focus{outline:none;border-color:#3d8b7a;box-shadow:0 0 0 4px rgba(61,139,122,.14);transform:translateY(-1px)}
+    .input-field:disabled{background:#f0f3f1;color:#a4c3a2;cursor:not-allowed}
+    
+    /* Buttons */
+    .btn-primary{background:linear-gradient(135deg,#1a3a2f,#2f6b58);border:1px solid rgba(255,255,255,.25);box-shadow:0 10px 22px rgba(20,54,44,.24);color:white;font-weight:600;padding:1rem 2rem;border-radius:1rem;transition:all .2s ease;cursor:pointer}
+    .btn-primary:hover{transform:translateY(-2px);box-shadow:0 14px 28px rgba(20,54,44,.3)}
+    .btn-primary:disabled{opacity:.6;cursor:not-allowed;transform:none}
+    
+    .btn-secondary{background:transparent;border:2px solid #3d8b7a;color:#3d8b7a;font-weight:600;padding:.9rem 1.8rem;border-radius:1rem;transition:all .2s ease;cursor:pointer}
+    .btn-secondary:hover{background:#3d8b7a;color:white}
+    
+    .btn-danger{background:linear-gradient(135deg,#dc2626,#b91c1c);border:1px solid rgba(255,255,255,.25);color:white;font-weight:600;padding:.9rem 1.8rem;border-radius:1rem;transition:all .2s ease;cursor:pointer}
+    .btn-danger:hover{transform:translateY(-2px);box-shadow:0 10px 22px rgba(220,38,38,.24)}
+    
+    /* Info Grid */
+    .info-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.5rem;margin-top:1.5rem}
+    .info-card{padding:1.5rem;background:linear-gradient(180deg,rgba(255,255,255,.7),rgba(255,255,255,.4));border:1px solid rgba(210,225,217,.7);border-radius:1.5rem;transition:all .3s cubic-bezier(.4,.0,.2,1);position:relative;overflow:hidden}
+    .info-card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(61,139,122,.02),rgba(164,195,162,.02));pointer-events:none}
+    .info-card:hover{background:linear-gradient(180deg,rgba(255,255,255,.9),rgba(255,255,255,.7));border-color:rgba(61,139,122,.5);box-shadow:0 12px 32px rgba(61,139,122,.15);transform:translateY(-4px)}
+    
+    .info-field{display:flex;flex-direction:column;gap:.6rem;position:relative;z-index:1}
+    .info-label{font-size:.8rem;font-weight:800;color:#6b9080;text-transform:uppercase;letter-spacing:.1em}
+    .info-value{font-size:1rem;color:#173b30;font-weight:600;line-height:1.6;word-break:break-word}
+    .info-value.empty{color:#a4c3a2;font-style:italic;font-weight:500}
+    
+    /* Status Badges */
+    .badge{display:inline-flex;align-items:center;gap:.6rem;padding:.75rem 1.5rem;border-radius:1rem;font-size:.95rem;font-weight:700;box-shadow:0 4px 12px rgba(0,0,0,.1);backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,.5)}
+    .badge-admin{background:linear-gradient(135deg,#e8f4f8,#d4e8f0);color:#0066cc;border:1px solid rgba(0,102,204,.3)}
+    .badge-head{background:linear-gradient(135deg,#fff3cd,#ffe8a1);color:#856404;border:1px solid rgba(133,100,4,.3)}
+    .badge-active{background:linear-gradient(135deg,#d4edda,#c3e6cb);color:#155724;border:1px solid rgba(21,87,36,.3)}
+    .badge-archived{background:linear-gradient(135deg,#f8d7da,#f5c6cb);color:#721c24;border:1px solid rgba(114,28,36,.3)}
+    
+    /* Profile Avatar */
+    .profile-avatar{width:120px;height:120px;border-radius:2rem;background:linear-gradient(135deg,#3d8b7a,#6b9080);display:flex;align-items:center;justify-content:center;color:white;font-size:3rem;font-weight:800;box-shadow:0 16px 40px rgba(61,139,122,.35);flex-shrink:0;border:4px solid rgba(255,255,255,.9);position:relative}
+    .profile-avatar::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.1),rgba(255,255,255,0));border-radius:1.75rem;pointer-events:none}
+    
+    /* Profile Header */
+    .profile-header{display:flex;align-items:flex-start;gap:2rem;padding:2rem;background:linear-gradient(135deg,rgba(26,58,47,.08),rgba(61,139,122,.12));border-radius:1.5rem;border:1px solid rgba(210,225,217,.8)}
+    .profile-info{flex:1}
+    .profile-name{font-size:1.5rem;font-weight:800;color:#173b30;margin-bottom:.25rem;letter-spacing:-.02em;line-height:1.2}
+    .profile-email{font-size:.95rem;color:#6b9080;margin-bottom:1rem;font-weight:500}
+    .profile-badges{display:flex;gap:.75rem;flex-wrap:wrap;align-items:center}
+    
+    /* Divider */
+    .divider{height:2px;background:linear-gradient(90deg,transparent,rgba(210,225,217,.6),transparent);margin:1.5rem 0}
+    
+    /* Password Visibility Toggle */
+    .password-toggle{position:absolute;right:1rem;top:50%;transform:translateY(-50%);cursor:pointer;color:#6b9080;transition:color .2s ease}
+    .password-toggle:hover{color:#3d8b7a}
+    .password-input-wrapper{position:relative}
+    
+    /* Modal */
+    .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);z-index:50;align-items:center;justify-content:center}
+    .modal.active{display:flex}
+    .modal-content{background:white;border-radius:1.75rem;box-shadow:0 24px 60px rgba(15,51,41,.2);max-width:500px;width:90%;padding:2rem;animation:slideUp .3s ease}
+    @keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+    
+    /* Page Header */
+    .page-header{margin-bottom:1.5rem}
+    .page-title{font-size:2rem;font-weight:800;color:#173b30;letter-spacing:-.02em;margin-bottom:.25rem}
+    .page-subtitle{font-size:.95rem;color:#6b9080;font-weight:500}
+    
+    /* Animations */
+    .lift-in{animation:liftIn .6s cubic-bezier(.34,.1,.68,1) both}
+    .lift-in.delay-1{animation-delay:.1s}
+    .lift-in.delay-2{animation-delay:.2s}
+    .lift-in.delay-3{animation-delay:.3s}
+    .lift-in.delay-4{animation-delay:.4s}
+    @keyframes liftIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+    
+    /* Responsive */
+    @media (max-width:1024px){
+      .main-surface::before,.main-surface::after{display:none}
+      .profile-avatar{width:120px;height:120px;font-size:3rem}
+      .info-grid{grid-template-columns:1fr}
+      .profile-card{padding:1.5rem 2rem}
+    }
+    
+    @media (max-width:640px){
+      .profile-avatar{width:100px;height:100px;font-size:2.5rem}
+      .info-card{padding:1rem}
+      .section-title{font-size:1.2rem}
+      .profile-card{padding:1rem 1.5rem}
+      main{padding:1rem}
+    }
+  </style>
+</head>
+<body class="h-full bg-cream font-sans">
+<div class="flex h-full w-full">
+  <aside class="w-64 bg-forest flex flex-col min-h-full">
+    <div class="flex-1 flex flex-col overflow-auto">
+      <div class="p-6">
+        <div class="flex items-center gap-3 mb-8">
+          <div class="w-10 h-10 bg-teal rounded-xl flex items-center justify-center"><svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg></div>
+          <span class="text-white font-semibold text-lg">BinTECH</span>
+        </div>
+        <nav class="space-y-2">
+          <a href="/admin/dashboard" class="nav-pill flex items-center gap-3 px-4 py-3 rounded-full text-white/70 hover:text-white"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg><span class="font-medium">Dashboard</span></a>
+          <a href="/admin/rewards" class="nav-pill flex items-center gap-3 px-4 py-3 rounded-full text-white/70 hover:text-white"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><span class="font-medium">Rewards &amp; Stores</span></a>
+          <a href="/admin/binmanage" class="nav-pill flex items-center gap-3 px-4 py-3 rounded-full text-white/70 hover:text-white"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg><span class="font-medium">Bin Management</span></a>
+          <a href="/admin/website-logs" class="nav-pill flex items-center gap-3 px-4 py-3 rounded-full text-white/70 hover:text-white"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6M9 8h6M7 4h10a2 2 0 012 2v12a2 2 0 01-2 2H7a2 2 0 01-2-2V6a2 2 0 012-2z"/></svg><span class="font-medium">Website Logs</span></a>
+          <a href="/admin/collection" class="nav-pill flex items-center gap-3 px-4 py-3 rounded-full text-white/70 hover:text-white"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg><span class="font-medium">Collections</span></a>
+          <a href="/admin/routes" class="nav-pill flex items-center gap-3 px-4 py-3 rounded-full text-white/70 hover:text-white"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg><span class="font-medium">Routes</span></a>
+          <a href="/admin/accounts" class="nav-pill flex items-center gap-3 px-4 py-3 rounded-full text-white/70 hover:text-white"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg><span class="font-medium">Account Management</span></a>
+          <a href="/admin/schedule" class="nav-pill flex items-center gap-3 px-4 py-3 rounded-full text-white/70 hover:text-white"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg><span class="font-medium">Schedule</span></a>
+        </nav>
+      </div>
+    </div>
+    <div class="p-6 border-t border-forestLight">
+      <div class="bg-forestLight rounded-2xl p-4">
+        <div class="flex items-center gap-3 mb-3">
+          <div class="w-8 h-8 bg-sage rounded-full flex items-center justify-center"><span class="text-forest font-semibold text-sm" id="adminInitials">AD</span></div>
+          <div>
+            <p class="text-white text-sm font-medium" id="adminName">Admin</p>
+            <p class="text-white/60 text-xs" id="adminEmail">Administrator</p>
+          </div>
+        </div>
+        <div class="space-y-2">
+          <a href="/admin/settings" class="w-full text-white bg-forest/40 border border-white/20 text-sm flex items-center gap-2 px-3 py-2 rounded-lg transition shadow-sm">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            Settings
+          </a>
+          <button onclick="authHelpers.logout()" class="w-full text-white/70 hover:text-white hover:bg-forest/30 text-sm flex items-center gap-2 px-3 py-2 rounded-lg transition">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+          Logout
+          </button>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main-surface flex-1 overflow-auto p-4 md:p-6">
+    <!-- Page Header -->
+    <div class="page-header lift-in mb-6">
+      <h1 class="page-title">Admin Profile</h1>
+      <p class="page-subtitle">Manage your account and security settings</p>
+    </div>
+
+    <!-- Notification Area -->
+    <div id="settingsNotice" class="hidden mb-4 lift-in"></div>
+
+    <!-- Profile Header Card -->
+    <div class="profile-card lift-in delay-1 rounded-2xl p-4 md:p-6 mb-6">
+      <div class="profile-header">
+        <div class="profile-avatar" id="profileAvatar">👤</div>
+        <div class="profile-info">
+          <div class="profile-name" id="profileFullNameDisplay">Loading...</div>
+          <div class="profile-email" id="profileEmailDisplay">—</div>
+          <div class="profile-badges">
+            <span class="badge badge-admin" id="roleBadge">Admin</span>
+            <span class="badge badge-active" id="statusBadge">Active</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Personal Information Section -->
+    <div class="profile-card lift-in delay-2 rounded-2xl p-4 md:p-6 mb-6">
+      <div class="section-header">
+        <span class="section-dot"></span>
+        <h2 class="section-title">Personal Information</h2>
+      </div>
+      
+      <div class="info-grid">
+        <div>
+          <label class="block text-sm font-semibold text-forest mb-2">First Name</label>
+          <input id="firstName" class="input-field" type="text" placeholder="Enter first name">
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-forest mb-2">Middle Name</label>
+          <input id="middleName" class="input-field" type="text" placeholder="Enter middle name">
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-forest mb-2">Last Name</label>
+          <input id="lastName" class="input-field" type="text" placeholder="Enter last name">
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-forest mb-2">Full Name (Auto)</label>
+          <input id="fullNameDisplay" class="input-field" type="text" placeholder="Auto-generated" disabled>
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-forest mb-2">Email</label>
+          <input id="profileEmail" class="input-field" type="email" placeholder="Enter email">
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-forest mb-2">Phone</label>
+          <input id="profilePhone" class="input-field" type="tel" placeholder="Enter phone">
+        </div>
+      </div>
+    </div>
+
+    <!-- Account Details Section -->
+    <div class="profile-card lift-in delay-3 rounded-2xl p-4 md:p-6 mb-6">
+      <div class="section-header">
+        <span class="section-dot"></span>
+        <h2 class="section-title">Account Details</h2>
+      </div>
+      
+      <div class="info-grid">
+        <div class="info-card">
+          <div class="info-field">
+            <span class="info-label">Account ID</span>
+            <span class="info-value" id="accountId">—</span>
+          </div>
+        </div>
+        <div class="info-card">
+          <div class="info-field">
+            <span class="info-label">Role</span>
+            <span class="info-value" id="roleValue">—</span>
+          </div>
+        </div>
+        <div class="info-card">
+          <div class="info-field">
+            <span class="info-label">Auth ID</span>
+            <span class="info-value" id="authId">—</span>
+          </div>
+        </div>
+        <div class="info-card">
+          <div class="info-field">
+            <span class="info-label">Google ID</span>
+            <span class="info-value" id="googleId">—</span>
+          </div>
+        </div>
+        <div class="info-card">
+          <div class="info-field">
+            <span class="info-label">Created</span>
+            <span class="info-value" id="createdAt">—</span>
+          </div>
+        </div>
+        <div class="info-card">
+          <div class="info-field">
+            <span class="info-label">Updated</span>
+            <span class="info-value" id="updatedAt">—</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Security Section -->
+    <div class="profile-card lift-in delay-4 rounded-2xl p-4 md:p-6 mb-6">
+      <div class="section-header">
+        <span class="section-dot"></span>
+        <h2 class="section-title">Security</h2>
+      </div>
+      
+      <p class="text-moss mb-4 text-sm">Leave blank to keep current password.</p>
+      
+      <div class="info-grid">
+        <div>
+          <label class="block text-sm font-semibold text-forest mb-2">Current Password</label>
+          <div class="password-input-wrapper">
+            <input id="currentPassword" class="input-field" type="password" autocomplete="current-password" placeholder="Current password">
+            <span class="password-toggle" onclick="togglePasswordVisibility('currentPassword')">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+            </span>
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-forest mb-2">New Password</label>
+          <div class="password-input-wrapper">
+            <input id="newPassword" class="input-field" type="password" autocomplete="new-password" placeholder="New password">
+            <span class="password-toggle" onclick="togglePasswordVisibility('newPassword')">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+            </span>
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-forest mb-2">Confirm Password</label>
+          <div class="password-input-wrapper">
+            <input id="confirmPassword" class="input-field" type="password" autocomplete="new-password" placeholder="Confirm password">
+            <span class="password-toggle" onclick="togglePasswordVisibility('confirmPassword')">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+            </span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="divider"></div>
+      
+      <div class="bg-cream/50 border border-creamDark/50 rounded-lg p-3 mt-4">
+        <p class="text-xs text-moss font-semibold mb-2">Requirements:</p>
+        <ul class="text-xs text-moss space-y-1">
+          <li>✓ 8+ characters</li>
+          <li>✓ Uppercase & lowercase</li>
+          <li>✓ Number & special char (@$!%*?&)</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Archive Information Section (Conditional) -->
+    <div id="archiveSection" class="profile-card lift-in rounded-2xl p-4 md:p-6 mb-6 hidden">
+      <div class="section-header">
+        <span class="section-dot"></span>
+        <h2 class="section-title">Archive Info</h2>
+      </div>
+      
+      <div class="info-grid">
+        <div class="info-card">
+          <div class="info-field">
+            <span class="info-label">Status</span>
+            <span class="info-value" id="archiveStatus">—</span>
+          </div>
+        </div>
+        <div class="info-card">
+          <div class="info-field">
+            <span class="info-label">Archived At</span>
+            <span class="info-value" id="archivedAt">—</span>
+          </div>
+        </div>
+        <div class="info-card">
+          <div class="info-field">
+            <span class="info-label">Archived By</span>
+            <span class="info-value" id="archivedBy">—</span>
+          </div>
+        </div>
+        <div class="info-card">
+          <div class="info-field">
+            <span class="info-label">Reason</span>
+            <span class="info-value" id="archiveReason">—</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="lift-in flex gap-3 justify-end mb-6">
+      <button id="cancelBtn" class="btn-secondary" onclick="cancelEdit()">Cancel</button>
+      <button id="saveSettingsBtn" class="btn-primary" onclick="saveSettings()">Save</button>
+    </div>
+  </main>
+</div>
+<script src="/js/auth-frontend-v2.js"></script>
+<script>
+  const settingsState = {
+    requesterEmail: '',
+    requesterRole: '',
+    originalData: {}
+  };
+
+  function getSessionUser() {
+    try {
+      return JSON.parse(sessionStorage.getItem('bintech_user') || 'null');
+    } catch (_) {
+      return null;
+    }
+  }
+
+  function getInitials(firstName, middleName, lastName, fullName) {
+    const first = (String(firstName || '').trim()[0] || String(fullName || '').trim()[0] || 'A').toUpperCase();
+    const last = (String(lastName || '').trim()[0] || '').toUpperCase();
+    return `${first}${last}` || 'AD';
+  }
+
+  function generateFullName() {
+    const firstName = document.getElementById('firstName').value.trim();
+    const middleName = document.getElementById('middleName').value.trim();
+    const lastName = document.getElementById('lastName').value.trim();
+    
+    const parts = [firstName, middleName, lastName].filter(p => p);
+    return parts.join(' ') || '';
+  }
+
+  function updateFullNameDisplay() {
+    const fullName = generateFullName();
+    document.getElementById('fullNameDisplay').value = fullName;
+  }
+
+  function formatDate(dateString) {
+    if (!dateString) return '—';
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch (_) {
+      return dateString;
+    }
+  }
+
+  function togglePasswordVisibility(fieldId) {
+    const field = document.getElementById(fieldId);
+    if (field.type === 'password') {
+      field.type = 'text';
+    } else {
+      field.type = 'password';
+    }
+  }
+
+  function showNotification(message, type) {
+    const notice = document.getElementById('settingsNotice');
+    if (!notice) return;
+
+    notice.classList.remove('hidden');
+    const isSuccess = type === 'success';
+    
+    notice.className = `mb-6 px-6 py-4 rounded-xl border ${isSuccess ? 'bg-green-50 border-green-200 text-green-800' : 'bg-red-50 border-red-200 text-red-800'}`;
+    
+    notice.innerHTML = `
+      <div class="flex items-start gap-3">
+        <div class="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${isSuccess ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">
+          ${isSuccess ? '<svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>' : '<svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>'}
+        </div>
+        <div>
+          <p class="text-sm font-semibold">${isSuccess ? 'Success' : 'Error'}</p>
+          <p class="text-sm mt-0.5">${message}</p>
+        </div>
+      </div>
+    `;
+  }
+
+  function updateProfileHeader(data) {
+    const fullName = data.full_name || 'Admin';
+    const email = data.email || 'admin@example.com';
+    const role = data.role || 'admin';
+    const isArchived = data.is_archived || false;
+    const initials = getInitials(data.First_Name, data.Middle_Name, data.Last_Name, fullName);
+
+    document.getElementById('profileFullNameDisplay').textContent = fullName;
+    document.getElementById('profileEmailDisplay').textContent = email;
+    document.getElementById('profileAvatar').textContent = initials;
+    document.getElementById('roleBadge').textContent = role === 'head' ? 'Head' : 'Admin';
+    document.getElementById('roleBadge').className = `badge ${role === 'head' ? 'badge-head' : 'badge-admin'}`;
+    document.getElementById('statusBadge').textContent = isArchived ? 'Archived' : 'Active';
+    document.getElementById('statusBadge').className = `badge ${isArchived ? 'badge-archived' : 'badge-active'}`;
+
+    // Update sidebar
+    document.getElementById('adminName').textContent = fullName;
+    document.getElementById('adminEmail').textContent = email;
+    document.getElementById('adminInitials').textContent = initials;
+  }
+
+  function populateFormFields(data) {
+    document.getElementById('firstName').value = data.First_Name || '';
+    document.getElementById('middleName').value = data.Middle_Name || '';
+    document.getElementById('lastName').value = data.Last_Name || '';
+    document.getElementById('profileEmail').value = data.email || '';
+    document.getElementById('profilePhone').value = data.phone || '';
+    
+    updateFullNameDisplay();
+
+    // Account Details (read-only)
+    document.getElementById('accountId').textContent = data.id || '—';
+    document.getElementById('roleValue').textContent = data.role === 'head' ? 'Head' : 'Admin';
+    document.getElementById('authId').textContent = data.auth_id || '—';
+    document.getElementById('googleId').textContent = data.Google_ID ? data.Google_ID.substring(0, 20) + '...' : '—';
+    document.getElementById('createdAt').textContent = formatDate(data.created_at);
+    document.getElementById('updatedAt').textContent = formatDate(data.updated_at);
+
+    // Archive Information (conditional)
+    if (data.is_archived) {
+      document.getElementById('archiveSection').classList.remove('hidden');
+      document.getElementById('archiveStatus').textContent = 'Archived';
+      document.getElementById('archivedAt').textContent = formatDate(data.archived_at);
+      document.getElementById('archivedBy').textContent = data.archived_by_email || '—';
+      document.getElementById('archiveReason').textContent = data.archive_reason || '—';
+    } else {
+      document.getElementById('archiveSection').classList.add('hidden');
+    }
+  }
+
+  async function loadProfile() {
+    const sessionUser = getSessionUser();
+    settingsState.requesterEmail = String(sessionUser?.email || '').trim();
+    settingsState.requesterRole = String(sessionUser?.role || '').trim().toLowerCase();
+
+    const response = await fetch('/api/admin/settings', {
+      headers: {
+        'Content-Type': 'application/json',
+        ...(settingsState.requesterEmail ? { 'X-User-Email': settingsState.requesterEmail } : {})
+      }
+    });
+
+    const result = await response.json();
+    if (!response.ok || !result.success) {
+      throw new Error(result.message || 'Failed to load profile');
+    }
+
+    const settings = result.settings || {};
+    settingsState.originalData = JSON.parse(JSON.stringify(settings));
+    
+    updateProfileHeader(settings);
+    populateFormFields(settings);
+    settingsState.requesterEmail = settings.email || settingsState.requesterEmail;
+  }
+
+  function cancelEdit() {
+    if (Object.keys(settingsState.originalData).length === 0) {
+      showNotification('No changes to cancel', 'error');
+      return;
+    }
+
+    const confirmed = window.confirm('Are you sure you want to discard all changes?');
+    if (confirmed) {
+      populateFormFields(settingsState.originalData);
+      document.getElementById('currentPassword').value = '';
+      document.getElementById('newPassword').value = '';
+      document.getElementById('confirmPassword').value = '';
+      showNotification('Changes discarded', 'success');
+    }
+  }
+
+  async function saveSettings() {
+    const currentPassword = document.getElementById('currentPassword').value.trim();
+    const newPassword = document.getElementById('newPassword').value.trim();
+    const confirmPassword = document.getElementById('confirmPassword').value.trim();
+
+    // Validate password fields
+    if (newPassword || confirmPassword || currentPassword) {
+      if (!currentPassword || !newPassword || !confirmPassword) {
+        showNotification('Complete all password fields to update your password.', 'error');
+        return;
+      }
+      if (newPassword !== confirmPassword) {
+        showNotification('New password and confirmation do not match.', 'error');
+        return;
+      }
+      
+      // Validate password strength
+      const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+      if (!passwordRegex.test(newPassword)) {
+        showNotification('Password does not meet requirements (8+ chars, uppercase, lowercase, number, special char)', 'error');
+        return;
+      }
+    }
+
+    const shouldContinue = window.confirm('Are you sure you want to save your changes?');
+    if (!shouldContinue) {
+      return;
+    }
+
+    const payload = {
+      First_Name: document.getElementById('firstName').value.trim(),
+      Middle_Name: document.getElementById('middleName').value.trim(),
+      Last_Name: document.getElementById('lastName').value.trim(),
+      email: document.getElementById('profileEmail').value.trim(),
+      phone: document.getElementById('profilePhone').value.trim(),
+      ...(newPassword ? { password: newPassword } : {})
+    };
+
+    const button = document.getElementById('saveSettingsBtn');
+    const originalButtonText = button.textContent;
+    button.disabled = true;
+    button.textContent = 'Saving...';
+
+    try {
+      const response = await fetch('/api/admin/settings', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(settingsState.requesterEmail ? { 'X-User-Email': settingsState.requesterEmail } : {})
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const result = await response.json();
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || 'Failed to save settings');
+      }
+
+      const updatedSettings = result.settings || {};
+      settingsState.requesterEmail = updatedSettings.email || settingsState.requesterEmail;
+      settingsState.originalData = JSON.parse(JSON.stringify(updatedSettings));
+      
+      updateProfileHeader(updatedSettings);
+      populateFormFields(updatedSettings);
+
+      // Update session storage
+      const sessionUser = getSessionUser() || {};
+      const mergedSessionUser = {
+        ...sessionUser,
+        email: updatedSettings.email || sessionUser.email,
+        full_name: updatedSettings.full_name || sessionUser.full_name,
+        phone: updatedSettings.phone || sessionUser.phone,
+        role: updatedSettings.role || sessionUser.role,
+        First_Name: updatedSettings.First_Name || sessionUser.First_Name,
+        Middle_Name: updatedSettings.Middle_Name || sessionUser.Middle_Name,
+        Last_Name: updatedSettings.Last_Name || sessionUser.Last_Name
+      };
+      sessionStorage.setItem('bintech_user', JSON.stringify(mergedSessionUser));
+
+      // Clear password fields
+      document.getElementById('currentPassword').value = '';
+      document.getElementById('newPassword').value = '';
+      document.getElementById('confirmPassword').value = '';
+
+      showNotification('Profile updated successfully!', 'success');
+    } catch (error) {
+      showNotification(error.message || 'Failed to save settings.', 'error');
+    } finally {
+      button.disabled = false;
+      button.textContent = originalButtonText;
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', async () => {
+    // Add event listeners for full name auto-generation
+    document.getElementById('firstName').addEventListener('input', updateFullNameDisplay);
+    document.getElementById('middleName').addEventListener('input', updateFullNameDisplay);
+    document.getElementById('lastName').addEventListener('input', updateFullNameDisplay);
+
+    try {
+      await loadProfile();
+    } catch (error) {
+      showNotification(error.message || 'Failed to load profile.', 'error');
+    }
+  });
+</script>
+</body>
+</html>

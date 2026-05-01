@@ -1,0 +1,980 @@
+<!doctype html>
+<html lang="en" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BinTECH - Transaction History</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <script src="/js/timestampUtils.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&amp;family=Poppins:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+  <link href="/css/user-footer.css" rel="stylesheet">
+  <style>
+    :root {
+      --primary-dark: #0F3B2E;
+      --secondary-gradient-start: #143D2E;
+      --secondary-gradient-end: #1F4F3B;
+      --accent-yellow: #D4E157;
+      --card-green: #5DAE60;
+      --page-bg: #E8ECEB;
+    }
+    
+    * {
+      box-sizing: border-box;
+    }
+    
+    html, body {
+      height: 100%;
+    }
+    
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-color: var(--page-bg);
+      margin: 0;
+      padding: 0;
+    }
+    
+    .font-playfair {
+      font-family: 'Playfair Display', serif;
+    }
+    
+    .gradient-dark {
+      background: linear-gradient(135deg, var(--secondary-gradient-start), var(--secondary-gradient-end));
+    }
+    
+    .card-shadow {
+      box-shadow: 0 4px 20px rgba(15, 59, 46, 0.12);
+    }
+    
+    .nav-link {
+      position: relative;
+      transition: color 0.3s ease;
+    }
+    
+    .nav-link::after {
+      content: '';
+      position: absolute;
+      bottom: -4px;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: var(--accent-yellow);
+      transition: width 0.3s ease;
+    }
+    
+    .nav-link:hover::after,
+    .nav-link.active::after {
+      width: 100%;
+    }
+    
+    @keyframes pulse-glow {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(212, 225, 87, 0.4); }
+      50% { box-shadow: 0 0 20px 4px rgba(212, 225, 87, 0.6); }
+    }
+    
+    .points-badge {
+      animation: pulse-glow 2s ease-in-out infinite;
+    }
+
+    .mobile-nav-panel {
+      display: none;
+    }
+
+    @media (max-width: 767px) {
+      .mobile-nav-toggle {
+        display: inline-flex;
+      }
+
+      .points-badge {
+        display: none;
+      }
+
+      .mobile-nav-panel[data-open="true"] {
+        display: block;
+      }
+    }
+
+    .transaction-row {
+      transition: background-color 0.3s ease;
+    }
+
+    .transaction-row:hover {
+      background-color: #f9fafb;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .badge-earn {
+      background-color: #dcfce7;
+      color: #166534;
+    }
+
+    .badge-redeem {
+      background-color: #fee2e2;
+      color: #991b1b;
+    }
+
+    .badge-transfer-out {
+      background-color: #fef3c7;
+      color: #92400e;
+    }
+
+    .badge-transfer-in {
+      background-color: #dbeafe;
+      color: #0c4a6e;
+    }
+
+    .badge-admin {
+      background-color: #f3e8ff;
+      color: #5b21b6;
+    }
+
+    .icon-circle {
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      font-size: 1.25rem;
+    }
+
+    .icon-earn {
+      background-color: #dcfce7;
+      color: #22c55e;
+    }
+
+    .icon-redeem {
+      background-color: #fee2e2;
+      color: #ef4444;
+    }
+
+    .icon-transfer-out {
+      background-color: #fef3c7;
+      color: #eab308;
+    }
+
+    .icon-transfer-in {
+      background-color: #dbeafe;
+      color: #3b82f6;
+    }
+  </style>
+  <style>body { box-sizing: border-box; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+ </head>
+ <body>
+  <div id="app-wrapper" class="w-full min-h-screen flex flex-col">
+   <!-- Navigation Bar -->
+   <nav class="gradient-dark sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+     <div class="flex items-center justify-between h-16">
+      <!-- Left - User Welcome -->
+      <div class="flex items-center space-x-3">
+       <button onclick="window.location.href='/profile'" class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center overflow-hidden border-2 border-[#D4E157]/30 hover:border-[#D4E157]/60 hover:bg-white/20 transition-all cursor-pointer" title="View Profile">
+        <svg class="w-6 h-6 text-[#D4E157]" fill="currentColor" viewbox="0 0 24 24">
+         <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+        </svg>
+       </button>
+       <div class="hidden sm:block">
+        <p class="text-[#D4E157]/70 text-xs uppercase tracking-wider">Welcome Back</p>
+        <p id="nav-user-name" class="text-white font-semibold text-sm">MARIO SALLY</p>
+       </div>
+      </div>
+      <!-- Center - Navigation Links -->
+      <div class="hidden md:flex items-center space-x-8">
+        <a href="/dashboard" class="nav-link text-white/80 hover:text-white text-sm font-medium">Dashboard</a>
+        <a href="/rewards" class="nav-link text-white/80 hover:text-white text-sm font-medium">Rewards</a>
+        <a href="/history" class="nav-link active text-[#D4E157] text-sm font-medium">History</a>
+        <a href="/how-it-works" class="nav-link text-white/80 hover:text-white text-sm font-medium">How It Works</a>
+        <a href="/qr-scanner" class="nav-link text-white/80 hover:text-white text-sm font-medium flex items-center gap-1"><span>💳</span> Transfer Points</a>
+      </div>
+      <!-- Right - Points & Notifications -->
+      <div class="flex items-center space-x-3">
+      <button id="mobile-nav-toggle" type="button" class="mobile-nav-toggle md:hidden p-2 text-white/80 hover:text-[#D4E157] border border-white/30 rounded-full" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="mobile-nav-panel">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
+       </button>
+       <div class="hidden md:flex items-center space-x-4">
+        <div class="points-badge flex items-center space-x-2 bg-[#D4E157]/20 px-4 py-2 rounded-full border border-[#D4E157]/40">
+         <span class="text-lg">✨</span> <span id="nav-points" class="text-[#D4E157] font-bold text-sm">521 Points</span>
+        </div>
+        <button onclick="handleLogout()" class="px-2 sm:px-4 py-2 text-white/70 hover:text-white text-xs sm:text-sm border border-white/30 rounded-full hover:bg-white/10 transition-all">
+         Logout
+        </button>
+       </div>
+      </div>
+     </div>
+    </div>
+    <div id="mobile-nav-panel" class="mobile-nav-panel md:hidden border-t border-white/15 bg-[#143D2E]/95 px-4 py-4 space-y-3" data-open="false" style="display:none;">
+      <a href="/dashboard" class="block text-white/90 text-sm font-medium">Dashboard</a>
+      <a href="/profile" class="block text-white/90 text-sm font-medium">Profile</a>
+      <a href="/rewards" class="block text-white/90 text-sm font-medium">Rewards</a>
+      <a href="/history" class="block text-[#D4E157] text-sm font-medium">History</a>
+      <a href="/how-it-works" class="block text-white/90 text-sm font-medium">How It Works</a>
+      <a href="/qr-scanner" class="block text-white/90 text-sm font-medium">Transfer Points</a>
+      <div class="pt-2 border-t border-white/15 flex items-center justify-between">
+        <span id="mobile-nav-points" class="text-[#D4E157] text-sm font-semibold">0 Points</span>
+        <button onclick="handleLogout()" class="px-3 py-1.5 text-white/80 text-xs border border-white/30 rounded-full hover:bg-white/10">Logout</button>
+      </div>
+    </div>
+   </nav>
+
+   <!-- Main Content -->
+   <main class="flex-grow">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+     <!-- Page Header -->
+     <div class="text-center mb-12">
+      <h1 id="page-title" class="font-playfair text-4xl sm:text-5xl text-[#0F3B2E] mb-3">Transaction History</h1>
+      <p id="page-subtitle" class="text-[#0F3B2E]/70 text-lg">Track all your EcoPoints activities and transactions.</p>
+     </div>
+
+    <!-- Activity Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6 mb-8">
+     <div class="bg-white rounded-xl card-shadow p-6 border-l-4 border-[#22c55e]"><div class="flex items-center justify-between"><div><p class="text-[#0F3B2E]/70 text-sm font-medium">Current Points</p><p class="text-3xl font-bold text-[#0F3B2E] mt-2" id="stat-total-points">0</p></div><div class="icon-circle icon-earn">✨</div></div></div>
+     <div class="bg-white rounded-xl card-shadow p-6 border-l-4 border-[#ef4444]"><div class="flex items-center justify-between"><div><p class="text-[#0F3B2E]/70 text-sm font-medium">Waste Sorted</p><p class="text-3xl font-bold text-[#0F3B2E] mt-2" id="stat-total-waste">0</p></div><div class="icon-circle icon-redeem">♻️</div></div></div>
+     <div class="bg-white rounded-xl card-shadow p-6 border-l-4 border-[#16a34a]"><div class="flex items-center justify-between"><div><p class="text-[#0F3B2E]/70 text-sm font-medium">Metal</p><p class="text-3xl font-bold text-[#0F3B2E] mt-2" id="stat-metal">0</p></div><div class="icon-circle" style="background-color:#dcfce7;color:#166534;">M</div></div></div>
+     <div class="bg-white rounded-xl card-shadow p-6 border-l-4 border-[#0ea5e9]"><div class="flex items-center justify-between"><div><p class="text-[#0F3B2E]/70 text-sm font-medium">Plastic</p><p class="text-3xl font-bold text-[#0F3B2E] mt-2" id="stat-plastic">0</p></div><div class="icon-circle" style="background-color:#e0f2fe;color:#0369a1;">P</div></div></div>
+     <div class="bg-white rounded-xl card-shadow p-6 border-l-4 border-[#eab308]"><div class="flex items-center justify-between"><div><p class="text-[#0F3B2E]/70 text-sm font-medium">Paper</p><p class="text-3xl font-bold text-[#0F3B2E] mt-2" id="stat-paper">0</p></div><div class="icon-circle icon-transfer-out">P</div></div></div>
+     <div class="bg-white rounded-xl card-shadow p-6 border-l-4 border-[#8b5cf6]"><div class="flex items-center justify-between"><div><p class="text-[#0F3B2E]/70 text-sm font-medium">Sessions</p><p class="text-3xl font-bold text-[#0F3B2E] mt-2" id="stat-sessions">0</p></div><div class="icon-circle" style="background-color:#ede9fe;color:#7c3aed;">⏱</div></div></div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="mb-6 bg-white rounded-xl card-shadow p-4">
+     <div class="grid grid-cols-1 md:grid-cols-4 gap-3" id="activity-tabs">
+      <button class="activity-tab-btn px-4 py-3 rounded-lg border border-[#0F3B2E]/15 bg-[#0F3B2E] text-white font-semibold text-sm" data-tab="summary">Summary</button>
+      <button class="activity-tab-btn px-4 py-3 rounded-lg border border-[#0F3B2E]/15 text-[#0F3B2E] font-semibold text-sm" data-tab="redemptions">Reward Redemptions</button>
+      <button class="activity-tab-btn px-4 py-3 rounded-lg border border-[#0F3B2E]/15 text-[#0F3B2E] font-semibold text-sm" data-tab="sessions">Machine Sessions</button>
+      <button class="activity-tab-btn px-4 py-3 rounded-lg border border-[#0F3B2E]/15 text-[#0F3B2E] font-semibold text-sm" data-tab="transfers">Transfer Logs</button>
+     </div>
+    </div>
+
+    <!-- Tab Panels -->
+    <div class="bg-white rounded-xl card-shadow overflow-hidden">
+     <div class="tab-panel active" data-tab-panel="summary">
+      <div class="overflow-x-auto">
+       <table class="w-full">
+        <thead>
+      <tr class="bg-gradient-to-r from-[#143D2E] to-[#1F4F3B]">
+       <th class="px-6 py-4 text-left text-sm font-semibold text-white">Date & Time</th>
+       <th class="px-6 py-4 text-left text-sm font-semibold text-white">Type</th>
+       <th class="px-6 py-4 text-left text-sm font-semibold text-white">Description</th>
+       <th class="px-6 py-4 text-left text-sm font-semibold text-white">Quantity</th>
+       <th class="px-6 py-4 text-right text-sm font-semibold text-white">Points</th>
+       <th class="px-6 py-4 text-center text-sm font-semibold text-white">Status</th>
+      </tr>
+        </thead>
+        <tbody id="history-body">
+      <tr class="border-t border-[#0F3B2E]/10 transaction-row">
+       <td class="px-6 py-4" colspan="6"><div class="text-center py-8"><p class="text-[#0F3B2E]/70">Loading activity logs...</p></div></td>
+      </tr>
+        </tbody>
+       </table>
+      </div>
+     </div>
+
+     <div class="tab-panel hidden" data-tab-panel="redemptions">
+      <div class="overflow-x-auto">
+       <table class="w-full">
+        <thead>
+      <tr class="bg-gradient-to-r from-[#143D2E] to-[#1F4F3B]">
+       <th class="px-6 py-4 text-left text-sm font-semibold text-white">Date & Time</th>
+       <th class="px-6 py-4 text-left text-sm font-semibold text-white">Reward</th>
+       <th class="px-6 py-4 text-left text-sm font-semibold text-white">Description</th>
+       <th class="px-6 py-4 text-right text-sm font-semibold text-white">Points</th>
+       <th class="px-6 py-4 text-center text-sm font-semibold text-white">Status</th>
+      </tr>
+        </thead>
+        <tbody id="redemption-body"><tr><td colspan="5" class="px-6 py-8 text-center text-[#0F3B2E]/70">Loading redemptions...</td></tr></tbody>
+       </table>
+      </div>
+     </div>
+
+     <div class="tab-panel hidden" data-tab-panel="sessions">
+      <div class="overflow-x-auto">
+       <table class="w-full">
+        <thead>
+      <tr class="bg-gradient-to-r from-[#143D2E] to-[#1F4F3B]">
+       <th class="px-6 py-4 text-left text-sm font-semibold text-white">Date & Time</th>
+       <th class="px-6 py-4 text-left text-sm font-semibold text-white">Machine</th>
+       <th class="px-6 py-4 text-left text-sm font-semibold text-white">Materials</th>
+       <th class="px-6 py-4 text-right text-sm font-semibold text-white">Points</th>
+       <th class="px-6 py-4 text-center text-sm font-semibold text-white">Status</th>
+      </tr>
+        </thead>
+        <tbody id="session-body"><tr><td colspan="5" class="px-6 py-8 text-center text-[#0F3B2E]/70">Loading machine sessions...</td></tr></tbody>
+       </table>
+      </div>
+     </div>
+
+     <div class="tab-panel hidden" data-tab-panel="transfers">
+      <div class="overflow-x-auto">
+       <table class="w-full">
+        <thead>
+      <tr class="bg-gradient-to-r from-[#143D2E] to-[#1F4F3B]">
+       <th class="px-6 py-4 text-left text-sm font-semibold text-white">Date & Time</th>
+       <th class="px-6 py-4 text-left text-sm font-semibold text-white">Type</th>
+       <th class="px-6 py-4 text-left text-sm font-semibold text-white">Description</th>
+       <th class="px-6 py-4 text-left text-sm font-semibold text-white">Quantity</th>
+       <th class="px-6 py-4 text-right text-sm font-semibold text-white">Points</th>
+      </tr>
+        </thead>
+        <tbody id="transfer-body"><tr><td colspan="5" class="px-6 py-8 text-center text-[#0F3B2E]/70">Loading transfer logs...</td></tr></tbody>
+       </table>
+      </div>
+     </div>
+    </div>
+    </div>
+   </main>
+
+   <!-- Footer -->
+   <footer class="bintech-user-footer flex-shrink-0">
+    <div class="bintech-user-footer__wrap">
+      <div class="bintech-user-footer__grid">
+        <section>
+          <div class="flex items-center gap-3">
+            <span class="bintech-brand-mark" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
+                <path d="M13 3L4 14h6l-1 7 11-13h-6l1-5z" stroke-linecap="round" stroke-linejoin="round"></path>
+              </svg>
+            </span>
+            <p class="bintech-brand-title">Bintech</p>
+          </div>
+          <p class="bintech-brand-copy">Bintech builds secure, intuitive financial technology for modern users, blending speed, trust, and smarter money workflows.</p>
+        </section>
+
+        <nav class="bintech-user-footer__nav" aria-label="Company links">
+          <h4>Company</h4>
+          <ul>
+            <li><a href="#">About</a></li>
+            <li><a href="#">Contact</a></li>
+          </ul>
+        </nav>
+
+        <nav class="bintech-user-footer__nav" aria-label="Products links">
+          <h4>Products</h4>
+          <ul>
+            <li><a href="#">Rewards</a></li>
+          </ul>
+        </nav>
+
+        <nav class="bintech-user-footer__nav" aria-label="Resources links">
+          <h4>Resources</h4>
+          <ul>
+            <li><a href="#">Help Center</a></li>
+            <li><a href="#">Developers</a></li>
+          </ul>
+        </nav>
+
+        <nav class="bintech-user-footer__nav" aria-label="Legal links">
+          <h4>Legal</h4>
+          <ul>
+            <li><a href="#">Terms</a></li>
+            <li><a href="#">Privacy</a></li>
+          </ul>
+        </nav>
+
+        <section class="bintech-user-footer__subscribe bintech-user-footer__glass">
+          <h4>Subscribe To Our Newsletter</h4>
+          <p>Get product releases, security updates, and fintech insights delivered monthly.</p>
+          <form class="bintech-newsletter-form" onsubmit="event.preventDefault();">
+            <input type="email" placeholder="you@domain.com" aria-label="Email address">
+            <button type="submit">Join</button>
+          </form>
+        </section>
+      </div>
+
+      <div class="bintech-footer-bottom">
+        <p>© 2026 Bintech. All rights reserved.</p>
+        <div class="bintech-social-list" aria-label="Social media">
+          <a href="#" aria-label="X">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.901 3H21l-4.588 5.244L21.808 21h-4.226l-3.31-4.889L9.996 21H7.896l4.907-5.609L2.192 3h4.332l2.993 4.422L13.099 3h5.802zm-1.48 16h1.171L7.946 4.89H6.69L17.42 19z"></path></svg>
+          </a>
+          <a href="#" aria-label="LinkedIn">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6.94 8.5A1.55 1.55 0 1 1 6.94 5.4 1.55 1.55 0 0 1 6.94 8.5zM5.62 9.75h2.64V18H5.62V9.75zm4.13 0h2.53v1.13h.03c.35-.67 1.22-1.37 2.5-1.37 2.67 0 3.16 1.76 3.16 4.05V18h-2.64v-3.93c0-.94-.02-2.14-1.3-2.14-1.3 0-1.5 1.02-1.5 2.07V18H9.75V9.75z"></path></svg>
+          </a>
+          <a href="#" aria-label="Instagram">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3.6" y="3.6" width="16.8" height="16.8" rx="4"></rect><circle cx="12" cy="12" r="3.8"></circle><circle cx="17.35" cy="6.65" r="0.9" fill="currentColor" stroke="none"></circle></svg>
+          </a>
+          <a href="#" aria-label="YouTube">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M22 12s0-3.1-.4-4.6c-.2-.8-.8-1.4-1.6-1.6C18.5 5.4 12 5.4 12 5.4s-6.5 0-8 .4c-.8.2-1.4.8-1.6 1.6C2 8.9 2 12 2 12s0 3.1.4 4.6c.2.8.8 1.4 1.6 1.6 1.5.4 8 .4 8 .4s6.5 0 8-.4c.8-.2 1.4-.8 1.6-1.6.4-1.5.4-4.6.4-4.6zM10 15.5V8.5l6 3.5-6 3.5z"></path></svg>
+          </a>
+        </div>
+      </div>
+    </div>
+   </footer>
+
+  </div>
+
+  <script>
+   // Route protection - redirect to login if not authenticated
+   function protectRoute() {
+    const user = sessionStorage.getItem('bintech_user');
+    if (!user) {
+     if (!window.isLoggingOut) {
+      window.location.replace('/');
+     }
+    }
+   }
+   
+   window.isLoggingOut = false;
+   
+   if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', protectRoute);
+   } else {
+    setTimeout(protectRoute, 300);
+   }
+   
+   const defaultConfig = {
+    background_color: '#E8ECEB',
+    card_surface_color: '#FFFFFF',
+    text_color: '#0F3B2E',
+    primary_action_color: '#5DAE60',
+    accent_color: '#D4E157',
+    font_family: 'Poppins',
+    font_size: 16,
+    user_name: 'MARIO SALLY',
+    current_points: '521',
+    page_title: 'Transaction History',
+    page_subtitle: 'Track all your EcoPoints activities and transactions.'
+   };
+   
+   async function onConfigChange(config) {
+    const bgColor = config.background_color || defaultConfig.background_color;
+    const cardColor = config.card_surface_color || defaultConfig.card_surface_color;
+    const textColor = config.text_color || defaultConfig.text_color;
+    const primaryColor = config.primary_action_color || defaultConfig.primary_action_color;
+    const fontFamily = config.font_family || defaultConfig.font_family;
+    const fontSize = config.font_size || defaultConfig.font_size;
+    
+    document.getElementById('app-wrapper').style.backgroundColor = bgColor;
+    
+    document.querySelectorAll('.card-shadow, .bg-white').forEach(card => {
+     if ((card.classList.contains('card-shadow') || card.classList.contains('bg-white')) && !card.closest('.modal-content')) {
+      card.style.backgroundColor = cardColor;
+     }
+    });
+    
+    document.querySelectorAll('h1, h2, h3, p').forEach(el => {
+     if (!el.closest('.gradient-dark')) {
+      el.style.color = textColor;
+     }
+    });
+    
+    document.body.style.fontFamily = `${fontFamily}, sans-serif`;
+    document.body.style.fontSize = `${fontSize}px`;
+    
+    const userName = config.user_name || defaultConfig.user_name;
+    const navUserName = document.getElementById('nav-user-name');
+    if (navUserName) navUserName.textContent = userName;
+    
+    const pageTitle = config.page_title || defaultConfig.page_title;
+    const pageTitleEl = document.getElementById('page-title');
+    if (pageTitleEl) pageTitleEl.textContent = pageTitle;
+    
+    const pageSubtitle = config.page_subtitle || defaultConfig.page_subtitle;
+    const pageSubtitleEl = document.getElementById('page-subtitle');
+    if (pageSubtitleEl) pageSubtitleEl.textContent = pageSubtitle;
+    
+    const currentPoints = config.current_points || defaultConfig.current_points;
+    const navPointsEl = document.getElementById('nav-points');
+    if (navPointsEl) navPointsEl.textContent = currentPoints + ' Points';
+   }
+   
+   function mapToCapabilities(config) {
+    return {
+     recolorables: [
+      {
+       get: () => config.background_color || defaultConfig.background_color,
+       set: (value) => {
+        config.background_color = value;
+        window.elementSdk.setConfig({ background_color: value });
+       }
+      },
+      {
+       get: () => config.card_surface_color || defaultConfig.card_surface_color,
+       set: (value) => {
+        config.card_surface_color = value;
+        window.elementSdk.setConfig({ card_surface_color: value });
+       }
+      },
+      {
+       get: () => config.text_color || defaultConfig.text_color,
+       set: (value) => {
+        config.text_color = value;
+        window.elementSdk.setConfig({ text_color: value });
+       }
+      },
+      {
+       get: () => config.primary_action_color || defaultConfig.primary_action_color,
+       set: (value) => {
+        config.primary_action_color = value;
+        window.elementSdk.setConfig({ primary_action_color: value });
+       }
+      },
+      {
+       get: () => config.accent_color || defaultConfig.accent_color,
+       set: (value) => {
+        config.accent_color = value;
+        window.elementSdk.setConfig({ accent_color: value });
+       }
+      }
+     ],
+     borderables: [],
+     fontEditable: {
+      get: () => config.font_family || defaultConfig.font_family,
+      set: (value) => {
+       config.font_family = value;
+       window.elementSdk.setConfig({ font_family: value });
+      }
+     },
+     fontSizeable: {
+      get: () => config.font_size || defaultConfig.font_size,
+      set: (value) => {
+       config.font_size = value;
+       window.elementSdk.setConfig({ font_size: value });
+      }
+     }
+    };
+   }
+   
+   function mapToEditPanelValues(config) {
+    return new Map([
+     ['user_name', config.user_name || defaultConfig.user_name],
+     ['current_points', config.current_points || defaultConfig.current_points],
+     ['page_title', config.page_title || defaultConfig.page_title],
+     ['page_subtitle', config.page_subtitle || defaultConfig.page_subtitle]
+    ]);
+   }
+   
+   if (window.elementSdk) {
+    window.elementSdk.init({
+     defaultConfig,
+     onConfigChange,
+     mapToCapabilities,
+     mapToEditPanelValues
+    });
+   }
+   
+   function handleLogout() {
+    if (confirm('Are you sure you want to logout?')) {
+     document.querySelectorAll('button, input, a').forEach(el => {
+      el.disabled = true;
+      el.style.pointerEvents = 'none';
+      el.style.opacity = '0.5';
+     });
+     
+     sessionStorage.clear();
+     
+     setTimeout(() => {
+      window.location.href = '/';
+     }, 100);
+    }
+   }
+
+   function initializeUserMobileMenu() {
+    const toggle = document.getElementById('mobile-nav-toggle');
+    const panel = document.getElementById('mobile-nav-panel');
+    const navPoints = document.getElementById('nav-points');
+    const mobilePoints = document.getElementById('mobile-nav-points');
+    if (!toggle || !panel) return;
+
+    const closeMenu = () => {
+      panel.dataset.open = 'false';
+      panel.style.display = 'none';
+      toggle.setAttribute('aria-expanded', 'false');
+    };
+
+    const openMenu = () => {
+      if (mobilePoints && navPoints) {
+        mobilePoints.textContent = navPoints.textContent;
+      }
+      panel.dataset.open = 'true';
+      panel.style.display = 'block';
+      toggle.setAttribute('aria-expanded', 'true');
+    };
+
+    toggle.addEventListener('click', () => {
+      if (panel.dataset.open === 'true') {
+        closeMenu();
+      } else {
+        openMenu();
+      }
+    });
+
+    panel.querySelectorAll('a').forEach((link) => {
+      link.addEventListener('click', closeMenu);
+    });
+
+    window.addEventListener('resize', () => {
+      if (window.innerWidth >= 768) {
+        closeMenu();
+      }
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') {
+        closeMenu();
+      }
+    });
+   }
+   
+  async function updateUserInfo() {
+   try {
+    const userDataStr = sessionStorage.getItem('bintech_user');
+    if (!userDataStr) {
+    console.warn('No user data found in session');
+    return;
+    }
+     
+    const user = JSON.parse(userDataStr);
+    const navUserName = document.getElementById('nav-user-name');
+    const navPoints = document.getElementById('nav-points');
+    const effectiveUserId = user.system_id || user.campus_id || user.id || '';
+     
+    if (navUserName) navUserName.textContent = (user.full_name || user.email || 'User').toUpperCase();
+
+    const query = new URLSearchParams();
+    if (effectiveUserId) query.set('userId', effectiveUserId);
+    if (user.email) query.set('email', user.email);
+
+    if (query.toString()) {
+    const response = await fetch(`/api/dashboard/points?${query.toString()}`);
+    if (response.ok) {
+     const payload = await response.json();
+     const pointsValue = Number(payload?.user?.points || user.points || 0);
+     if (navPoints) navPoints.textContent = `${pointsValue} Points`;
+     user.points = pointsValue;
+     sessionStorage.setItem('bintech_user', JSON.stringify(user));
+     return;
+    }
+    }
+
+    if (navPoints) navPoints.textContent = (user.points || 0) + ' Points';
+   } catch (error) {
+    console.error('Error updating user info:', error);
+   }
+   }
+
+  const activityState = {
+   summary: {
+    totalPoints: 0,
+    totalWaste: 0,
+    metalCount: 0,
+    plasticCount: 0,
+    paperCount: 0,
+    totalRedemptions: 0,
+    totalSessions: 0,
+    totalTransfers: 0
+   },
+   redemptions: [],
+   sessions: [],
+   transfers: []
+  };
+
+  function getCombinedActivityRows() {
+   return [...activityState.redemptions, ...activityState.sessions, ...activityState.transfers].sort((a, b) => new Date(`${b.date || ''} ${b.time || ''}`).getTime() - new Date(`${a.date || ''} ${a.time || ''}`).getTime());
+  }
+
+  function loadSampleHistory() {
+   activityState.summary = {
+    totalPoints: 521,
+    totalWaste: 9,
+    metalCount: 3,
+    plasticCount: 4,
+    paperCount: 2,
+    totalRedemptions: 2,
+    totalSessions: 1,
+    totalTransfers: 4
+   };
+   activityState.redemptions = [
+    { date: '2026-04-19', time: '16:45', type: 'redemption', rewardName: 'Coffee Voucher', description: 'Redeemed: Coffee Voucher', quantity: '1 voucher', points: -75, status: 'Completed' }
+   ];
+   activityState.sessions = [
+    { date: '2026-04-19', time: '11:20', type: 'machine-session', machineId: 'BINTECH-SORTER-001', description: 'Machine session at BINTECH-SORTER-001', quantity: 'Metal 1 / Plastic 2 / Paper 1', points: 100, status: 'Completed', metalCount: 1, plasticCount: 2, paperCount: 1, totalWasteSorted: 4 }
+   ];
+   activityState.transfers = [
+    { date: '2026-04-20', time: '10:15', type: 'p2p-sent', description: 'Sent points to maria@example.com', quantity: '1 transfer', points: -25, status: 'Completed' },
+    { date: '2026-04-18', time: '09:30', type: 'p2p-received', description: 'Received from john@example.com', quantity: '1 transfer', points: 30, status: 'Completed' },
+    { date: '2026-04-16', time: '08:45', type: 'admin-added', description: 'Referral reward bonus', quantity: '1 bonus', points: 100, status: 'Completed' },
+    { date: '2026-04-15', time: '14:20', type: 'admin-deducted', description: 'Points deducted for policy violation', quantity: '2 points', points: -2, status: 'Completed' }
+   ];
+   updateActivityStats();
+   renderAllTabs();
+  }
+
+  function clearActivityState() {
+   activityState.summary = {
+    totalPoints: 0,
+    totalWaste: 0,
+    metalCount: 0,
+    plasticCount: 0,
+    paperCount: 0,
+    totalRedemptions: 0,
+    totalSessions: 0,
+    totalTransfers: 0
+   };
+   activityState.redemptions = [];
+   activityState.sessions = [];
+   activityState.transfers = [];
+   updateActivityStats();
+   renderAllTabs();
+  }
+
+  async function loadActivityOverview() {
+   try {
+    const userDataStr = sessionStorage.getItem('bintech_user');
+    if (!userDataStr) {
+      clearActivityState();
+    return;
+    }
+
+    const user = JSON.parse(userDataStr);
+    const userEmail = user.email;
+    const userId = user.system_id || user.campus_id || user.id || '';
+
+    const response = await fetch(`/api/dashboard/activity-overview?email=${encodeURIComponent(userEmail)}&userId=${encodeURIComponent(userId)}`);
+    if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
+
+    const data = await response.json();
+      if (!data.success) throw new Error(data.message || 'Failed to load activity overview');
+
+    activityState.summary = data.summary || activityState.summary;
+    activityState.redemptions = (data.logs?.redemptions || []).map((item) => ({
+    date: item.date ? String(item.date).slice(0, 10) : '',
+    time: item.time || '00:00',
+    type: 'redemption',
+    rewardName: item.rewardName || 'Reward',
+    description: item.description || 'Reward redemption',
+    quantity: item.quantity || '1 redemption',
+    points: Number(item.points || 0),
+    status: item.status || 'Completed'
+    }));
+    activityState.sessions = (data.logs?.sessions || []).map((item) => ({
+    date: item.date ? String(item.date).slice(0, 10) : '',
+    time: item.time || '00:00',
+    type: 'machine-session',
+    machineId: item.machineId || 'Machine',
+    description: item.description || 'Machine session',
+    quantity: item.quantity || '-',
+    points: Number(item.points || 0),
+    status: item.status || 'Completed',
+    metalCount: Number(item.metalCount || 0),
+    plasticCount: Number(item.plasticCount || 0),
+    paperCount: Number(item.paperCount || 0),
+    totalWasteSorted: Number(item.totalWasteSorted || 0)
+    }));
+    activityState.transfers = (data.logs?.transfers || []).map((item) => ({
+    date: item.date ? String(item.date).slice(0, 10) : '',
+    time: item.time || '00:00',
+    type: item.type || 'transfer',
+    description: item.description || 'Transfer',
+    subdescription: item.subdescription || '',
+    quantity: item.quantity || '1 transfer',
+    points: Number(item.points || 0),
+    status: item.status || 'Completed',
+    reason: item.reason || ''
+    }));
+
+    updateActivityStats();
+    renderAllTabs();
+   } catch (error) {
+    console.error('[HISTORY] Error loading activity overview:', error);
+    clearActivityState();
+   }
+  }
+
+   function formatDate(date) {
+    return timestampUtils.formatDateForDisplay(date);
+   }
+   
+   function formatTime(time) {
+    return timestampUtils.formatTimeForDisplay(time);
+   }
+
+  function setActiveTab(tabName) {
+   document.querySelectorAll('.activity-tab-btn').forEach((button) => {
+    const isActive = button.dataset.tab === tabName;
+    button.classList.toggle('bg-[#0F3B2E]', isActive);
+    button.classList.toggle('text-white', isActive);
+    button.classList.toggle('text-[#0F3B2E]', !isActive);
+   });
+
+   document.querySelectorAll('.tab-panel').forEach((panel) => {
+    const isActive = panel.dataset.tabPanel === tabName;
+    panel.classList.toggle('active', isActive);
+    panel.classList.toggle('hidden', !isActive);
+   });
+  }
+
+  function updateActivityStats() {
+   const summary = activityState.summary;
+   document.getElementById('stat-total-points').textContent = Number(summary.totalPoints || 0).toLocaleString();
+   document.getElementById('stat-total-waste').textContent = Number(summary.totalWaste || 0).toLocaleString();
+   document.getElementById('stat-metal').textContent = Number(summary.metalCount || 0).toLocaleString();
+   document.getElementById('stat-plastic').textContent = Number(summary.plasticCount || 0).toLocaleString();
+   document.getElementById('stat-paper').textContent = Number(summary.paperCount || 0).toLocaleString();
+   document.getElementById('stat-sessions').textContent = Number(summary.totalSessions || 0).toLocaleString();
+  }
+
+   function getTypeInfo(type) {
+    const types = {
+     earn: { label: 'Earned', icon: '📈', badgeClass: 'badge-earn' },
+     redemption: { label: 'Redemption', icon: '🎁', badgeClass: 'badge-redeem' },
+     'machine-session': { label: 'Machine Session', icon: '♻️', badgeClass: 'badge-earn' },
+     'p2p-sent': { label: 'P2P sent', icon: '📤', badgeClass: 'badge-transfer-out' },
+     'p2p-received': { label: 'P2P received', icon: '📥', badgeClass: 'badge-transfer-in' },
+     'admin-added': { label: 'Admin added', icon: '👤', badgeClass: 'badge-admin' },
+     'admin-deducted': { label: 'Admin deducted', icon: '👤', badgeClass: 'badge-admin' }
+    };
+    return types[type] || types.earn;
+   }
+
+  function renderSummaryHistory(data) {
+    const tbody = document.getElementById('history-body');
+    
+    if (data.length === 0) {
+     tbody.innerHTML = `
+      <tr>
+       <td colspan="6" class="px-6 py-8 text-center text-[#0F3B2E]/70">
+        No transactions found
+       </td>
+      </tr>
+     `;
+     return;
+    }
+
+    tbody.innerHTML = data.map((item, idx) => {
+    const typeInfo = getTypeInfo(item.type);
+     
+     // Determine if this is a deducting transaction
+     const isDeducting = ['redemption', 'p2p-sent', 'admin-deducted'].includes(item.type);
+     
+     // Ensure points are negative for deducting transactions
+     let points = Number(item.points) || 0;
+     if (isDeducting && points > 0) {
+      points = -points;
+     }
+     
+     // Determine color and display format
+     const pointsClass = points > 0 ? 'text-[#22c55e] font-semibold' : 'text-[#ef4444] font-semibold';
+     const pointsDisplay = points > 0 ? `+${points}` : `${points}`;
+     const subdesc = item.subdescription ? `<div class="text-[#0F3B2E]/70 text-xs">${item.subdescription}</div>` : '';
+
+     return `
+      <tr class="border-t border-[#0F3B2E]/10 transaction-row hover:bg-gray-50">
+       <td class="px-6 py-4 text-sm">
+        <div class="font-medium text-[#0F3B2E]">${formatDate(item.date)}</div>
+        <div class="text-[#0F3B2E]/70 text-xs">${formatTime(item.time)}</div>
+       </td>
+       <td class="px-6 py-4 text-sm">
+        <span class="badge ${typeInfo.badgeClass}">${typeInfo.icon} ${typeInfo.label}</span>
+       </td>
+       <td class="px-6 py-4 text-sm text-[#0F3B2E]">
+        <div class="font-medium">${item.description}</div>
+        ${subdesc}
+       </td>
+       <td class="px-6 py-4 text-sm text-[#0F3B2E]">${item.quantity || '-'}</td>
+       <td class="px-6 py-4 text-sm text-right ${pointsClass}">${pointsDisplay}</td>
+       <td class="px-6 py-4 text-center">
+        <span class="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-[#dcfce7] text-[#166534]">
+         ✓ ${item.status}
+        </span>
+       </td>
+      </tr>
+     `;
+    }).join('');
+   }
+
+   function renderRedemptions() {
+    const tbody = document.getElementById('redemption-body');
+    const rows = activityState.redemptions;
+    if (!rows.length) {
+     tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-8 text-center text-[#0F3B2E]/70">No reward redemptions found.</td></tr>';
+     return;
+    }
+
+    tbody.innerHTML = rows.map((item) => `
+      <tr class="border-t border-[#0F3B2E]/10 transaction-row hover:bg-gray-50">
+       <td class="px-6 py-4 text-sm"><div class="font-medium text-[#0F3B2E]">${formatDate(item.date)}</div><div class="text-[#0F3B2E]/70 text-xs">${formatTime(item.time)}</div></td>
+       <td class="px-6 py-4 text-sm"><span class="badge badge-redeem">🎁 ${item.rewardName || 'Reward'}</span></td>
+       <td class="px-6 py-4 text-sm text-[#0F3B2E]"><div class="font-medium">${item.description}</div></td>
+       <td class="px-6 py-4 text-sm text-right text-[#ef4444] font-semibold">${item.points > 0 ? `-${item.points}` : item.points}</td>
+       <td class="px-6 py-4 text-center"><span class="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-[#dcfce7] text-[#166534]">✓ ${item.status}</span></td>
+      </tr>
+    `).join('');
+   }
+
+   function renderSessions() {
+    const tbody = document.getElementById('session-body');
+    const rows = activityState.sessions;
+    if (!rows.length) {
+     tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-8 text-center text-[#0F3B2E]/70">No machine sessions found.</td></tr>';
+     return;
+    }
+
+    tbody.innerHTML = rows.map((item) => `
+      <tr class="border-t border-[#0F3B2E]/10 transaction-row hover:bg-gray-50">
+       <td class="px-6 py-4 text-sm"><div class="font-medium text-[#0F3B2E]">${formatDate(item.date)}</div><div class="text-[#0F3B2E]/70 text-xs">${formatTime(item.time)}</div></td>
+       <td class="px-6 py-4 text-sm text-[#0F3B2E]"><div class="font-medium">${item.machineId || 'Machine'}</div></td>
+       <td class="px-6 py-4 text-sm text-[#0F3B2E]">${item.quantity || '-'}</td>
+       <td class="px-6 py-4 text-sm text-right text-[#22c55e] font-semibold">+${Number(item.points || 0)}</td>
+       <td class="px-6 py-4 text-center"><span class="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-[#dcfce7] text-[#166534]">✓ ${item.status}</span></td>
+      </tr>
+    `).join('');
+   }
+
+   function renderTransfers() {
+    const tbody = document.getElementById('transfer-body');
+    const rows = activityState.transfers;
+    if (!rows.length) {
+     tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-8 text-center text-[#0F3B2E]/70">No transfer logs found.</td></tr>';
+     return;
+    }
+
+    tbody.innerHTML = rows.map((item) => {
+     const typeInfo = getTypeInfo(item.type);
+     const points = Number(item.points || 0);
+     const pointsClass = points > 0 ? 'text-[#22c55e] font-semibold' : 'text-[#ef4444] font-semibold';
+     const pointsDisplay = points > 0 ? `+${points}` : `${points}`;
+     const subdesc = item.subdescription ? `<div class="text-[#0F3B2E]/70 text-xs">${item.subdescription}</div>` : '';
+     return `
+      <tr class="border-t border-[#0F3B2E]/10 transaction-row hover:bg-gray-50">
+       <td class="px-6 py-4 text-sm"><div class="font-medium text-[#0F3B2E]">${formatDate(item.date)}</div><div class="text-[#0F3B2E]/70 text-xs">${formatTime(item.time)}</div></td>
+       <td class="px-6 py-4 text-sm"><span class="badge ${typeInfo.badgeClass}">${typeInfo.icon} ${typeInfo.label}</span></td>
+       <td class="px-6 py-4 text-sm text-[#0F3B2E]"><div class="font-medium">${item.description}</div>${subdesc}</td>
+       <td class="px-6 py-4 text-sm text-[#0F3B2E]">${item.quantity || '-'}</td>
+       <td class="px-6 py-4 text-sm text-right ${pointsClass}">${pointsDisplay}</td>
+      </tr>
+     `;
+    }).join('');
+   }
+
+   function renderAllTabs() {
+    renderSummaryHistory(getCombinedActivityRows());
+    renderRedemptions();
+    renderSessions();
+    renderTransfers();
+   }
+   
+   document.querySelectorAll('.activity-tab-btn').forEach((button) => {
+    button.addEventListener('click', () => setActiveTab(button.dataset.tab));
+   });
+
+   // Initialize
+   document.addEventListener('DOMContentLoaded', function() {
+    initializeUserMobileMenu();
+    updateUserInfo();
+    
+    // Load activity overview from API
+    loadActivityOverview();
+
+    setActiveTab('summary');
+   });
+  </script>
+ </body>
+</html>
