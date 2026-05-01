@@ -716,6 +716,19 @@
                         <button class="btn btn-primary" id="start-scanner" onclick="startScanner()">Start Scanner</button>
                         <button class="btn btn-secondary" id="stop-scanner" onclick="stopScanner()" style="display: none;">Stop Scanner</button>
                         <button class="btn btn-secondary" id="manual-entry" onclick="openManualEntry()">Manual Entry</button>
+
+                        <!-- Manual Entry Modal -->
+                        <div id="manual-entry-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+                            <div class="bg-white rounded-lg shadow-lg w-11/12 max-w-md p-4">
+                                <h3 class="text-lg font-semibold mb-2">Manual Device Entry</h3>
+                                <p class="text-sm text-gray-600 mb-3">Enter the ESP32 Hardware ID (e.g. BINTECH-SORTER-001)</p>
+                                <input id="manual-hardware-id" class="w-full border rounded px-3 py-2 mb-3" placeholder="Enter device ID" />
+                                <div class="flex justify-end gap-2">
+                                    <button class="btn btn-secondary" onclick="closeManualEntry()">Cancel</button>
+                                    <button class="btn btn-primary" onclick="submitManualEntry()">Start Session</button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -985,18 +998,33 @@
         }
 
         function openManualEntry() {
-            const hardwareId = prompt('Enter ESP32 Hardware ID:');
-            if (hardwareId) {
-                const user = AuthManager.getUser();
-                if (!user) {
-                    showStatus('Please log in first', 'error');
-                    return;
-                }
-                
-                document.getElementById('start-scanner').style.display = 'inline-block';
-                document.getElementById('stop-scanner').style.display = 'none';
-                handleQRCodeScanned(hardwareId);
+            document.getElementById('manual-hardware-id').value = '';
+            document.getElementById('manual-entry-modal').classList.remove('hidden');
+            document.getElementById('manual-hardware-id').focus();
+        }
+
+        function closeManualEntry() {
+            document.getElementById('manual-entry-modal').classList.add('hidden');
+        }
+
+        async function submitManualEntry() {
+            const hardwareId = document.getElementById('manual-hardware-id').value.trim();
+            if (!hardwareId) {
+                showStatus('Please enter the device ID', 'error');
+                return;
             }
+
+            const user = AuthManager.getUser();
+            if (!user) {
+                showStatus('Please log in first', 'error');
+                closeManualEntry();
+                return;
+            }
+
+            closeManualEntry();
+            document.getElementById('start-scanner').style.display = 'inline-block';
+            document.getElementById('stop-scanner').style.display = 'none';
+            await handleQRCodeScanned(hardwareId);
         }
 
         // ============================================
