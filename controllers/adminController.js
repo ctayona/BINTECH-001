@@ -1255,10 +1255,11 @@ exports.getWebsiteLogs = async (req, res) => {
       'redemptions',
       () => supabase
         .from('redemptions')
-        .select('id, user_id, gmail, reward_id, points_spent, status, created_at')
+        .select('id, user_id, gmail, email, reward_id, points_spent, status, created_at')
         .order('created_at', { ascending: false })
         .limit(100),
       async (primaryError) => {
+        // If gmail column doesn't exist, try without it
         if (!String(primaryError.message || '').toLowerCase().includes('gmail')) return null;
         return supabase
           .from('redemptions')
@@ -1267,6 +1268,19 @@ exports.getWebsiteLogs = async (req, res) => {
           .limit(100);
       }
     );
+
+    // Fetch user accounts by ID for direct lookup of redemption users
+    const userAccountsByUUID = new Map();
+    if (userAccounts && Array.isArray(userAccounts)) {
+      userAccounts.forEach(account => {
+        if (account.id) {
+          userAccountsByUUID.set(account.id, {
+            name: account.full_name || `${account.first_name || ''} ${account.last_name || ''}`.trim() || account.email || 'Unknown',
+            email: account.email || ''
+          });
+        }
+      });
+    }
 
     const userAccountMap = new Map();
     const accountLogs = [];
@@ -1373,10 +1387,14 @@ exports.getWebsiteLogs = async (req, res) => {
     const redemptionLogs = (redemptions || []).map((redemption) => {
       const redemptionUserKey = String(redemption.user_id || '').trim();
       const redemptionEmailKey = String(redemption.gmail || redemption.email || '').trim().toLowerCase();
-      const account = userAccountMap.get(redemptionUserKey)
+      
+      // Try direct UUID lookup first, then fall back to other lookups
+      let account = userAccountsByUUID.get(redemptionUserKey)
+        || userAccountMap.get(redemptionUserKey)
         || userAccountMap.get(redemptionUserKey.toLowerCase())
         || (redemptionEmailKey ? userAccountMap.get(redemptionEmailKey) : null)
         || null;
+      
       const reward = rewardLookup.get(String(redemption.reward_id || '')) || null;
       const redemptionEmail = String(redemption.gmail || redemption.email || account?.email || '').trim();
 
