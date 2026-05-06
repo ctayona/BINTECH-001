@@ -4,25 +4,37 @@
 const nodemailer = require('nodemailer');
 require('dotenv').config();
 
-// Create transporter for Gmail SMTP
-const transporter = nodemailer.createTransport({
-  host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-  port: parseInt(process.env.EMAIL_PORT) || 587,
-  secure: false, // true for 465, false for other ports
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASSWORD
+// Create transporter only when SMTP credentials are provided
+let transporter = null;
+function createTransporterIfConfigured() {
+  const user = process.env.EMAIL_USER;
+  const pass = process.env.EMAIL_PASSWORD;
+  if (!user || !pass) {
+    console.warn('[Email Service] ⚠️ SMTP credentials not set - email sending disabled');
+    return null;
   }
-});
 
-// Verify transporter connection
-transporter.verify((error, success) => {
-  if (error) {
-    console.error('❌ Email service error:', error.message);
-  } else {
-    console.log('✅ Email service ready');
+  try {
+    const t = nodemailer.createTransport({
+      host: process.env.EMAIL_HOST || 'smtp.gmail.com',
+      port: parseInt(process.env.EMAIL_PORT) || 587,
+      secure: false, // true for 465, false for other ports
+      auth: { user, pass }
+    });
+
+    t.verify((error) => {
+      if (error) console.error('[Email Service] ❌ Transporter verify failed:', error && error.message ? error.message : error);
+      else console.log('[Email Service] ✅ Email transporter ready');
+    });
+
+    return t;
+  } catch (err) {
+    console.error('[Email Service] ❌ Failed to create transporter:', err && err.message ? err.message : err);
+    return null;
   }
-});
+}
+
+transporter = createTransporterIfConfigured();
 
 /**
  * Send simple welcome email after signup
@@ -145,14 +157,21 @@ The BinTECH Team
       `
     };
     
-    const info = await transporter.sendMail(mailOptions);
-    console.log(`✅ Welcome email sent to ${email}`);
-    console.log(`   Message ID: ${info.messageId}`);
-    return true;
-  } catch (error) {
-    console.error(`❌ Error sending welcome email to ${email}:`, error.message);
-    return false;
-  }
+    if (!transporter) {
+      console.warn('[Email Service] ⚠️ SMTP not configured; skipping welcome email to', email);
+      return true;
+    }
+
+    try {
+      const info = await transporter.sendMail(mailOptions);
+      console.log('✅ Welcome email sent to', email);
+      console.log('   Message ID:', info && info.messageId);
+      return true;
+    } catch (error) {
+      console.error('❌ Error sending welcome email to', email, '-', error && error.message ? error.message : error);
+      console.error(error && error.stack ? error.stack : 'No stack available');
+      return false;
+    }
 }
 
 /**
@@ -243,14 +262,21 @@ The BinTECH Team
       `
     };
     
-    const info = await transporter.sendMail(mailOptions);
-    console.log(`✅ Password reset email sent to ${email}`);
-    console.log(`   Message ID: ${info.messageId}`);
-    return true;
-  } catch (error) {
-    console.error(`❌ Error sending password reset email to ${email}:`, error.message);
-    return false;
-  }
+    if (!transporter) {
+      console.warn('[Email Service] ⚠️ SMTP not configured; skipping password reset email to', email);
+      return true;
+    }
+
+    try {
+      const info = await transporter.sendMail(mailOptions);
+      console.log('✅ Password reset email sent to', email);
+      console.log('   Message ID:', info && info.messageId);
+      return true;
+    } catch (error) {
+      console.error('❌ Error sending password reset email to', email, '-', error && error.message ? error.message : error);
+      console.error(error && error.stack ? error.stack : 'No stack available');
+      return false;
+    }
 }
 
 /**
@@ -369,14 +395,21 @@ The BinTECH Team
       `
     };
     
-    const info = await transporter.sendMail(mailOptions);
-    console.log(`✅ Welcome email sent to ${email}`);
-    console.log(`   Message ID: ${info.messageId}`);
-    return true;
-  } catch (error) {
-    console.error(`❌ Error sending welcome email to ${email}:`, error.message);
-    return false;
-  }
+    if (!transporter) {
+      console.warn('[Email Service] ⚠️ SMTP not configured; skipping welcome email to', email);
+      return true;
+    }
+
+    try {
+      const info = await transporter.sendMail(mailOptions);
+      console.log('✅ Welcome email sent to', email);
+      console.log('   Message ID:', info && info.messageId);
+      return true;
+    } catch (error) {
+      console.error('❌ Error sending welcome email to', email, '-', error && error.message ? error.message : error);
+      console.error(error && error.stack ? error.stack : 'No stack available');
+      return false;
+    }
 }
 
 /**
@@ -388,98 +421,29 @@ The BinTECH Team
  */
 async function sendOTPEmail(email, otp, firstName) {
   try {
+    // If transporter not configured, log OTP for debugging and return success
+    if (!transporter) {
+      console.warn('[Email Service] ⚠️ SMTP not configured; skipping OTP send');
+      console.warn('[Email Service] 📧 OTP for testing purposes:', otp);
+      console.warn('[Email Service] 📧 Would be sent to:', email);
+      return true;
+    }
+
     const mailOptions = {
       from: `BinTECH <${process.env.EMAIL_USER}>`,
-      to: email,
+      to: String(email).trim().toLowerCase(),
       subject: 'Your BinTECH Password Recovery Code',
-      html: `
-        <!DOCTYPE html>
-        <html>
-          <head>
-            <style>
-              body { font-family: 'Poppins', Arial, sans-serif; line-height: 1.6; color: #333; }
-              .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-              .header { background: linear-gradient(135deg, #0f3b2e 0%, #1f4f3b 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
-              .header h1 { margin: 0; font-size: 28px; }
-              .content { background: #f5f5f5; padding: 30px; border-radius: 0 0 8px 8px; }
-              .otp-box { background: white; border: 2px solid #d4e157; padding: 20px; text-align: center; border-radius: 8px; margin: 20px 0; }
-              .otp-code { font-size: 36px; font-weight: bold; color: #0f3b2e; letter-spacing: 5px; font-family: 'Courier New', monospace; }
-              .otp-expiry { color: #666; font-size: 12px; margin-top: 10px; }
-              .footer { text-align: center; color: #666; font-size: 12px; margin-top: 20px; }
-              .warning { background: #f8d7da; border-left: 4px solid #dc3545; padding: 15px; margin: 20px 0; border-radius: 4px; color: #721c24; }
-            </style>
-          </head>
-          <body>
-            <div class="container">
-              <div class="header">
-                <h1>🔐 Password Recovery Code</h1>
-              </div>
-              
-              <div class="content">
-                <p>Hi <strong>${firstName}</strong>,</p>
-                
-                <p>We received a request to reset your BinTECH password. Use the code below to proceed with your password recovery:</p>
-                
-                <div class="otp-box">
-                  <div class="otp-code">${otp}</div>
-                  <div class="otp-expiry">This code expires in 10 minutes</div>
-                </div>
-                
-                <p><strong>How to use this code:</strong></p>
-                <ol>
-                  <li>Go to the password recovery page</li>
-                  <li>Enter your email address</li>
-                  <li>Enter the code above when prompted</li>
-                  <li>Create your new password</li>
-                </ol>
-                
-                <div class="warning">
-                  <strong>⚠️ Important:</strong> Never share this code with anyone. BinTECH staff will never ask for this code. If you didn't request a password reset, please ignore this email.
-                </div>
-                
-                <p>If you have any questions, please contact our support team.</p>
-                
-                <p>Best regards,<br><strong>The BinTECH Team</strong></p>
-              </div>
-              
-              <div class="footer">
-                <p>© 2024 BinTECH - University of Makati. All rights reserved.</p>
-                <p>This is an automated email. Please do not reply to this message.</p>
-              </div>
-            </div>
-          </body>
-        </html>
-      `,
-      text: `
-Password Recovery Code
-
-Hi ${firstName},
-
-We received a request to reset your BinTECH password. Use the code below to proceed:
-
-${otp}
-
-This code expires in 10 minutes.
-
-How to use this code:
-1. Go to the password recovery page
-2. Enter your email address
-3. Enter the code above when prompted
-4. Create your new password
-
-Important: Never share this code with anyone. If you didn't request a password reset, please ignore this email.
-
-Best regards,
-The BinTECH Team
-      `
+      html: generateOTPEmailTemplate(firstName, otp),
+      text: `Your OTP is: ${otp}. This code expires in 10 minutes.`
     };
-    
+
     const info = await transporter.sendMail(mailOptions);
-    console.log(`✅ OTP email sent to ${email}`);
-    console.log(`   Message ID: ${info.messageId}`);
+    console.log('✅ OTP email sent to', email);
+    console.log('   Message ID:', info && info.messageId);
     return true;
   } catch (error) {
-    console.error(`❌ Error sending OTP email to ${email}:`, error.message);
+    console.error('❌ Error sending OTP email to', email, '-', error && error.message ? error.message : error);
+    console.error(error && error.stack ? error.stack : 'No stack available');
     return false;
   }
 }
@@ -579,14 +543,21 @@ The BinTECH Team
       `
     };
     
-    const info = await transporter.sendMail(mailOptions);
-    console.log(`✅ Password reset confirmation email sent to ${email}`);
-    console.log(`   Message ID: ${info.messageId}`);
-    return true;
-  } catch (error) {
-    console.error(`❌ Error sending password reset confirmation email to ${email}:`, error.message);
-    return false;
-  }
+    if (!transporter) {
+      console.warn('[Email Service] ⚠️ SMTP not configured; skipping password reset confirmation to', email);
+      return true;
+    }
+
+    try {
+      const info = await transporter.sendMail(mailOptions);
+      console.log('✅ Password reset confirmation email sent to', email);
+      console.log('   Message ID:', info && info.messageId);
+      return true;
+    } catch (error) {
+      console.error('❌ Error sending password reset confirmation email to', email, '-', error && error.message ? error.message : error);
+      console.error(error && error.stack ? error.stack : 'No stack available');
+      return false;
+    }
 }
 
 /**
@@ -607,14 +578,21 @@ async function sendEmail(to, subject, html, text) {
       text
     };
     
-    const info = await transporter.sendMail(mailOptions);
-    console.log(`✅ Email sent to ${to}`);
-    console.log(`   Message ID: ${info.messageId}`);
-    return true;
-  } catch (error) {
-    console.error(`❌ Error sending email to ${to}:`, error.message);
-    return false;
-  }
+    if (!transporter) {
+      console.warn('[Email Service] ⚠️ SMTP not configured; skipping generic email to', to);
+      return true;
+    }
+
+    try {
+      const info = await transporter.sendMail(mailOptions);
+      console.log('✅ Email sent to', to);
+      console.log('   Message ID:', info && info.messageId);
+      return true;
+    } catch (error) {
+      console.error('❌ Error sending email to', to, '-', error && error.message ? error.message : error);
+      console.error(error && error.stack ? error.stack : 'No stack available');
+      return false;
+    }
 }
 
 module.exports = {
