@@ -2,7 +2,6 @@
 // Handles sending confirmation emails, password reset emails, etc.
 
 const dns = require('node:dns');
-const { promisify } = require('util');
 const nodemailer = require('nodemailer');
 require('dotenv').config();
 
@@ -12,49 +11,48 @@ if (typeof dns.setDefaultResultOrder === 'function') {
   console.log('[Email Service] 🔧 DNS configured to use IPv4 first');
 }
 
-// Custom DNS lookup that filters for IPv4 only
-const dnsLookup = (hostname, options, callback) => {
-  dns.lookup(hostname, { family: 4, ...options }, (err, address, family) => {
-    if (err) {
-      // Fallback to IPv6 if IPv4 fails
-      console.warn(`[Email Service] ⚠️ IPv4 lookup failed for ${hostname}, trying IPv6:`, err.message);
-      dns.lookup(hostname, { family: 6, ...options }, callback);
-    } else {
-      console.log(`[Email Service] ✓ Resolved ${hostname} to IPv4: ${address}`);
-      callback(err, address, family);
-    }
-  });
-};
+// Log environment variables for debugging
+const EMAIL_USER = process.env.EMAIL_USER;
+const EMAIL_PASSWORD = process.env.EMAIL_PASSWORD;
+const EMAIL_HOST = process.env.EMAIL_HOST || 'smtp.gmail.com';
+const EMAIL_PORT = parseInt(process.env.EMAIL_PORT) || 587;
+
+console.log('[Email Service] Configuration:');
+console.log('  EMAIL_HOST:', EMAIL_HOST);
+console.log('  EMAIL_PORT:', EMAIL_PORT);
+console.log('  EMAIL_USER:', EMAIL_USER ? `${EMAIL_USER.substring(0, 3)}...` : 'NOT SET');
+console.log('  EMAIL_PASSWORD:', EMAIL_PASSWORD ? 'SET' : 'NOT SET');
 
 // Create transporter only when SMTP credentials are provided
 let transporter = null;
 function createTransporterIfConfigured() {
-  const user = process.env.EMAIL_USER;
-  const pass = process.env.EMAIL_PASSWORD;
-  const host = process.env.EMAIL_HOST || 'smtp.gmail.com';
-  const port = parseInt(process.env.EMAIL_PORT) || 587;
-
-  if (!user || !pass) {
+  if (!EMAIL_USER || !EMAIL_PASSWORD) {
     console.warn('[Email Service] ⚠️ SMTP credentials not set - email sending disabled');
+    console.warn('[Email Service] Please ensure EMAIL_USER and EMAIL_PASSWORD are set in environment variables');
     return null;
   }
 
   try {
     const t = nodemailer.createTransport({
-      host,
-      port,
-      secure: false, // true for 465, false for other ports
-      family: 4,
-      lookup: dnsLookup,
+      host: EMAIL_HOST,
+      port: EMAIL_PORT,
+      secure: EMAIL_PORT === 465, // true for 465, false for 587
+      family: 4, // Force IPv4
       requireTLS: true,
-      connectionTimeout: Number(process.env.EMAIL_CONNECTION_TIMEOUT_MS) || 10000,
-      greetingTimeout: Number(process.env.EMAIL_GREETING_TIMEOUT_MS) || 10000,
-      socketTimeout: Number(process.env.EMAIL_SOCKET_TIMEOUT_MS) || 15000,
+      connectionTimeout: Number(process.env.EMAIL_CONNECTION_TIMEOUT_MS) || 15000,
+      greetingTimeout: Number(process.env.EMAIL_GREETING_TIMEOUT_MS) || 15000,
+      socketTimeout: Number(process.env.EMAIL_SOCKET_TIMEOUT_MS) || 20000,
       tls: {
-        servername: host,
-        minVersion: 'TLSv1.2'
+        servername: EMAIL_HOST,
+        minVersion: 'TLSv1.2',
+        rejectUnauthorized: false // Allow self-signed certs if needed
       },
-      auth: { user, pass }
+      auth: { 
+        user: EMAIL_USER, 
+        pass: EMAIL_PASSWORD 
+      },
+      logger: false,
+      debug: false
     });
 
     t.verify((error) => {
@@ -72,10 +70,7 @@ function createTransporterIfConfigured() {
 transporter = createTransporterIfConfigured();
 
 function buildTransporterCandidate({ host, port, secure }) {
-  const user = process.env.EMAIL_USER;
-  const pass = process.env.EMAIL_PASSWORD;
-
-  if (!user || !pass) {
+  if (!EMAIL_USER || !EMAIL_PASSWORD) {
     return null;
   }
 
@@ -83,54 +78,78 @@ function buildTransporterCandidate({ host, port, secure }) {
     host,
     port,
     secure,
-    family: 4,
-    lookup: dnsLookup,
+    family: 4, // Force IPv4
     requireTLS: !secure,
-    connectionTimeout: Number(process.env.EMAIL_CONNECTION_TIMEOUT_MS) || 10000,
-    greetingTimeout: Number(process.env.EMAIL_GREETING_TIMEOUT_MS) || 10000,
-    socketTimeout: Number(process.env.EMAIL_SOCKET_TIMEOUT_MS) || 15000,
+    connectionTimeout: Number(process.env.EMAIL_CONNECTION_TIMEOUT_MS) || 15000,
+    greetingTimeout: Number(process.env.EMAIL_GREETING_TIMEOUT_MS) || 15000,
+    socketTimeout: Number(process.env.EMAIL_SOCKET_TIMEOUT_MS) || 20000,
     tls: {
       servername: host,
-      minVersion: 'TLSv1.2'
+      minVersion: 'TLSv1.2',
+      rejectUnauthorized: false // Allow self-signed certs if needed
     },
-    auth: { user, pass }
+    auth: { 
+      user: EMAIL_USER, 
+      pass: EMAIL_PASSWORD 
+    },
+    logger: false,
+    debug: false
   });
 }
 
-async function sendMailWithFallback(mailOptions, timeoutMs = Number(process.env.EMAIL_SEND_TIMEOUT_MS) || 15000) {
-  const host = process.env.EMAIL_HOST || 'smtp.gmail.com';
+async function sendMailWithFallback(mailOptions, timeoutMs = Number(process.env.EMAIL_SEND_TIMEOUT_MS) || 30000) {
+  const host = EMAIL_HOST;
   const primaryPort = parseInt(process.env.EMAIL_PORT) || 587;
+  
+  // Try primary port first with 2 attempts, then fallback port with 2 attempts
   const candidates = [
     { host, port: primaryPort, secure: primaryPort === 465 },
+    { host, port: primaryPort, secure: primaryPort === 465 }, // Retry same port
     { host, port: 465, secure: true },
+    { host, port: 465, secure: true }, // Retry port 465
     { host, port: 587, secure: false }
   ];
 
   let lastError = null;
+  let attemptNumber = 0;
 
   for (const candidate of candidates) {
+    attemptNumber++;
     const candidateTransporter = buildTransporterCandidate(candidate);
     if (!candidateTransporter) {
-      throw new Error('SMTP transporter is not configured');
+      throw new Error('SMTP transporter is not configured (missing EMAIL_USER or EMAIL_PASSWORD)');
     }
 
     let timeoutId;
     try {
+      console.log(`[Email Service] 📧 Attempt ${attemptNumber}/${candidates.length}: Connecting to ${candidate.host}:${candidate.port} (secure=${candidate.secure}, family=4, timeout=${timeoutMs}ms)`);
+      
       const info = await Promise.race([
         candidateTransporter.sendMail(mailOptions),
         new Promise((_, reject) => {
-          timeoutId = setTimeout(() => reject(new Error(`Email send timed out after ${timeoutMs}ms`)), timeoutMs);
+          timeoutId = setTimeout(() => reject(new Error(`Connection timeout after ${timeoutMs}ms`)), timeoutMs);
         })
       ]);
+      
+      console.log(`[Email Service] ✅ Email sent successfully on attempt ${attemptNumber}`);
+      console.log(`   To: ${mailOptions.to}, Message ID: ${info && info.messageId}`);
       return info;
     } catch (error) {
       lastError = error;
-      console.warn('[Email Service] ⚠️ SMTP attempt failed:', {
+      const errorMsg = error && error.message ? error.message : String(error);
+      console.warn(`[Email Service] ⚠️ Attempt ${attemptNumber} failed:`, {
         host: candidate.host,
         port: candidate.port,
         secure: candidate.secure,
-        error: error && error.message ? error.message : error
+        error: errorMsg
       });
+      
+      // Wait before retry (except on last attempt)
+      if (attemptNumber < candidates.length) {
+        const waitMs = 1000 + (attemptNumber * 500); // 1.5s, 2s, 2.5s, 3s, etc
+        console.log(`[Email Service] ⏳ Waiting ${waitMs}ms before next attempt...`);
+        await new Promise(resolve => setTimeout(resolve, waitMs));
+      }
     } finally {
       if (timeoutId) {
         clearTimeout(timeoutId);
