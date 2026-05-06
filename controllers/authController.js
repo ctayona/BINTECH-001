@@ -345,7 +345,7 @@ exports.register = async (req, res) => {
     try {
       const { data: existingUser, error: checkError } = await supabase
         .from('user_accounts')
-        .select('email, system_id, created_at')
+        .select('email, system_id, created_at, role')
         .ilike('email', trimmedEmail)  // Use ilike for case-insensitive search
         .maybeSingle();
       
@@ -362,17 +362,43 @@ exports.register = async (req, res) => {
         console.log(`⚠️ Email FOUND in database: ${existingUser.email}`);
         console.log(`   System ID: ${existingUser.system_id}`);
         console.log(`   Created at: ${createdAt.toISOString()}`);
-        
-        // Check if this is a ghost/orphaned account (created more than 1 hour ago but incomplete)
-        const ageInMinutes = (Date.now() - createdAt.getTime()) / (1000 * 60);
-        
-        if (ageInMinutes > 60) {
-          console.log(`   Account is ${Math.floor(ageInMinutes)} minutes old - might be orphaned, attempting cleanup...`);
-          // Try to clean up old orphaned records
-          await cleanupOrphanedAccount(existingUser.system_id);
-          console.log(`✓ Cleaned up orphaned account, proceeding with new registration`);
-        } else {
-          console.log(`❌ Email already registered (recent record)`);
+        // Immediately verify whether a role-specific profile exists for this system_id.
+        // If the role profile is missing, treat this as an orphan and attempt cleanup so the user can retry.
+        try {
+          const foundRole = existingUser.role || null;
+          if (foundRole) {
+            const roleTableName = getTableNameByRole(foundRole);
+            const { data: roleProfile, error: roleProfileErr } = await supabase
+              .from(roleTableName)
+              .select('system_id')
+              .eq('system_id', existingUser.system_id)
+              .maybeSingle();
+
+            if (roleProfileErr && roleProfileErr.code !== 'PGRST116') {
+              console.warn('Error checking role profile during orphan detection:', roleProfileErr.message);
+            }
+
+            if (!roleProfile) {
+              console.log(`   No role-specific profile found in ${roleTableName} for system_id ${existingUser.system_id} — treating as orphan and cleaning up.`);
+              await cleanupOrphanedAccount(existingUser.system_id);
+              console.log(`✓ Cleaned up orphaned account, proceeding with new registration`);
+            } else {
+              // Role profile exists — respect existing account regardless of age
+              console.log(`❌ Role profile exists for system_id ${existingUser.system_id}; email is registered`);
+              return res.status(400).json({
+                success: false,
+                message: 'Email already registered',
+                existingEmail: existingUser.email
+              });
+            }
+          } else {
+            // Role not set on the existing user — attempt cleanup
+            console.log(`   Existing user has no role set; treating as orphan and cleaning up.`);
+            await cleanupOrphanedAccount(existingUser.system_id);
+            console.log(`✓ Cleaned up orphaned account, proceeding with new registration`);
+          }
+        } catch (orphanErr) {
+          console.warn('Error during orphan-detection cleanup:', orphanErr);
           return res.status(400).json({
             success: false,
             message: 'Email already registered',
