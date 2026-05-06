@@ -1255,18 +1255,9 @@ exports.getWebsiteLogs = async (req, res) => {
       'redemptions',
       () => supabase
         .from('redemptions')
-        .select('id, user_id, gmail, email, reward_id, points_spent, status, created_at')
+        .select('*')
         .order('created_at', { ascending: false })
-        .limit(100),
-      async (primaryError) => {
-        // If gmail column doesn't exist, try without it
-        if (!String(primaryError.message || '').toLowerCase().includes('gmail')) return null;
-        return supabase
-          .from('redemptions')
-          .select('id, user_id, reward_id, points_spent, status, created_at')
-          .order('created_at', { ascending: false })
-          .limit(100);
-      }
+        .limit(100)
     );
 
     // Fetch user accounts by ID for direct lookup of redemption users
