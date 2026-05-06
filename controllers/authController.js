@@ -617,7 +617,7 @@ exports.register = async (req, res) => {
     void emailService.sendSignupWelcomeEmail(email, firstName)
       .then((emailSent) => {
         if (emailSent) {
-          console.log(`✅ Welcome email sent successfully to ${email}`);
+          console.log(`✅ Welcome email queued successfully for ${email}`);
         } else {
           console.warn(`⚠️ Failed to send welcome email to ${email}, but account was created`);
         }

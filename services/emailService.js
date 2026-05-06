@@ -53,6 +53,82 @@ function createTransporterIfConfigured() {
 
 transporter = createTransporterIfConfigured();
 
+function buildTransporterCandidate({ host, port, secure }) {
+  const user = process.env.EMAIL_USER;
+  const pass = process.env.EMAIL_PASSWORD;
+
+  if (!user || !pass) {
+    return null;
+  }
+
+  return nodemailer.createTransport({
+    host,
+    port,
+    secure,
+    family: 4,
+    requireTLS: !secure,
+    connectionTimeout: Number(process.env.EMAIL_CONNECTION_TIMEOUT_MS) || 10000,
+    greetingTimeout: Number(process.env.EMAIL_GREETING_TIMEOUT_MS) || 10000,
+    socketTimeout: Number(process.env.EMAIL_SOCKET_TIMEOUT_MS) || 15000,
+    tls: {
+      servername: host,
+      minVersion: 'TLSv1.2'
+    },
+    auth: { user, pass }
+  });
+}
+
+async function sendMailWithFallback(mailOptions, timeoutMs = Number(process.env.EMAIL_SEND_TIMEOUT_MS) || 15000) {
+  const host = process.env.EMAIL_HOST || 'smtp.gmail.com';
+  const primaryPort = parseInt(process.env.EMAIL_PORT) || 587;
+  const candidates = [
+    { host, port: primaryPort, secure: primaryPort === 465 },
+    { host, port: 465, secure: true },
+    { host, port: 587, secure: false }
+  ];
+
+  let lastError = null;
+
+  for (const candidate of candidates) {
+    const candidateTransporter = buildTransporterCandidate(candidate);
+    if (!candidateTransporter) {
+      throw new Error('SMTP transporter is not configured');
+    }
+
+    let timeoutId;
+    try {
+      const info = await Promise.race([
+        candidateTransporter.sendMail(mailOptions),
+        new Promise((_, reject) => {
+          timeoutId = setTimeout(() => reject(new Error(`Email send timed out after ${timeoutMs}ms`)), timeoutMs);
+        })
+      ]);
+      return info;
+    } catch (error) {
+      lastError = error;
+      console.warn('[Email Service] ⚠️ SMTP attempt failed:', {
+        host: candidate.host,
+        port: candidate.port,
+        secure: candidate.secure,
+        error: error && error.message ? error.message : error
+      });
+    } finally {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+      if (candidateTransporter && typeof candidateTransporter.close === 'function') {
+        try {
+          candidateTransporter.close();
+        } catch (_) {
+          // Ignore close errors
+        }
+      }
+    }
+  }
+
+  throw lastError || new Error('All SMTP send attempts failed');
+}
+
 async function sendMailWithTimeout(mailOptions, timeoutMs = Number(process.env.EMAIL_SEND_TIMEOUT_MS) || 15000) {
   if (!transporter) {
     throw new Error('SMTP transporter is not configured');
@@ -200,7 +276,7 @@ The BinTECH Team
     }
 
     try {
-      const info = await sendMailWithTimeout(mailOptions);
+      const info = await sendMailWithFallback(mailOptions);
       console.log('✅ Welcome email sent to', email);
       console.log('   Message ID:', info && info.messageId);
       return true;
@@ -333,135 +409,7 @@ The BinTECH Team
  * @returns {Promise<boolean>} - Success status
  */
 async function sendWelcomeEmail(email, firstName) {
-  try {
-    const dashboardLink = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard`;
-    
-    const mailOptions = {
-      from: `BinTECH <${process.env.EMAIL_USER}>`,
-      to: email,
-      subject: 'Welcome to BinTECH - Start Earning EcoPoints!',
-      html: `
-        <!DOCTYPE html>
-        <html>
-          <head>
-            <style>
-              body { font-family: 'Poppins', Arial, sans-serif; line-height: 1.6; color: #333; }
-              .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-              .header { background: linear-gradient(135deg, #0f3b2e 0%, #1f4f3b 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
-              .header h1 { margin: 0; font-size: 28px; }
-              .content { background: #f5f5f5; padding: 30px; border-radius: 0 0 8px 8px; }
-              .button { display: inline-block; background: #d4e157; color: #0f3b2e; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold; margin: 20px 0; }
-              .button:hover { background: #e8f5a8; }
-              .footer { text-align: center; color: #666; font-size: 12px; margin-top: 20px; }
-              .features { background: white; padding: 20px; border-radius: 4px; margin: 20px 0; }
-              .feature-item { display: flex; align-items: center; margin: 15px 0; }
-              .feature-icon { font-size: 24px; margin-right: 15px; }
-              .feature-text { flex: 1; }
-            </style>
-          </head>
-          <body>
-            <div class="container">
-              <div class="header">
-                <h1>🎉 Welcome to BinTECH!</h1>
-              </div>
-              
-              <div class="content">
-                <p>Hi <strong>${firstName}</strong>,</p>
-                
-                <p>Your email has been verified! Your BinTECH account is now fully activated and ready to use.</p>
-                
-                <div style="text-align: center;">
-                  <a href="${dashboardLink}" class="button">Go to Dashboard</a>
-                </div>
-                
-                <div class="features">
-                  <h3>🌱 What You Can Do Now:</h3>
-                  
-                  <div class="feature-item">
-                    <div class="feature-icon">♻️</div>
-                    <div class="feature-text">
-                      <strong>Sort Waste</strong><br>
-                      Use our smart kiosks to sort waste and get instant feedback
-                    </div>
-                  </div>
-                  
-                  <div class="feature-item">
-                    <div class="feature-icon">⭐</div>
-                    <div class="feature-text">
-                      <strong>Earn EcoPoints</strong><br>
-                      Collect points for every item you sort correctly
-                    </div>
-                  </div>
-                  
-                  <div class="feature-item">
-                    <div class="feature-icon">🎁</div>
-                    <div class="feature-text">
-                      <strong>Redeem Rewards</strong><br>
-                      Exchange your EcoPoints for exciting rewards
-                    </div>
-                  </div>
-                  
-                  <div class="feature-item">
-                    <div class="feature-icon">📊</div>
-                    <div class="feature-text">
-                      <strong>Track Impact</strong><br>
-                      Monitor your environmental contribution
-                    </div>
-                  </div>
-                </div>
-                
-                <p>If you have any questions or need help, don't hesitate to contact our support team.</p>
-                
-                <p>Happy sorting!<br><strong>The BinTECH Team</strong></p>
-              </div>
-              
-              <div class="footer">
-                <p>© 2024 BinTECH - University of Makati. All rights reserved.</p>
-              </div>
-            </div>
-          </body>
-        </html>
-      `,
-      text: `
-Welcome to BinTECH!
-
-Hi ${firstName},
-
-Your email has been verified! Your BinTECH account is now fully activated.
-
-Go to your dashboard: ${dashboardLink}
-
-What You Can Do Now:
-• Sort Waste - Use our smart kiosks to sort waste
-• Earn EcoPoints - Collect points for every item you sort correctly
-• Redeem Rewards - Exchange your EcoPoints for exciting rewards
-• Track Impact - Monitor your environmental contribution
-
-Happy sorting!
-The BinTECH Team
-      `
-    };
-    
-    if (!transporter) {
-      console.warn('[Email Service] ⚠️ SMTP not configured; skipping welcome email to', email);
-      return true;
-    }
-
-    try {
-      const info = await sendMailWithTimeout(mailOptions);
-      console.log('✅ Welcome email sent to', email);
-      console.log('   Message ID:', info && info.messageId);
-      return true;
-    } catch (error) {
-      console.error('❌ Error sending welcome email to', email, '-', error && error.message ? error.message : error);
-      console.error(error && error.stack ? error.stack : 'No stack available');
-      return false;
-    }
-  } catch (error) {
-    console.error('❌ Error in sendWelcomeEmail for', email, '-', error && error.message ? error.message : error);
-    console.error(error && error.stack ? error.stack : 'No stack available');
-    return false;
-  }
+  return sendSignupWelcomeEmail(email, firstName);
 }
 
 /**
@@ -489,7 +437,7 @@ async function sendOTPEmail(email, otp, firstName) {
   };
 
   try {
-    const info = await sendMailWithTimeout(mailOptions);
+    const info = await sendMailWithFallback(mailOptions);
     console.log('✅ OTP email sent to', email);
     console.log('   Message ID:', info && info.messageId);
     return true;
@@ -601,7 +549,7 @@ The BinTECH Team
     }
 
     try {
-      const info = await sendMailWithTimeout(mailOptions);
+      const info = await sendMailWithFallback(mailOptions);
       console.log('✅ Password reset confirmation email sent to', email);
       console.log('   Message ID:', info && info.messageId);
       return true;
@@ -641,7 +589,7 @@ async function sendEmail(to, subject, html, text) {
     }
 
     try {
-      const info = await sendMailWithTimeout(mailOptions);
+      const info = await sendMailWithFallback(mailOptions);
       console.log('✅ Email sent to', to);
       console.log('   Message ID:', info && info.messageId);
       return true;
