@@ -137,6 +137,10 @@ function generateOTPEmailTemplate(firstName, otp) {
               BinTECH - Smart Waste Sorting & Rewards Platform<br>
               University of Makati | <a href="https://bintech.umak.edu.ph" style="color: #0f3b2e; text-decoration: none;">bintech.umak.edu.ph</a>
             </p>
+            
+            <p style="font-size: 10px; color: #ccc; text-align: center; margin-top: 20px;">
+              💡 <strong>Missing this email?</strong> If this email landed in your spam or promotions folder, please mark it as "Not Spam" or "Move to Inbox" to ensure you receive important BinTECH updates.
+            </p>
           </div>
           
           <div class="footer">
@@ -241,6 +245,10 @@ async function sendSignupWelcomeEmail(email, firstName) {
               <p style="font-size: 11px; color: #999;">
                 BinTECH - Smart Waste Sorting & Rewards Platform<br>
                 University of Makati | <a href="https://bintech.umak.edu.ph" style="color: #0f3b2e; text-decoration: none;">bintech.umak.edu.ph</a>
+              </p>
+              
+              <p style="font-size: 10px; color: #ccc; text-align: center; margin-top: 20px;">
+                💡 <strong>Missing this email?</strong> If this email landed in your spam or promotions folder, please mark it as "Not Spam" or "Move to Inbox" to ensure you receive important BinTECH updates.
               </p>
             </div>
             
@@ -366,6 +374,10 @@ async function sendPasswordResetConfirmation(email, firstName) {
               <p style="font-size: 11px; color: #999;">
                 BinTECH - Smart Waste Sorting & Rewards Platform<br>
                 University of Makati | <a href="https://bintech.umak.edu.ph" style="color: #0f3b2e; text-decoration: none;">bintech.umak.edu.ph</a>
+              </p>
+              
+              <p style="font-size: 10px; color: #ccc; text-align: center; margin-top: 20px;">
+                💡 <strong>Missing this email?</strong> If this email landed in your spam or promotions folder, please mark it as "Not Spam" or "Move to Inbox" to ensure you receive important BinTECH updates.
               </p>
             </div>
             
