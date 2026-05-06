@@ -1,0 +1,1429 @@
+<!doctype html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BinTECH - Available Rewards</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="/js/timestampUtils.js"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&amp;family=Poppins:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+  <link href="/css/user-footer.css" rel="stylesheet">
+  <style>
+    :root {
+      --primary-dark: #0F3B2E;
+      --secondary-gradient-start: #143D2E;
+      --secondary-gradient-end: #1F4F3B;
+      --accent-yellow: #D4E157;
+      --card-green: #5DAE60;
+      --page-bg: #E8ECEB;
+    }
+    
+    * { box-sizing: border-box; }
+    
+    html, body { height: 100%; }
+    
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-color: var(--page-bg);
+      margin: 0;
+      padding: 0;
+    }
+    
+    .font-playfair { font-family: 'Playfair Display', serif; }
+    .gradient-dark { background: linear-gradient(135deg, var(--secondary-gradient-start), var(--secondary-gradient-end)); }
+    .card-shadow { box-shadow: 0 4px 20px rgba(15, 59, 46, 0.12); }
+    
+    .reward-card {
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .reward-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 12px 35px rgba(15, 59, 46, 0.2);
+    }
+    
+    .nav-link {
+      position: relative;
+      transition: color 0.3s ease;
+    }
+    
+    .nav-link::after {
+      content: '';
+      position: absolute;
+      bottom: -4px;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: var(--accent-yellow);
+      transition: width 0.3s ease;
+    }
+    
+    .nav-link:hover::after,
+    .nav-link.active::after { width: 100%; }
+    
+    .details-btn, .transfer-btn, .redeem-btn {
+      background: linear-gradient(135deg, var(--card-green), #4CAF50);
+      transition: all 0.3s ease;
+    }
+    
+    .details-btn:hover, .transfer-btn:hover, .redeem-btn:hover {
+      background: linear-gradient(135deg, #4CAF50, var(--card-green));
+      transform: scale(1.02);
+    }
+    
+    .redeem-btn.disabled {
+      background: linear-gradient(135deg, #EF5350, #E53935) !important;
+      cursor: not-allowed;
+      opacity: 0.8;
+    }
+    
+    .redeem-btn.disabled:hover {
+      transform: none;
+    }
+    
+    @keyframes pulse-glow {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(212, 225, 87, 0.4); }
+      50% { box-shadow: 0 0 20px 4px rgba(212, 225, 87, 0.6); }
+    }
+    
+    .points-badge { animation: pulse-glow 2s ease-in-out infinite; }
+    
+    .mobile-nav-panel { display: none; }
+    
+    @media (max-width: 767px) {
+      .mobile-nav-toggle { display: inline-flex; }
+      .points-badge { display: none; }
+      .mobile-nav-panel[data-open="true"] { display: block; }
+    }
+    
+    .modal-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    
+    .modal-backdrop.active { display: flex; }
+    
+    .modal-content {
+      background: white;
+      border-radius: 1.5rem;
+      padding: 1.75rem;
+      max-width: 1100px;
+      width: 90vw;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 60px rgba(15, 59, 46, 0.3);
+      animation: slideIn 0.3s ease;
+    }
+    
+    /* Two-column layout for details modal */
+    #details-modal .modal-content {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      align-items: start;
+    }
+    
+    /* Header spans full width at top */
+    #details-modal .modal-header {
+      grid-column: 1 / -1;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+    
+    /* LEFT COLUMN: Image and Description */
+    #details-modal .modal-image-col { grid-column: 1; grid-row: 2; }
+    #details-modal .modal-desc-col { grid-column: 1; grid-row: 3; margin-top: 1rem; }
+    
+    /* RIGHT COLUMN: All controls and info */
+    #details-modal .modal-controls-col { grid-column: 2; grid-row: 2 / span 8; display: flex; flex-direction: column; gap: 1.25rem; }
+    
+    /* Responsive: Stack on mobile */
+    @media (max-width: 768px) {
+      #details-modal .modal-content {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+        padding: 1.25rem;
+      }
+      #details-modal .modal-image-col,
+      #details-modal .modal-desc-col,
+      #details-modal .modal-controls-col {
+        grid-column: 1;
+      }
+      #details-modal .modal-controls-col { grid-row: auto; }
+    }
+    
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .close-modal {
+      cursor: pointer;
+      font-size: 28px;
+      line-height: 1;
+      color: #9CA3AF;
+      transition: color 0.2s ease;
+    }
+    
+    .close-modal:hover { color: #0F3B2E; }
+    
+    #modal-reward-image-container {
+      width: 100%;
+      height: 280px;
+      border-radius: 1rem;
+      overflow: hidden;
+      background: linear-gradient(135deg, #E8ECEB, #D1D5DB);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    #modal-reward-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    
+    .info-card {
+      background: linear-gradient(135deg, #E8F5E9, #F1F8F6);
+      border-radius: 1rem;
+      padding: 1.25rem;
+      border: 1px solid #C8E6C9;
+    }
+    
+    .info-card-red {
+      background: linear-gradient(135deg, #FFEBEE, #FEF3F2);
+      border-color: #FFCDD2;
+    }
+    
+    .quantity-control {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+      background: #F5F5F5;
+      border-radius: 1rem;
+      padding: 1rem;
+    }
+    
+    .quantity-btn {
+      background: #5DAE60;
+      color: white;
+      width: 44px;
+      height: 44px;
+      border-radius: 0.75rem;
+      font-weight: bold;
+      font-size: 1.5rem;
+      transition: all 0.2s ease;
+      cursor: pointer;
+      border: none;
+    }
+    
+    .quantity-btn:hover { background: #4CAF50; transform: scale(1.05); }
+    .quantity-btn:active { transform: scale(0.95); }
+    
+    #modal-quantity-select {
+      width: 80px;
+      padding: 0.75rem;
+      border: 2px solid #5DAE60;
+      border-radius: 0.75rem;
+      text-align: center;
+      font-weight: bold;
+      font-size: 1.25rem;
+      font-family: 'Poppins', sans-serif;
+    }
+    
+    .input-field {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid #E8ECEB;
+      border-radius: 0.75rem;
+      font-family: 'Poppins', sans-serif;
+      transition: all 0.3s ease;
+    }
+    
+    .input-field:focus {
+      outline: none;
+      border-color: var(--card-green);
+      box-shadow: 0 0 0 3px rgba(93, 174, 96, 0.1);
+    }
+    
+    .error-message {
+      background: #FEF2F2;
+      border: 2px solid #FCA5A5;
+      border-radius: 1rem;
+      padding: 1rem;
+    }
+    
+    .line-clamp-2 {
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+  </style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+</head>
+<body>
+<div id="app-wrapper" class="w-full min-h-screen flex flex-col">
+  <!-- Navigation Bar -->
+  <nav class="gradient-dark sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <div class="flex items-center space-x-3">
+          <button onclick="window.location.href='/profile'" class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center overflow-hidden border-2 border-[#D4E157]/30 hover:border-[#D4E157]/60 hover:bg-white/20 transition-all cursor-pointer">
+            <svg class="w-6 h-6 text-[#D4E157]" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+            </svg>
+          </button>
+          <div class="hidden sm:block">
+            <p class="text-[#D4E157]/70 text-xs uppercase tracking-wider">Welcome Back</p>
+            <p id="nav-user-name" class="text-white font-semibold text-sm">MARIO SALLY</p>
+          </div>
+        </div>
+
+        <div class="hidden md:flex items-center space-x-8">
+          <a href="/dashboard" class="nav-link text-white/80 hover:text-white text-sm font-medium">Dashboard</a>
+          <a href="/rewards" class="nav-link active text-[#D4E157] text-sm font-medium">Rewards</a>
+          <a href="/history" class="nav-link text-white/80 hover:text-white text-sm font-medium">History</a>
+          <a href="/how-it-works" class="nav-link text-white/80 hover:text-white text-sm font-medium">How It Works</a>
+          <a href="/qr-scanner" class="nav-link text-white/80 hover:text-white text-sm font-medium flex items-center gap-1">💳 Transfer Points</a>
+        </div>
+
+        <div class="flex items-center space-x-3">
+          <button id="mobile-nav-toggle" class="mobile-nav-toggle md:hidden p-2 text-white/80 hover:text-[#D4E157] border border-white/30 rounded-full">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+          </button>
+          <div class="hidden md:flex items-center space-x-4">
+            <div class="points-badge flex items-center space-x-2 bg-[#D4E157]/20 px-4 py-2 rounded-full border border-[#D4E157]/40">
+              <span class="text-lg">✨</span>
+              <span id="nav-points" class="text-[#D4E157] font-bold text-sm">521 Points</span>
+            </div>
+            <button onclick="handleLogout()" class="px-2 sm:px-4 py-2 text-white/70 hover:text-white text-xs sm:text-sm border border-white/30 rounded-full hover:bg-white/10 transition-all">Logout</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="mobile-nav-panel" class="mobile-nav-panel md:hidden border-t border-white/15 bg-[#143D2E]/95 px-4 py-4 space-y-3" data-open="false" style="display:none;">
+      <a href="/dashboard" class="block text-white/90 text-sm font-medium">Dashboard</a>
+      <a href="/profile" class="block text-white/90 text-sm font-medium">Profile</a>
+      <a href="/rewards" class="block text-[#D4E157] text-sm font-medium">Rewards</a>
+      <a href="/history" class="block text-white/90 text-sm font-medium">History</a>
+      <a href="/how-it-works" class="block text-white/90 text-sm font-medium">How It Works</a>
+      <a href="/qr-scanner" class="block text-white/90 text-sm font-medium">Transfer Points</a>
+      <div class="pt-2 border-t border-white/15 flex items-center justify-between">
+        <span id="mobile-nav-points" class="text-[#D4E157] text-sm font-semibold">0 Points</span>
+        <button onclick="handleLogout()" class="px-3 py-1.5 text-white/80 text-xs border border-white/30 rounded-full hover:bg-white/10">Logout</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="flex-grow">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <!-- Page Header -->
+      <div class="text-center mb-12">
+        <h1 id="page-title" class="font-playfair text-4xl sm:text-5xl text-[#0F3B2E] mb-3">Available Rewards</h1>
+        <p id="page-subtitle" class="text-[#0F3B2E]/70 text-lg">Check out exciting rewards you can earn with your EcoPoints.</p>
+      </div>
+
+      <!-- Filter & Sort Controls -->
+      <div class="mb-8 bg-white rounded-xl card-shadow p-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-semibold text-[#0F3B2E] mb-2">Search Rewards</label>
+            <input type="text" id="search-rewards" placeholder="Search rewards by name..." class="w-full px-4 py-2 border border-[#0F3B2E]/20 rounded-lg focus:outline-none focus:border-[#5DAE60] focus:ring-2 focus:ring-[#5DAE60]/20 text-[#0F3B2E]">
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-[#0F3B2E] mb-2">Sort By</label>
+            <select id="sort-rewards" class="w-full px-4 py-2 border border-[#0F3B2E]/20 rounded-lg focus:outline-none focus:border-[#5DAE60] focus:ring-2 focus:ring-[#5DAE60]/20 text-[#0F3B2E] bg-white cursor-pointer">
+              <option value="points-asc">Points (Low to High)</option>
+              <option value="points-desc">Points (High to Low)</option>
+              <option value="name-asc">Name (A-Z)</option>
+              <option value="name-desc">Name (Z-A)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Rewards Grid -->
+      <div id="rewards-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+        <div class="text-center col-span-full py-12">
+          <div class="inline-block bg-[#0F3B2E]/10 rounded-lg p-4">
+            <p class="text-[#0F3B2E]/70">Loading rewards...</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Transfer EcoPoints Section -->
+      <div class="gradient-dark rounded-2xl card-shadow p-8 mb-8 text-white">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
+          <div>
+            <h2 class="font-playfair text-3xl mb-1">Share EcoPoints</h2>
+            <p class="text-white/70">Spread the green — send points to a friend</p>
+          </div>
+          <div class="mt-4 md:mt-0 border-2 border-[#D4E157]/50 rounded-xl px-6 py-3 bg-white/10">
+            <p class="text-white/70 text-xs uppercase tracking-wider mb-1">YOUR BALANCE</p>
+            <p class="font-playfair text-3xl text-[#D4E157]"><span id="balance-display">521</span></p>
+          </div>
+        </div>
+
+        <div class="mb-6">
+          <label class="block text-sm font-semibold text-white/90 mb-2 uppercase tracking-wider">RECIPIENT EMAIL</label>
+          <input type="email" id="recipient-email" class="w-full bg-white/10 border border-white/20 text-white px-4 py-3 rounded-lg placeholder-white/50 focus:outline-none focus:border-[#D4E157]/50" placeholder="e.g., student@umak.edu.ph">
+          <p class="text-red-400 text-sm mt-1 hidden" id="email-error">Please enter a valid email address.</p>
+        </div>
+
+        <div class="mb-6">
+          <p class="text-sm font-semibold text-white/90 mb-3 uppercase tracking-wider">QUICK SELECT</p>
+          <div class="grid grid-cols-3 gap-3">
+            <button class="quick-select-btn border-2 border-[#D4E157]/30 hover:border-[#D4E157] text-white py-2 rounded-lg transition-all" data-amount="10">10 pts</button>
+            <button class="quick-select-btn border-2 border-white/20 hover:border-[#D4E157] text-white py-2 rounded-lg transition-all" data-amount="25">25 pts</button>
+            <button class="quick-select-btn border-2 border-white/20 hover:border-[#D4E157] text-white py-2 rounded-lg transition-all" data-amount="50">50 pts</button>
+            <button class="quick-select-btn border-2 border-white/20 hover:border-[#D4E157] text-white py-2 rounded-lg transition-all" data-amount="75">75 pts</button>
+            <button class="quick-select-btn border-2 border-white/20 hover:border-[#D4E157] text-white py-2 rounded-lg transition-all" data-amount="100">100 pts</button>
+            <button class="quick-select-btn border-2 border-white/20 hover:border-[#D4E157] text-white py-2 rounded-lg transition-all" data-amount="custom">Custom</button>
+          </div>
+        </div>
+
+        <div class="mb-8">
+          <div class="flex justify-between items-center mb-2">
+            <label class="text-sm font-semibold text-white/90">Transfer amount</label>
+            <span class="text-[#D4E157] font-bold text-lg"><span id="amount-display">10</span> pts</span>
+          </div>
+          <div class="flex items-center gap-3">
+            <span class="text-white/70 text-sm">Min 10</span>
+            <input type="range" id="transfer-amount" class="flex-1 h-2 bg-white/20 rounded-lg appearance-none cursor-pointer" style="accent-color: #D4E157;" min="10" max="100" value="10">
+            <span class="text-white/70 text-sm">Max 100</span>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between">
+          <p class="text-xs text-white/60">⏱ Max 100 pts per transaction</p>
+          <button class="transfer-btn text-[#0F3B2E] px-8 py-3 rounded-lg font-semibold hover:shadow-lg transition-all flex items-center gap-2" id="transfer-btn">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8m0 8l-6-4m6 4l6-4"/></svg>
+            Send Points
+          </button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="bintech-user-footer flex-shrink-0">
+    <div class="bintech-user-footer__wrap">
+      <div class="bintech-user-footer__grid">
+        <section>
+          <div class="flex items-center gap-3">
+            <span class="bintech-brand-mark" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
+                <path d="M13 3L4 14h6l-1 7 11-13h-6l1-5z" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </span>
+            <p class="bintech-brand-title">Bintech</p>
+          </div>
+          <p class="bintech-brand-copy">Bintech builds secure, intuitive financial technology for modern users, blending speed, trust, and smarter money workflows.</p>
+        </section>
+        <nav class="bintech-user-footer__nav"><h4>Company</h4><ul><li><a href="#">About</a></li><li><a href="#">Contact</a></li></ul></nav>
+        <nav class="bintech-user-footer__nav"><h4>Products</h4><ul><li><a href="#">Rewards</a></li></ul></nav>
+        <nav class="bintech-user-footer__nav"><h4>Resources</h4><ul><li><a href="#">Help Center</a></li><li><a href="#">Developers</a></li></ul></nav>
+        <nav class="bintech-user-footer__nav"><h4>Legal</h4><ul><li><a href="#">Terms</a></li><li><a href="#">Privacy</a></li></ul></nav>
+        <section class="bintech-user-footer__subscribe bintech-user-footer__glass">
+          <h4>Subscribe To Our Newsletter</h4>
+          <p>Get product releases, security updates, and fintech insights delivered monthly.</p>
+          <form class="bintech-newsletter-form" onsubmit="event.preventDefault();">
+            <input type="email" placeholder="you@domain.com">
+            <button type="submit">Join</button>
+          </form>
+        </section>
+      </div>
+      <div class="bintech-footer-bottom">
+        <p>© 2026 Bintech. All rights reserved.</p>
+        <div class="bintech-social-list">
+          <a href="#" aria-label="X"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.901 3H21l-4.588 5.244L21.808 21h-4.226l-3.31-4.889L9.996 21H7.896l4.907-5.609L2.192 3h4.332l2.993 4.422L13.099 3h5.802zm-1.48 16h1.171L7.946 4.89H6.69L17.42 19z"/></svg></a>
+          <a href="#" aria-label="LinkedIn"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6.94 8.5A1.55 1.55 0 1 1 6.94 5.4 1.55 1.55 0 0 1 6.94 8.5zM5.62 9.75h2.64V18H5.62V9.75zm4.13 0h2.53v1.13h.03c.35-.67 1.22-1.37 2.5-1.37 2.67 0 3.16 1.76 3.16 4.05V18h-2.64v-3.93c0-.94-.02-2.14-1.3-2.14-1.3 0-1.5 1.02-1.5 2.07V18H9.75V9.75z"/></svg></a>
+          <a href="#" aria-label="Instagram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3.6" y="3.6" width="16.8" height="16.8" rx="4"></rect><circle cx="12" cy="12" r="3.8"></circle><circle cx="17.35" cy="6.65" r="0.9" fill="currentColor" stroke="none"></circle></svg></a>
+          <a href="#" aria-label="YouTube"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M22 12s0-3.1-.4-4.6c-.2-.8-.8-1.4-1.6-1.6C18.5 5.4 12 5.4 12 5.4s-6.5 0-8 .4c-.8.2-1.4.8-1.6 1.6C2 8.9 2 12 2 12s0 3.1.4 4.6c.2.8.8 1.4 1.6 1.6 1.5.4 8 .4 8 .4s6.5 0 8-.4c.8-.2 1.4-.8 1.6-1.6.4-1.5.4-4.6.4-4.6zM10 15.5V8.5l6 3.5-6 3.5z"/></svg></a>
+        </div>
+      </div>
+    </div>
+  </footer>
+</div>
+
+<!-- Reward Details Modal -->
+<div id="details-modal" class="modal-backdrop">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 id="modal-reward-name" class="font-playfair text-3xl md:text-4xl font-bold text-[#0F3B2E]">Reward Name</h2>
+      <button onclick="closeModal()" class="close-modal">✕</button>
+    </div>
+
+    <!-- Left Column: Image -->
+    <div class="modal-image-col">
+      <div id="modal-reward-image-container">
+        <img id="modal-reward-image" src="" alt="Reward Image" style="display: none;">
+        <div id="modal-image-placeholder" class="text-6xl">🎁</div>
+      </div>
+    </div>
+
+    <!-- Left Column: Description -->
+    <div class="modal-desc-col">
+      <h3 class="text-xs font-bold text-[#0F3B2E]/60 uppercase tracking-widest mb-2">Description</h3>
+      <p id="modal-reward-description" class="text-[#0F3B2E]/75 text-sm leading-relaxed">Description goes here.</p>
+    </div>
+
+    <!-- Right Column: Controls -->
+    <div class="modal-controls-col">
+      <!-- Cost Card -->
+      <div class="info-card">
+        <p class="text-xs text-[#2E7D32] uppercase tracking-widest font-bold mb-2">Cost per item</p>
+        <p class="text-4xl font-bold text-[#2E7D32]"><span id="modal-reward-points">0</span> <span class="text-base">pts</span></p>
+      </div>
+
+      <!-- Remaining Stock Card -->
+      <div id="modal-stock-container" class="info-card">
+        <p class="text-xs text-[#2E7D32] uppercase tracking-widest font-bold mb-2">Remaining Stock</p>
+        <p class="text-4xl font-bold text-[#2E7D32]"><span id="modal-reward-quantity">0</span></p>
+        <p class="text-sm text-[#4CAF50] font-medium mt-1">available</p>
+      </div>
+
+      <!-- Quantity Selector -->
+      <div class="bg-white rounded-xl p-5 border border-[#E0E0E0]">
+        <p class="text-xs text-[#0F3B2E]/60 uppercase tracking-widest font-bold mb-3">Quantity</p>
+        <div class="quantity-control">
+          <button onclick="decreaseQuantity()" class="quantity-btn">−</button>
+          <input type="number" id="modal-quantity-select" min="1" max="1" value="1" onchange="validateQuantity()" onkeyup="validateQuantity()">
+          <button onclick="increaseQuantity()" class="quantity-btn">+</button>
+        </div>
+        <p class="text-xs text-[#0F3B2E]/50 text-center mt-3">Max: <span id="modal-max-quantity" class="font-bold text-[#0F3B2E]">1</span></p>
+      </div>
+
+      <!-- Total Cost Card -->
+      <div class="bg-gradient-to-br from-[#0F3B2E] to-[#1F4F3B] rounded-xl p-5 text-white shadow-md">
+        <p class="text-xs text-white/70 uppercase tracking-widest font-bold mb-2">Total Cost</p>
+        <p class="text-4xl font-bold"><span id="modal-total-cost">0</span> <span class="text-base">pts</span></p>
+      </div>
+
+      <!-- Redemption Instructions -->
+      <div class="bg-white rounded-xl p-5 border border-[#E0E0E0]">
+        <h3 class="text-xs font-bold text-[#0F3B2E] uppercase tracking-widest mb-2">Redemption Instructions</h3>
+        <p id="modal-redemption-instructions" class="text-[#0F3B2E]/70 text-sm leading-relaxed">Contact the office to redeem this reward.</p>
+      </div>
+
+      <!-- Terms & Conditions -->
+      <div class="bg-white rounded-xl p-5 border border-[#E0E0E0]">
+        <h3 class="text-xs font-bold text-[#0F3B2E] uppercase tracking-widest mb-2">Terms & Conditions</h3>
+        <p id="modal-conditions" class="text-[#0F3B2E]/70 text-sm leading-relaxed">Valid for one-time use. Cannot be exchanged for cash.</p>
+      </div>
+
+      <!-- Error Message -->
+      <div id="modal-error-message" class="error-message hidden">
+        <div class="flex items-start gap-3">
+          <span class="text-2xl">⚠️</span>
+          <div>
+            <p class="text-red-800 font-bold text-sm">Cannot Redeem</p>
+            <p id="modal-error-text" class="text-red-700 text-xs mt-1">You need <span id="modal-error-required" class="font-semibold">0</span> points but only have <span id="modal-error-available" class="font-semibold">0</span></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Redeem Button -->
+      <button class="redeem-btn text-white px-6 py-3 rounded-xl font-bold w-full text-lg transition-all shadow-md" id="modal-redeem-btn" onclick="showRedeemConfirmation()">Redeem Now</button>
+    </div>
+  </div>
+</div>
+
+<!-- Transfer Confirmation Modal -->
+<div id="transfer-confirm-modal" class="modal-backdrop">
+  <div class="modal-content" style="max-width: 420px;">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="font-playfair text-2xl text-[#0F3B2E]">Confirm Transfer</h2>
+      <span class="close-modal text-2xl" onclick="closeTransferConfirmModal()">×</span>
+    </div>
+    <div class="bg-[#0F3B2E]/5 rounded-lg p-4 mb-6">
+      <p class="text-[#0F3B2E] mb-3">You're about to transfer:</p>
+      <p class="text-3xl font-bold text-[#5DAE60] mb-2"><span id="confirm-amount">10</span> Points</p>
+      <p class="text-[#0F3B2E]/70 text-sm">to <span id="confirm-recipient" class="font-semibold text-[#0F3B2E]">recipient@umak.edu.ph</span></p>
+    </div>
+    <p class="text-[#0F3B2E]/60 text-sm mb-6">This action cannot be undone. Please confirm you want to proceed.</p>
+    <div class="flex gap-3 justify-end">
+      <button class="px-6 py-2 rounded-lg font-semibold border border-[#0F3B2E] text-[#0F3B2E] hover:bg-[#0F3B2E]/5 transition-all" onclick="closeTransferConfirmModal()">Cancel</button>
+      <button class="px-6 py-2 rounded-lg font-semibold bg-gradient-to-r from-[#5DAE60] to-[#4CAF50] text-white hover:shadow-lg transition-all" onclick="confirmTransfer()">Yes, Transfer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Redemption Confirmation Modal -->
+<div id="redeem-confirm-modal" class="modal-backdrop">
+  <div class="modal-content" style="max-width: 420px;">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="font-playfair text-2xl text-[#0F3B2E]">Confirm Redemption</h2>
+      <span class="close-modal text-2xl" onclick="closeRedeemConfirmModal()">×</span>
+    </div>
+    <div class="bg-[#0F3B2E]/5 rounded-lg p-4 mb-6">
+      <p class="text-[#0F3B2E] mb-2">Redeeming:</p>
+      <p class="text-2xl font-bold text-[#5DAE60]" id="confirm-reward-name">Reward Name</p>
+      <p class="text-[#0F3B2E]/70 text-sm mt-3">Quantity: <span id="confirm-quantity" class="font-semibold text-[#0F3B2E]">1</span></p>
+      <p class="text-[#0F3B2E]/70 text-sm mt-2">Cost: <span id="confirm-breakdown" class="font-semibold text-[#0F3B2E]">1 × 200 = 200</span> EcoPoints</p>
+    </div>
+    <p class="text-[#0F3B2E]/60 text-sm mb-6">A coupon will be generated and sent to your email. Do you want to proceed?</p>
+    <div class="flex gap-3 justify-end">
+      <button class="px-6 py-2 rounded-lg font-semibold border border-[#0F3B2E] text-[#0F3B2E] hover:bg-[#0F3B2E]/5 transition-all" onclick="closeRedeemConfirmModal()">Cancel</button>
+      <button class="px-6 py-2 rounded-lg font-semibold bg-gradient-to-r from-[#5DAE60] to-[#4CAF50] text-white hover:shadow-lg transition-all" onclick="proceedWithRedemption()">Yes, Redeem</button>
+    </div>
+  </div>
+</div>
+
+<!-- Insufficient Balance Modal -->
+<div id="insufficient-balance-modal" class="modal-backdrop">
+  <div class="modal-content" style="max-width: 420px;">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="font-playfair text-2xl text-[#0F3B2E]">Insufficient Balance</h2>
+      <span class="close-modal text-2xl" onclick="closeInsufficientBalanceModal()">×</span>
+    </div>
+    <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+      <p class="text-red-700 font-semibold mb-1">You do not have enough points to redeem this reward.</p>
+      <p class="text-red-600 text-sm">Please earn more EcoPoints and try again.</p>
+    </div>
+    <div class="bg-[#0F3B2E]/5 rounded-lg p-4 mb-6 text-sm text-[#0F3B2E]">
+      <p class="mb-1">Available points: <span id="insufficient-available-points" class="font-semibold">0</span></p>
+      <p>Required points: <span id="insufficient-required-points" class="font-semibold">0</span></p>
+    </div>
+    <button class="px-6 py-3 rounded-lg font-semibold bg-gradient-to-r from-[#5DAE60] to-[#4CAF50] text-white w-full hover:shadow-lg transition-all" onclick="closeInsufficientBalanceModal()">Okay</button>
+  </div>
+</div>
+
+<!-- Coupon Display Modal -->
+<div id="coupon-modal" class="modal-backdrop">
+  <div class="modal-content" style="max-width: 420px;">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="font-playfair text-2xl text-[#0F3B2E]">Your Coupon</h2>
+      <span class="close-modal text-2xl" onclick="closeCouponModal()">×</span>
+    </div>
+    <div class="bg-gradient-to-br from-[#5DAE60]/10 to-[#4CAF50]/10 rounded-lg p-6 mb-6 border-2 border-dashed border-[#5DAE60]">
+      <p class="text-sm text-[#0F3B2E]/70 mb-2">Coupon Code</p>
+      <p class="text-3xl font-bold text-[#0F3B2E] font-mono mb-4" id="coupon-code">ECO-2026-XXXX</p>
+      <p class="text-sm text-[#0F3B2E]/70" id="coupon-expires">Expires: 2026-05-21</p>
+    </div>
+    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+      <p class="text-sm text-blue-800">✓ Coupon has been sent to your email</p>
+    </div>
+    <button class="px-6 py-3 rounded-lg font-semibold bg-gradient-to-r from-[#5DAE60] to-[#4CAF50] text-white w-full hover:shadow-lg transition-all" onclick="closeCouponModal()">Done</button>
+  </div>
+</div>
+
+<script>
+// Global state
+let currentRedeemReward = { id: '', name: '', points: 0, quantity: 1, totalPoints: 0 };
+let allRewards = [];
+let pendingTransfer = null;
+
+// ============================================
+// Route Protection & Logout
+// ============================================
+function protectRoute() {
+  const user = sessionStorage.getItem('bintech_user');
+  if (!user && !window.isLoggingOut) {
+    window.location.replace('/');
+  }
+}
+
+window.isLoggingOut = false;
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', protectRoute);
+} else {
+  setTimeout(protectRoute, 300);
+}
+
+function handleLogout() {
+  if (confirm('Are you sure you want to logout?')) {
+    const modals = document.querySelectorAll('.modal-backdrop');
+    modals.forEach(modal => modal.classList.remove('active'));
+    document.querySelectorAll('button, input, a').forEach(el => {
+      el.disabled = true;
+      el.style.pointerEvents = 'none';
+    });
+    sessionStorage.clear();
+    pendingTransfer = null;
+    setTimeout(() => { window.location.href = '/'; }, 100);
+  }
+}
+
+// ============================================
+// Modal Functions
+// ============================================
+function openModal(rewardId, rewardName, description, points, instructions, conditions, quantity, imageUrl) {
+  try {
+    // Reset state with proper initialization
+    const pointsValue = parseInt(points) || 0;
+    const quantityValue = Math.max(0, parseInt(quantity) || 0);
+    
+    currentRedeemReward = {
+      id: rewardId || '',
+      name: rewardName || 'Reward',
+      points: pointsValue,
+      quantity: 1,
+      totalPoints: pointsValue  // Initialize with single unit cost
+    };
+
+    console.log('Modal opened with reward:', currentRedeemReward);
+
+    // Update modal elements
+    const nameEl = document.getElementById('modal-reward-name');
+    const descEl = document.getElementById('modal-reward-description');
+    const pointsEl = document.getElementById('modal-reward-points');
+    const quantityEl = document.getElementById('modal-reward-quantity');
+    const instrEl = document.getElementById('modal-redemption-instructions');
+    const condEl = document.getElementById('modal-conditions');
+    const imageEl = document.getElementById('modal-reward-image');
+    
+    if (nameEl) nameEl.textContent = rewardName || 'Reward';
+    if (descEl) descEl.textContent = description || 'No description available.';
+    if (pointsEl) pointsEl.textContent = pointsValue || '0';
+    if (quantityEl) quantityEl.textContent = quantityValue || '0';
+    if (instrEl) instrEl.textContent = instructions || 'Contact support to redeem this reward.';
+    if (condEl) condEl.textContent = conditions || 'Terms and conditions apply.';
+
+    // Handle image
+    if (imageEl) {
+      if (imageUrl && imageUrl.trim()) {
+        imageEl.src = imageUrl;
+        imageEl.style.display = 'block';
+      } else {
+        imageEl.src = '';
+        imageEl.style.display = 'none';
+      }
+    }
+
+    // Setup quantity selector
+    const quantityInput = document.getElementById('modal-quantity-select');
+    const maxDisplay = document.getElementById('modal-max-quantity');
+    
+    if (quantityInput) {
+      quantityInput.max = quantityValue;
+      quantityInput.value = 1;
+    }
+    if (maxDisplay) maxDisplay.textContent = quantityValue;
+
+    // Handle out of stock styling
+    const stockContainer = document.getElementById('modal-quantity-container');
+    const redeemBtn = document.getElementById('modal-redeem-btn');
+    
+    if (quantityValue <= 0) {
+      if (stockContainer) stockContainer.className = 'bg-red-50 border border-red-200 rounded-lg p-4';
+      if (redeemBtn) {
+        redeemBtn.textContent = 'Out of Stock';
+        redeemBtn.disabled = true;
+        redeemBtn.classList.add('disabled');
+      }
+    } else {
+      if (stockContainer) stockContainer.className = 'bg-green-50 border border-green-200 rounded-lg p-4';
+      if (redeemBtn) {
+        redeemBtn.textContent = 'Redeem Now';
+        redeemBtn.disabled = false;
+        redeemBtn.classList.remove('disabled');
+      }
+    }
+
+    // Update total cost and check points
+    updateTotalCost();
+    checkSufficientPoints();
+    
+    const modal = document.getElementById('details-modal');
+    if (modal) modal.classList.add('active');
+  } catch (e) {
+    console.error('Error opening modal:', e);
+  }
+}
+
+function closeModal() {
+  document.getElementById('details-modal').classList.remove('active');
+}
+
+function increaseQuantity() {
+  const input = document.getElementById('modal-quantity-select');
+  if (input) {
+    const current = parseInt(input.value) || 1;
+    const max = parseInt(input.max) || 1;
+    if (current < max) {
+      input.value = current + 1;
+      validateQuantity();
+    }
+  }
+}
+
+function decreaseQuantity() {
+  const input = document.getElementById('modal-quantity-select');
+  if (input) {
+    const current = parseInt(input.value) || 1;
+    if (current > 1) {
+      input.value = current - 1;
+      validateQuantity();
+    }
+  }
+}
+
+function validateQuantity() {
+  const input = document.getElementById('modal-quantity-select');
+  if (input) {
+    let val = parseInt(input.value) || 1;
+    const min = 1;
+    const max = parseInt(input.max) || 1;
+    if (val < min) val = min;
+    if (val > max) val = max;
+    input.value = val;
+    currentRedeemReward.quantity = val;
+    updateTotalCost();
+    checkSufficientPoints();
+  }
+}
+
+function updateTotalCost() {
+  const quantity = currentRedeemReward.quantity || 1;
+  const pointsPerUnit = currentRedeemReward.points || 0;
+  const total = quantity * pointsPerUnit;
+  currentRedeemReward.totalPoints = total;
+  document.getElementById('modal-total-cost').textContent = total;
+}
+
+function getCurrentUserPoints() {
+  try {
+    const userDataStr = sessionStorage.getItem('bintech_user');
+    if (userDataStr) {
+      const userData = JSON.parse(userDataStr);
+      const points = Number(userData.points || userData.total_points || 0);
+      if (Number.isFinite(points)) return points;
+    }
+  } catch (error) {
+    console.warn('Unable to read session points:', error);
+  }
+  
+  const navPoints = document.getElementById('nav-points')?.textContent || '';
+  const parsed = parseInt(navPoints.replace(/[^0-9-]/g, ''), 10);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function checkSufficientPoints() {
+  const userPoints = getCurrentUserPoints();
+  const requiredPoints = currentRedeemReward.totalPoints || 0;
+  const errorMsg = document.getElementById('modal-error-message');
+  const redeemBtn = document.getElementById('modal-redeem-btn');
+  
+  if (userPoints < requiredPoints) {
+    if (errorMsg) {
+      errorMsg.classList.remove('hidden');
+      document.getElementById('modal-error-required').textContent = requiredPoints;
+      document.getElementById('modal-error-available').textContent = userPoints;
+    }
+    if (redeemBtn && !redeemBtn.disabled) {
+      redeemBtn.disabled = true;
+      redeemBtn.classList.add('disabled');
+      redeemBtn.textContent = 'Insufficient Points';
+    }
+  } else {
+    if (errorMsg) errorMsg.classList.add('hidden');
+    if (redeemBtn && redeemBtn.disabled && !redeemBtn.textContent.includes('Out of Stock')) {
+      redeemBtn.disabled = false;
+      redeemBtn.classList.remove('disabled');
+      redeemBtn.textContent = 'Redeem Now';
+    }
+  }
+}
+
+function showRedeemConfirmation() {
+  const userPoints = getCurrentUserPoints();
+  const requiredPoints = currentRedeemReward.totalPoints || 0;
+  
+  if (userPoints < requiredPoints) {
+    showInsufficientBalanceModal(userPoints, requiredPoints);
+    return;
+  }
+  
+  if (currentRedeemReward.quantity <= 0) {
+    alert('This reward is out of stock.');
+    return;
+  }
+  
+  document.getElementById('confirm-reward-name').textContent = currentRedeemReward.name;
+  document.getElementById('confirm-quantity').textContent = currentRedeemReward.quantity;
+  document.getElementById('confirm-breakdown').textContent = `${currentRedeemReward.quantity} × ${currentRedeemReward.points} = ${currentRedeemReward.totalPoints}`;
+  document.getElementById('redeem-confirm-modal').classList.add('active');
+}
+
+function closeRedeemConfirmModal() {
+  document.getElementById('redeem-confirm-modal').classList.remove('active');
+}
+
+function showInsufficientBalanceModal(availablePoints, requiredPoints) {
+  document.getElementById('insufficient-available-points').textContent = availablePoints;
+  document.getElementById('insufficient-required-points').textContent = requiredPoints;
+  document.getElementById('insufficient-balance-modal').classList.add('active');
+}
+
+function closeInsufficientBalanceModal() {
+  document.getElementById('insufficient-balance-modal').classList.remove('active');
+}
+
+function generateCouponCode() {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let code = 'ECO-' + new Date().getFullYear() + '-';
+  for (let i = 0; i < 6; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return code;
+}
+
+function proceedWithRedemption() {
+  closeRedeemConfirmModal();
+  
+  // Generate multiple coupon codes based on quantity
+  const quantity = currentRedeemReward.quantity || 1;
+  const couponCodes = [];
+  for (let i = 0; i < quantity; i++) {
+    couponCodes.push(generateCouponCode());
+  }
+  
+  const userDataStr = sessionStorage.getItem('bintech_user');
+  let userEmail = 'user@umak.edu.ph';
+  let effectiveUserId = '';
+  
+  if (userDataStr) {
+    try {
+      const userData = JSON.parse(userDataStr);
+      userEmail = userData.email || userEmail;
+      effectiveUserId = userData.campus_id || userData.account_id || userData.student_id || userData.id || '';
+    } catch (e) {
+      console.error('Error parsing user data:', e);
+    }
+  }
+  
+  // Ensure all required fields are present
+  const rewardId = currentRedeemReward.id;
+  const rewardName = currentRedeemReward.name;
+  const pointsPerUnit = currentRedeemReward.points || 0;
+  const totalPoints = currentRedeemReward.totalPoints || (pointsPerUnit * quantity);
+  
+  // Validate required fields
+  if (!rewardId || !userEmail || !rewardName || !totalPoints || couponCodes.length === 0) {
+    console.error('Missing required fields:', {
+      rewardId,
+      userEmail,
+      rewardName,
+      totalPoints,
+      couponCodesCount: couponCodes.length
+    });
+    alert('Error: Missing required information. Please try again.');
+    return;
+  }
+  
+  showLoadingState('Processing redemption...');
+  
+  const requestBody = {
+    rewardId: rewardId,
+    email: userEmail,
+    userId: effectiveUserId,
+    couponCodes: couponCodes,
+    rewardName: rewardName,
+    quantity: quantity,
+    pointsPerUnit: pointsPerUnit,
+    pointsSpent: totalPoints
+  };
+  
+  console.log('Sending redemption request:', requestBody);
+  console.log('Request details:', {
+    rewardId: !!rewardId,
+    email: !!userEmail,
+    userId: !!effectiveUserId,
+    couponCodesCount: couponCodes.length,
+    rewardName: !!rewardName,
+    quantity: quantity,
+    pointsPerUnit: pointsPerUnit,
+    totalPoints: totalPoints,
+    pointsSpent: totalPoints
+  });
+  
+  fetch('/api/rewards/process-redemption', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(requestBody)
+  })
+  .then(response => {
+    console.log('Response status:', response.status);
+    return response.json();
+  })
+  .then(data => {
+    console.log('Response data:', data);
+    if (data.success) {
+      syncLivePoints(data.redemption?.remainingPoints ?? getCurrentUserPoints());
+      
+      const expiryDate = new Date();
+      expiryDate.setDate(expiryDate.getDate() + 30);
+      
+      // Display all coupon codes
+      const couponCodeDisplay = document.getElementById('coupon-code');
+      if (couponCodes.length === 1) {
+        couponCodeDisplay.textContent = couponCodes[0];
+      } else {
+        couponCodeDisplay.innerHTML = couponCodes.map((code, idx) => 
+          `<div style="margin: 8px 0; padding: 8px; background: #f5f5f5; border-radius: 4px; font-size: 14px;">
+            <strong>Coupon ${idx + 1}:</strong> ${code}
+          </div>`
+        ).join('');
+      }
+      
+      document.getElementById('coupon-expires').textContent = 'Expires: ' + expiryDate.toISOString().split('T')[0];
+      
+      hideLoadingState();
+      document.getElementById('coupon-modal').classList.add('active');
+      closeModal();
+      
+      setTimeout(() => loadRewardsFromAPI(), 2000);
+    } else {
+      throw new Error(data.message || 'Redemption failed');
+    }
+  })
+  .catch(error => {
+    console.error('Redemption error:', error);
+    hideLoadingState();
+    if (error.message?.toLowerCase().includes('insufficient')) {
+      showInsufficientBalanceModal(getCurrentUserPoints(), currentRedeemReward.totalPoints);
+    } else {
+      alert('Redemption failed: ' + error.message);
+    }
+  });
+}
+
+function closeCouponModal() {
+  document.getElementById('coupon-modal').classList.remove('active');
+}
+
+function showLoadingState(message) {
+  let loadingDiv = document.getElementById('loading-overlay');
+  if (!loadingDiv) {
+    loadingDiv = document.createElement('div');
+    loadingDiv.id = 'loading-overlay';
+    loadingDiv.innerHTML = `<div style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:9999;"><div style="background:white;padding:30px;border-radius:10px;"><p style="margin:0;color:#0F3B2E;font-weight:bold;">${message}</p></div></div>`;
+    document.body.appendChild(loadingDiv);
+  }
+}
+
+function hideLoadingState() {
+  const loadingDiv = document.getElementById('loading-overlay');
+  if (loadingDiv) loadingDiv.remove();
+}
+
+function syncLivePoints(pointsValue) {
+  const numericPoints = Number(pointsValue || 0);
+  const formatted = numericPoints.toLocaleString();
+  
+  const navPoints = document.getElementById('nav-points');
+  if (navPoints) navPoints.textContent = `${formatted} Points`;
+  
+  const mobilePoints = document.getElementById('mobile-nav-points');
+  if (mobilePoints) mobilePoints.textContent = `${formatted} Points`;
+  
+  const balanceDisplay = document.getElementById('balance-display');
+  if (balanceDisplay) balanceDisplay.textContent = formatted;
+  
+  const userDataStr = sessionStorage.getItem('bintech_user');
+  if (userDataStr) {
+    try {
+      const userData = JSON.parse(userDataStr);
+      userData.points = numericPoints;
+      sessionStorage.setItem('bintech_user', JSON.stringify(userData));
+    } catch (error) {}
+  }
+}
+
+// ============================================
+// Rewards Loading & Rendering
+// ============================================
+async function loadRewardsFromAPI() {
+  const container = document.getElementById('rewards-container');
+  if (!container) return;
+  
+  try {
+    const response = await fetch('/api/rewards/list');
+    if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
+    
+    const data = await response.json();
+    
+    if (data.success && data.rewards && data.rewards.length > 0) {
+      allRewards = data.rewards;
+      applyFiltersAndSort();
+    } else if (data.rewards && data.rewards.length === 0) {
+      container.innerHTML = '<div class="text-center col-span-full py-12"><p class="text-[#0F3B2E]/70">No rewards available at this time.</p></div>';
+    } else {
+      container.innerHTML = '<div class="text-center col-span-full py-12"><p class="text-red-500">Error loading rewards</p></div>';
+    }
+  } catch (error) {
+    console.error('Error loading rewards:', error);
+    container.innerHTML = `<div class="text-center col-span-full py-12"><div class="bg-red-50 border border-red-200 rounded-lg p-4 inline-block"><p class="text-red-700 font-semibold">Error loading rewards</p><p class="text-red-600 text-sm">${error.message || 'Unknown error'}</p></div></div>`;
+  }
+}
+
+function applyFiltersAndSort() {
+  let filtered = [...allRewards];
+  
+  const searchTerm = document.getElementById('search-rewards')?.value.toLowerCase().trim() || '';
+  if (searchTerm) {
+    filtered = filtered.filter(r => 
+      (r.name || '').toLowerCase().includes(searchTerm) ||
+      (r.description || '').toLowerCase().includes(searchTerm)
+    );
+  }
+  
+  const sortValue = document.getElementById('sort-rewards')?.value || 'points-asc';
+  switch(sortValue) {
+    case 'points-asc':
+      filtered.sort((a, b) => (a.points_cost || 0) - (b.points_cost || 0));
+      break;
+    case 'points-desc':
+      filtered.sort((a, b) => (b.points_cost || 0) - (a.points_cost || 0));
+      break;
+    case 'name-asc':
+      filtered.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+      break;
+    case 'name-desc':
+      filtered.sort((a, b) => (b.name || '').localeCompare(a.name || ''));
+      break;
+  }
+  
+  renderRewardCards(filtered);
+}
+
+function renderRewardCards(rewards) {
+  const container = document.getElementById('rewards-container');
+  if (!rewards || rewards.length === 0) {
+    container.innerHTML = '<div class="text-center col-span-full py-12"><p class="text-[#0F3B2E]/70">No rewards available.</p></div>';
+    return;
+  }
+  
+  container.innerHTML = rewards.map(reward => {
+    const imageSrc = reward.image_url || '';
+    const rewardName = (reward.name || 'Reward').substring(0, 50);
+    const desc = (reward.description || 'Amazing reward').substring(0, 100);
+    const points = Math.max(0, parseInt(reward.points_cost) || 0);
+    const quantity = Math.max(0, parseInt(reward.inventory) || 0);
+    const isOutOfStock = quantity <= 0;
+    
+    return `
+      <div class="reward-card bg-white rounded-2xl overflow-hidden card-shadow flex flex-col h-full">
+        <div class="w-full h-40 bg-gradient-to-br from-[#60A5FA]/30 to-[#3B82F6]/20 flex items-center justify-center overflow-hidden flex-shrink-0">
+          ${imageSrc ? `<img src="${imageSrc}" alt="${rewardName}" class="w-full h-full object-cover" loading="lazy" onerror="this.style.display='none'; this.parentElement.innerHTML='<span class=text-6xl>🎁</span>';">` : '<span class="text-6xl">🎁</span>'}
+        </div>
+        <div class="p-6 flex-1 flex flex-col">
+          <span class="inline-block bg-[#60A5FA]/20 text-[#1E40AF] px-3 py-1 rounded-full text-xs font-semibold mb-2 w-fit">Reward</span>
+          <h3 class="text-lg font-semibold text-[#0F3B2E] mb-2 line-clamp-2">${rewardName}</h3>
+          <p class="text-[#0F3B2E]/70 text-sm mb-4 flex-1 line-clamp-2">${desc}</p>
+          <div class="mb-4 p-3 rounded-lg ${isOutOfStock ? 'bg-red-50 border border-red-200' : 'bg-green-50 border border-green-200'}">
+            <p class="text-xs font-semibold ${isOutOfStock ? 'text-red-600' : 'text-green-600'}">
+              Remaining: <span class="font-bold text-sm">${quantity}</span>${isOutOfStock ? ' (Out of Stock)' : ''}
+            </p>
+          </div>
+          <div class="flex items-center justify-between gap-2">
+            <span class="text-lg font-bold text-[#0F3B2E]">${points} pts</span>
+            <button class="details-btn view-details-btn text-white px-4 py-2 rounded-lg text-sm font-semibold whitespace-nowrap"
+              data-reward-id="${reward.id || ''}"
+              data-reward="${rewardName.replace(/"/g, '&quot;')}"
+              data-description="${desc.replace(/"/g, '&quot;')}"
+              data-points="${points}"
+              data-quantity="${quantity}"
+              data-image="${imageSrc || ''}"
+              data-instructions="Contact the office to redeem this reward."
+              data-conditions="Terms and conditions apply.">
+              View Details
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+  
+  attachRewardEventListeners();
+}
+
+function attachRewardEventListeners() {
+  document.querySelectorAll('.view-details-btn').forEach(btn => {
+    btn.removeEventListener('click', handleViewDetails);
+    btn.addEventListener('click', handleViewDetails);
+  });
+}
+
+function handleViewDetails() {
+  openModal(
+    this.getAttribute('data-reward-id'),
+    this.getAttribute('data-reward'),
+    this.getAttribute('data-description'),
+    this.getAttribute('data-points'),
+    this.getAttribute('data-instructions'),
+    this.getAttribute('data-conditions'),
+    this.getAttribute('data-quantity'),
+    this.getAttribute('data-image')
+  );
+}
+
+// ============================================
+// Transfer Functions
+// ============================================
+function showTransferConfirmModal(senderEmail, receiverEmail, amount) {
+  document.getElementById('confirm-amount').textContent = amount;
+  document.getElementById('confirm-recipient').textContent = receiverEmail;
+  document.getElementById('transfer-confirm-modal').classList.add('active');
+  pendingTransfer = { senderEmail, receiverEmail, amount };
+}
+
+function closeTransferConfirmModal() {
+  document.getElementById('transfer-confirm-modal').classList.remove('active');
+  pendingTransfer = null;
+}
+
+function confirmTransfer() {
+  if (!pendingTransfer) {
+    alert('No transfer data. Please try again.');
+    return;
+  }
+  
+  const { senderEmail, receiverEmail, amount } = pendingTransfer;
+  const transferBtn = document.getElementById('transfer-btn');
+  const originalContent = transferBtn.innerHTML;
+  
+  closeTransferConfirmModal();
+  transferBtn.disabled = true;
+  transferBtn.textContent = 'Processing...';
+  
+  fetch('/api/rewards/transfer/peer', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ senderEmail, receiverEmail, pointsAmount: amount })
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      transferBtn.textContent = 'TRANSFER SENT! ✓';
+      alert(`Successfully transferred ${amount} points to ${receiverEmail}!`);
+      
+      setTimeout(() => {
+        transferBtn.innerHTML = originalContent;
+        transferBtn.disabled = false;
+        document.getElementById('recipient-email').value = '';
+        document.getElementById('transfer-amount').value = '10';
+        document.getElementById('amount-display').textContent = '10';
+        
+        if (data.transfer?.senderNewBalance !== undefined) {
+          syncLivePoints(data.transfer.senderNewBalance);
+        }
+      }, 1500);
+    } else {
+      alert('Transfer failed: ' + (data.message || 'Unknown error'));
+      transferBtn.innerHTML = originalContent;
+      transferBtn.disabled = false;
+    }
+  })
+  .catch(error => {
+    console.error('Transfer error:', error);
+    alert('Transfer failed: ' + error.message);
+    transferBtn.innerHTML = originalContent;
+    transferBtn.disabled = false;
+  });
+}
+
+// ============================================
+// Mobile Menu & Initialization
+// ============================================
+function initializeUserMobileMenu() {
+  const toggle = document.getElementById('mobile-nav-toggle');
+  const panel = document.getElementById('mobile-nav-panel');
+  const navPoints = document.getElementById('nav-points');
+  const mobilePoints = document.getElementById('mobile-nav-points');
+  
+  if (!toggle || !panel) return;
+  
+  const syncPoints = () => {
+    if (navPoints && mobilePoints) mobilePoints.textContent = navPoints.textContent;
+  };
+  
+  const closeMenu = () => {
+    panel.dataset.open = 'false';
+    panel.style.display = 'none';
+    toggle.setAttribute('aria-expanded', 'false');
+  };
+  
+  const openMenu = () => {
+    syncPoints();
+    panel.dataset.open = 'true';
+    panel.style.display = 'block';
+    toggle.setAttribute('aria-expanded', 'true');
+  };
+  
+  toggle.addEventListener('click', () => {
+    panel.dataset.open === 'true' ? closeMenu() : openMenu();
+  });
+  
+  panel.querySelectorAll('a').forEach(link => link.addEventListener('click', closeMenu));
+  window.addEventListener('resize', () => { if (window.innerWidth >= 768) closeMenu(); });
+  document.addEventListener('keydown', (event) => { if (event.key === 'Escape') closeMenu(); });
+  
+  syncPoints();
+}
+
+function updateUserInfo() {
+  const userDataStr = sessionStorage.getItem('bintech_user');
+  if (!userDataStr) return;
+  
+  try {
+    const user = JSON.parse(userDataStr);
+    const navUserName = document.getElementById('nav-user-name');
+    if (navUserName) navUserName.textContent = (user.full_name || user.email || 'User').toUpperCase();
+    
+    if (user.points !== undefined) {
+      syncLivePoints(user.points);
+    }
+  } catch (error) {}
+}
+
+// Setup event listeners and initialize
+document.addEventListener('DOMContentLoaded', function() {
+  initializeUserMobileMenu();
+  updateUserInfo();
+  loadRewardsFromAPI();
+  
+  document.getElementById('search-rewards')?.addEventListener('input', applyFiltersAndSort);
+  document.getElementById('sort-rewards')?.addEventListener('change', applyFiltersAndSort);
+  
+  document.getElementById('transfer-btn')?.addEventListener('click', function() {
+    const email = document.getElementById('recipient-email').value;
+    const amount = document.getElementById('transfer-amount').value;
+    const emailError = document.getElementById('email-error');
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    
+    if (!email || !emailRegex.test(email)) {
+      emailError.classList.remove('hidden');
+      return;
+    }
+    emailError.classList.add('hidden');
+    
+    if (!amount || amount < 10 || amount > 100) {
+      alert('Transfer amount must be between 10 and 100 points');
+      return;
+    }
+    
+    const userDataStr = sessionStorage.getItem('bintech_user');
+    if (!userDataStr) {
+      alert('You must be logged in to transfer points');
+      return;
+    }
+    
+    const userData = JSON.parse(userDataStr);
+    const senderEmail = userData.email;
+    if (!senderEmail) {
+      alert('Could not determine your email. Please log in again.');
+      return;
+    }
+    
+    showTransferConfirmModal(senderEmail, email, parseInt(amount));
+  });
+  
+  document.querySelectorAll('.quick-select-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const amount = this.getAttribute('data-amount');
+      const amountInput = document.getElementById('transfer-amount');
+      if (amount === 'custom') {
+        amountInput.value = 50;
+      } else {
+        amountInput.value = amount;
+      }
+      document.getElementById('amount-display').textContent = amountInput.value;
+    });
+  });
+  
+  document.getElementById('transfer-amount')?.addEventListener('input', function() {
+    document.getElementById('amount-display').textContent = this.value;
+  });
+  
+  // Close modals when clicking backdrop
+  document.querySelectorAll('.modal-backdrop').forEach(modal => {
+    modal.addEventListener('click', function(e) {
+      if (e.target === this) {
+        if (this.id === 'details-modal') closeModal();
+        else if (this.id === 'transfer-confirm-modal') closeTransferConfirmModal();
+        else if (this.id === 'redeem-confirm-modal') closeRedeemConfirmModal();
+        else if (this.id === 'insufficient-balance-modal') closeInsufficientBalanceModal();
+        else if (this.id === 'coupon-modal') closeCouponModal();
+      }
+    });
+  });
+});
+
+// Element SDK Configuration
+const defaultConfig = {
+  background_color: '#E8ECEB',
+  card_surface_color: '#FFFFFF',
+  text_color: '#0F3B2E',
+  primary_action_color: '#5DAE60',
+  accent_color: '#D4E157',
+  font_family: 'Poppins',
+  font_size: 16,
+  user_name: 'MARIO SALLY',
+  current_points: '521',
+  page_title: 'Available Rewards',
+  page_subtitle: 'Check out exciting rewards you can earn with your EcoPoints.',
+};
+
+async function onConfigChange(config) {
+  const bgColor = config.background_color || defaultConfig.background_color;
+  const cardColor = config.card_surface_color || defaultConfig.card_surface_color;
+  const textColor = config.text_color || defaultConfig.text_color;
+  const primaryColor = config.primary_action_color || defaultConfig.primary_action_color;
+  const fontFamily = config.font_family || defaultConfig.font_family;
+  const fontSize = config.font_size || defaultConfig.font_size;
+  
+  document.getElementById('app-wrapper').style.backgroundColor = bgColor;
+  
+  document.querySelectorAll('.reward-card, .bg-white:not(.modal-content .bg-white)').forEach(card => {
+    if (card.classList.contains('reward-card')) card.style.backgroundColor = cardColor;
+  });
+  
+  document.body.style.fontFamily = `${fontFamily}, sans-serif`;
+  document.body.style.fontSize = `${fontSize}px`;
+  
+  if (config.user_name) document.getElementById('nav-user-name').textContent = config.user_name;
+  if (config.page_title) document.getElementById('page-title').textContent = config.page_title;
+  if (config.page_subtitle) document.getElementById('page-subtitle').textContent = config.page_subtitle;
+  if (config.current_points) syncLivePoints(config.current_points);
+}
+
+function mapToCapabilities(config) {
+  return {
+    recolorables: [
+      { get: () => config.background_color || defaultConfig.background_color, set: (value) => { config.background_color = value; window.elementSdk?.setConfig({ background_color: value }); } },
+      { get: () => config.card_surface_color || defaultConfig.card_surface_color, set: (value) => { config.card_surface_color = value; window.elementSdk?.setConfig({ card_surface_color: value }); } },
+      { get: () => config.text_color || defaultConfig.text_color, set: (value) => { config.text_color = value; window.elementSdk?.setConfig({ text_color: value }); } },
+      { get: () => config.primary_action_color || defaultConfig.primary_action_color, set: (value) => { config.primary_action_color = value; window.elementSdk?.setConfig({ primary_action_color: value }); } },
+      { get: () => config.accent_color || defaultConfig.accent_color, set: (value) => { config.accent_color = value; window.elementSdk?.setConfig({ accent_color: value }); } }
+    ],
+    fontEditable: { get: () => config.font_family || defaultConfig.font_family, set: (value) => { config.font_family = value; window.elementSdk?.setConfig({ font_family: value }); } },
+    fontSizeable: { get: () => config.font_size || defaultConfig.font_size, set: (value) => { config.font_size = value; window.elementSdk?.setConfig({ font_size: value }); } }
+  };
+}
+
+if (window.elementSdk) {
+  window.elementSdk.init({ defaultConfig, onConfigChange, mapToCapabilities, mapToEditPanelValues: () => new Map() });
+}
+</script>
+</body>
+</html>

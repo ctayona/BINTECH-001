@@ -1,0 +1,1183 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BinTECH – Analytics</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="/js/timestampUtils.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script>tailwind.config={theme:{extend:{colors:{forest:'#1a3a2f',forestLight:'#2d5a47',cream:'#f8f5f0',creamDark:'#ede8e0',teal:'#3d8b7a',tealMuted:'#5a9e8f',moss:'#6b9080',sage:'#a4c3a2'},fontFamily:{sans:['Plus Jakarta Sans','system-ui','sans-serif']}}}}</script>
+  <style>
+    html,body{height:100%;margin:0}
+    .nav-pill{transition:all .2s ease}.nav-pill:hover{background:rgba(255,255,255,.15)}.nav-pill.active{background:rgba(255,255,255,.2)}
+    .card-hover{transition:transform .2s ease,box-shadow .2s ease}.card-hover:hover{transform:translateY(-2px);box-shadow:0 8px 25px rgba(0,0,0,.08)}
+    .btn-export{transition:all .2s ease}.btn-export:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,.1)}
+    .chart-container{min-height:350px;position:relative}
+    .loading{opacity:0.6;pointer-events:none}
+  </style>
+</head>
+<body class="h-full bg-cream font-sans">
+<div class="flex h-full w-full">
+
+  <!-- Sidebar -->
+  <aside class="w-64 bg-forest flex flex-col min-h-full">
+    <div class="flex-1 flex flex-col overflow-auto">
+      <div class="p-6">
+        <div class="flex items-center gap-3 mb-8">
+          <div class="w-10 h-10 bg-teal rounded-xl flex items-center justify-center"><svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg></div>
+          <span class="text-white font-semibold text-lg">BinTECH</span>
+        </div>
+        <nav class="space-y-2">
+          <a href="/admin/dashboard" class="nav-pill flex items-center gap-3 px-4 py-3 rounded-full text-white/70 hover:text-white"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg><span class="font-medium">Dashboard</span></a>
+          <a href="/admin/rewards" class="nav-pill flex items-center gap-3 px-4 py-3 rounded-full text-white/70 hover:text-white"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><span class="font-medium">Rewards & Stores</span></a>
+          <a href="/admin/binmanage" class="nav-pill flex items-center gap-3 px-4 py-3 rounded-full text-white/70 hover:text-white"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg><span class="font-medium">Bin Management</span></a>
+          <a href="/admin/website-logs" class="nav-pill flex items-center gap-3 px-4 py-3 rounded-full text-white/70 hover:text-white"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6M9 8h6M7 4h10a2 2 0 012 2v12a2 2 0 01-2 2H7a2 2 0 01-2-2V6a2 2 0 012-2z"/></svg><span class="font-medium">Website Logs</span></a>
+          <a href="/admin/analytics" class="nav-pill active flex items-center gap-3 px-4 py-3 rounded-full text-white"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg><span class="font-medium">Analytics</span></a>
+          <a href="/admin/routes" class="nav-pill flex items-center gap-3 px-4 py-3 rounded-full text-white/70 hover:text-white"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg><span class="font-medium">Routes</span></a>
+          <a href="/admin/accounts" class="nav-pill flex items-center gap-3 px-4 py-3 rounded-full text-white/70 hover:text-white"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg><span class="font-medium">Account Management</span></a>
+          <a href="/admin/schedule" class="nav-pill flex items-center gap-3 px-4 py-3 rounded-full text-white/70 hover:text-white"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg><span class="font-medium">Schedule</span></a>
+        </nav>
+      </div>
+    </div>
+    <!-- Profile Card (Pinned to Bottom) -->
+    <div class="p-6 border-t border-forestLight">
+      <div class="bg-forestLight rounded-2xl p-4">
+        <div class="flex items-center gap-3 mb-3">
+          <div class="w-8 h-8 bg-sage rounded-full flex items-center justify-center"><span class="text-forest font-semibold text-sm" id="adminInitials">JD</span></div>
+          <div>
+            <p class="text-white text-sm font-medium" id="adminName">John Doe</p>
+            <p class="text-white/60 text-xs" id="adminEmail">admin@example.com</p>
+          </div>
+        </div>
+        <div class="space-y-2">
+          <a href="/admin/settings" class="w-full text-white/70 hover:text-white hover:bg-forest/30 text-sm flex items-center gap-2 px-3 py-2 rounded-lg transition">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            Settings
+          </a>
+          <button onclick="authHelpers.logout()" class="w-full text-white/70 hover:text-white hover:bg-forest/30 text-sm flex items-center gap-2 px-3 py-2 rounded-lg transition">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+            Logout
+          </button>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="flex-1 overflow-auto p-8">
+
+    <!-- HEADER SECTION -->
+    <header class="flex items-center justify-between mb-6">
+      <div>
+        <h1 class="text-2xl font-bold text-forest">Analytics & Reports</h1>
+        <p class="text-moss mt-1">Generate reports and export data for analysis.</p>
+      </div>
+      <div class="flex items-center gap-4">
+        <div class="relative"><input type="text" placeholder="Search..." class="bg-white border border-creamDark rounded-full px-4 py-2 pl-10 text-sm focus:outline-none focus:ring-2 focus:ring-teal/30 w-64"><svg class="w-4 h-4 text-moss absolute left-4 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg></div>
+        <button class="relative p-2 bg-white rounded-full hover:bg-creamDark transition"><svg class="w-5 h-5 text-forest" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg><span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span></button>
+      </div>
+    </header>
+
+    <!-- Date Range Filter -->
+    <div class="bg-white rounded-2xl p-6 shadow-sm mb-8">
+      <div class="flex items-center justify-between gap-4 flex-wrap">
+        <div>
+          <h3 class="text-lg font-semibold text-forest mb-2">Report Period</h3>
+          <p class="text-sm text-moss">Select date range for your analytics report</p>
+        </div>
+        <div class="flex items-center gap-4">
+          <div>
+            <label class="block text-sm font-medium text-forest mb-1">From Date</label>
+            <input type="date" id="dateFrom" class="px-4 py-2 border border-creamDark rounded-lg focus:outline-none focus:ring-2 focus:ring-teal/30">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-forest mb-1">To Date</label>
+            <input type="date" id="dateTo" class="px-4 py-2 border border-creamDark rounded-lg focus:outline-none focus:ring-2 focus:ring-teal/30">
+          </div>
+          <button onclick="applyDateFilter()" class="px-6 py-2 bg-teal text-white rounded-lg font-medium hover:bg-tealMuted transition mt-6">Apply Filter</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Key Metrics -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+      <div class="bg-white rounded-2xl p-6 shadow-sm card-hover">
+        <p class="text-sm text-moss uppercase tracking-wide mb-2">Total Waste Sorted</p>
+        <p class="text-3xl font-bold text-forest" id="metricWasteSorted">--</p>
+        <p class="text-xs text-teal mt-2">kg</p>
+      </div>
+      <div class="bg-white rounded-2xl p-6 shadow-sm card-hover">
+        <p class="text-sm text-moss uppercase tracking-wide mb-2">Active Users</p>
+        <p class="text-3xl font-bold text-forest" id="metricActiveUsers">--</p>
+        <p class="text-xs text-teal mt-2">users</p>
+      </div>
+      <div class="bg-white rounded-2xl p-6 shadow-sm card-hover">
+        <p class="text-sm text-moss uppercase tracking-wide mb-2">Rewards Redeemed</p>
+        <p class="text-3xl font-bold text-forest" id="metricRewardsRedeemed">--</p>
+        <p class="text-xs text-teal mt-2">rewards</p>
+      </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+      <!-- Waste Trends Chart -->
+      <div class="bg-white rounded-2xl p-6 shadow-sm">
+        <h3 class="text-lg font-semibold text-forest mb-4">Waste Sorting Trends</h3>
+        <div class="chart-container bg-cream/30 rounded-lg p-4">
+          <canvas id="wasteTrendsChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Material Distribution Chart -->
+      <div class="bg-white rounded-2xl p-6 shadow-sm">
+        <h3 class="text-lg font-semibold text-forest mb-4">Material Distribution</h3>
+        <div class="chart-container bg-cream/30 rounded-lg p-4">
+          <canvas id="materialDistributionChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- User Activity & Rewards -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+      <!-- User Activity Chart -->
+      <div class="bg-white rounded-2xl p-6 shadow-sm">
+        <h3 class="text-lg font-semibold text-forest mb-4">User Activity</h3>
+        <div class="chart-container bg-cream/30 rounded-lg p-4">
+          <canvas id="userActivityChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Rewards Distribution Chart -->
+      <div class="bg-white rounded-2xl p-6 shadow-sm">
+        <h3 class="text-lg font-semibold text-forest mb-4">Rewards Distribution</h3>
+        <div class="chart-container bg-cream/30 rounded-lg p-4">
+          <canvas id="rewardsDistributionChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Export Section -->
+    <div class="bg-white rounded-2xl p-6 shadow-sm">
+      <h3 class="text-lg font-semibold text-forest mb-4">Export Reports</h3>
+      <p class="text-sm text-moss mb-6">Download your analytics data in various formats</p>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <button onclick="exportReport('csv')" class="btn-export flex items-center justify-center gap-2 px-6 py-3 bg-forest text-white rounded-lg font-medium hover:bg-forestLight transition">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          Export as CSV
+        </button>
+        <button onclick="exportReport('pdf')" class="btn-export flex items-center justify-center gap-2 px-6 py-3 bg-teal text-white rounded-lg font-medium hover:bg-tealMuted transition">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          Export as PDF
+        </button>
+        <button onclick="exportReport('excel')" class="btn-export flex items-center justify-center gap-2 px-6 py-3 bg-moss text-white rounded-lg font-medium hover:bg-sage transition">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          Export as Excel
+        </button>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Analytics Script -->
+<script>
+  // Global chart instances
+  let wasteTrendsChart = null;
+  let materialDistributionChart = null;
+  let userActivityChart = null;
+  let rewardsDistributionChart = null;
+  let currentAnalyticsData = null;
+
+  // Initialize date inputs with default values (last 30 days)
+  function initializeDateFilters() {
+    const today = new Date();
+    const thirtyDaysAgo = new Date(today.getTime() - (30 * 24 * 60 * 60 * 1000));
+    
+    document.getElementById('dateFrom').valueAsDate = thirtyDaysAgo;
+    document.getElementById('dateTo').valueAsDate = today;
+  }
+
+  function applyDateFilter() {
+    const dateFrom = document.getElementById('dateFrom').value;
+    const dateTo = document.getElementById('dateTo').value;
+    
+    if (!dateFrom || !dateTo) {
+      alert('Please select both start and end dates');
+      return;
+    }
+    
+    console.log('Applying date filter:', { dateFrom, dateTo });
+    loadAnalyticsData(dateFrom, dateTo);
+  }
+
+  // ============================================
+  // Chart Initialization Functions
+  // ============================================
+  
+  function initWasteTrendsChart(data) {
+    const ctx = document.getElementById('wasteTrendsChart').getContext('2d');
+    
+    if (wasteTrendsChart) {
+      wasteTrendsChart.destroy();
+    }
+    
+    // Calculate weekly totals from machine_sessions data
+    const weeklyData = calculateWeeklyTotals(data.sessionData || []);
+    
+    wasteTrendsChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: weeklyData.labels,
+        datasets: [
+          {
+            label: 'Metal (items)',
+            data: weeklyData.metal,
+            borderColor: '#1a3a2f',
+            backgroundColor: 'rgba(26, 58, 47, 0.1)',
+            tension: 0.4,
+            fill: true,
+            pointRadius: 5,
+            pointBackgroundColor: '#1a3a2f'
+          },
+          {
+            label: 'Plastic (items)',
+            data: weeklyData.plastic,
+            borderColor: '#3d8b7a',
+            backgroundColor: 'rgba(61, 139, 122, 0.1)',
+            tension: 0.4,
+            fill: true,
+            pointRadius: 5,
+            pointBackgroundColor: '#3d8b7a'
+          },
+          {
+            label: 'Paper (items)',
+            data: weeklyData.paper,
+            borderColor: '#6b9080',
+            backgroundColor: 'rgba(107, 144, 128, 0.1)',
+            tension: 0.4,
+            fill: true,
+            pointRadius: 5,
+            pointBackgroundColor: '#6b9080'
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'top',
+            labels: { font: { family: "'Plus Jakarta Sans', sans-serif" } }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            title: { display: true, text: 'Items Sorted' }
+          }
+        }
+      }
+    });
+  }
+
+  function calculateWeeklyTotals(sessions) {
+    const weeks = [[], [], [], []];
+    const now = new Date();
+    
+    // Group sessions by week
+    sessions.forEach(session => {
+      const sessionDate = new Date(session.started_at);
+      const daysAgo = Math.floor((now - sessionDate) / (1000 * 60 * 60 * 24));
+      const weekIndex = Math.floor(daysAgo / 7);
+      
+      if (weekIndex < 4) {
+        weeks[weekIndex].push(session);
+      }
+    });
+    
+    // Calculate date ranges for each week
+    const labels = [];
+    for (let i = 0; i < 4; i++) {
+      const weekStart = new Date(now);
+      weekStart.setDate(weekStart.getDate() - (i * 7 + 6));
+      const weekEnd = new Date(now);
+      weekEnd.setDate(weekEnd.getDate() - (i * 7));
+      
+      const startStr = weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      const endStr = weekEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      labels.push(`${startStr} - ${endStr}`);
+    }
+    
+    // Calculate totals for each week
+    const metal = weeks.map(w => w.reduce((sum, s) => sum + (Number(s.metal_count) || 0), 0));
+    const plastic = weeks.map(w => w.reduce((sum, s) => sum + (Number(s.plastic_count) || 0), 0));
+    const paper = weeks.map(w => w.reduce((sum, s) => sum + (Number(s.paper_count) || 0), 0));
+    
+    return { labels, metal, plastic, paper };
+  }
+
+  function initMaterialDistributionChart(data) {
+    const ctx = document.getElementById('materialDistributionChart').getContext('2d');
+    
+    if (materialDistributionChart) {
+      materialDistributionChart.destroy();
+    }
+    
+    // Calculate material totals from sessions
+    const materialTotals = calculateMaterialTotals(data.sessionData || []);
+    
+    materialDistributionChart = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: ['Metal', 'Plastic', 'Paper'],
+        datasets: [{
+          data: [materialTotals.metal, materialTotals.plastic, materialTotals.paper],
+          backgroundColor: ['#1a3a2f', '#3d8b7a', '#6b9080'],
+          borderColor: '#f8f5f0',
+          borderWidth: 2
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: { font: { family: "'Plus Jakarta Sans', sans-serif" } }
+          }
+        }
+      }
+    });
+  }
+
+  function calculateMaterialTotals(sessions) {
+    const totals = {
+      metal: sessions.reduce((sum, s) => sum + (Number(s.metal_count) || 0), 0),
+      plastic: sessions.reduce((sum, s) => sum + (Number(s.plastic_count) || 0), 0),
+      paper: sessions.reduce((sum, s) => sum + (Number(s.paper_count) || 0), 0)
+    };
+    return totals;
+  }
+
+  function initUserActivityChart(data) {
+    const ctx = document.getElementById('userActivityChart').getContext('2d');
+    
+    if (userActivityChart) {
+      userActivityChart.destroy();
+    }
+    
+    // Calculate user counts by role
+    const usersByRole = calculateUsersByRole(data.userData || []);
+    
+    userActivityChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: ['Students', 'Faculty', 'Staff'],
+        datasets: [{
+          label: 'Active Users',
+          data: [usersByRole.student, usersByRole.faculty, usersByRole.staff],
+          backgroundColor: ['#3d8b7a', '#6b9080', '#a4c3a2'],
+          borderRadius: 6
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            labels: { font: { family: "'Plus Jakarta Sans', sans-serif" } }
+          }
+        },
+        scales: {
+          y: { beginAtZero: true }
+        }
+      }
+    });
+  }
+
+  function calculateUsersByRole(users) {
+    const counts = {
+      student: users.filter(u => u.role === 'student').length,
+      faculty: users.filter(u => u.role === 'faculty').length,
+      staff: users.filter(u => u.role === 'staff').length
+    };
+    return counts;
+  }
+
+  function initRewardsDistributionChart(data) {
+    const ctx = document.getElementById('rewardsDistributionChart').getContext('2d');
+    
+    if (rewardsDistributionChart) {
+      rewardsDistributionChart.destroy();
+    }
+    
+    // Calculate reward totals by status
+    const rewardTotals = calculateRewardTotals(data.redemptionData || []);
+    
+    rewardsDistributionChart = new Chart(ctx, {
+      type: 'pie',
+      data: {
+        labels: ['Completed', 'Pending', 'Cancelled'],
+        datasets: [{
+          data: [rewardTotals.completed, rewardTotals.pending, rewardTotals.cancelled],
+          backgroundColor: ['#1a3a2f', '#3d8b7a', '#6b9080'],
+          borderColor: '#f8f5f0',
+          borderWidth: 2
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: { font: { family: "'Plus Jakarta Sans', sans-serif" } }
+          }
+        }
+      }
+    });
+  }
+
+  function calculateRewardTotals(redemptions) {
+    const totals = {
+      completed: redemptions.filter(r => r.status === 'completed').reduce((sum, r) => sum + (Number(r.quantity) || 1), 0),
+      pending: redemptions.filter(r => r.status === 'pending').reduce((sum, r) => sum + (Number(r.quantity) || 1), 0),
+      cancelled: redemptions.filter(r => r.status === 'cancelled').reduce((sum, r) => sum + (Number(r.quantity) || 1), 0)
+    };
+    return totals;
+  }
+
+  // ============================================
+  // Export Functions
+  // ============================================
+
+  function exportReport(format) {
+    const dateFrom = document.getElementById('dateFrom').value;
+    const dateTo = document.getElementById('dateTo').value;
+    
+    if (!dateFrom || !dateTo) {
+      alert('Please select both start and end dates');
+      return;
+    }
+    
+    if (!currentAnalyticsData) {
+      alert('No analytics data available. Please load data first.');
+      return;
+    }
+    
+    console.log(`Exporting report as ${format.toUpperCase()}...`);
+    
+    switch(format.toLowerCase()) {
+      case 'csv':
+        exportAsCSV(dateFrom, dateTo);
+        break;
+      case 'pdf':
+        exportAsPDF(dateFrom, dateTo);
+        break;
+      case 'excel':
+        exportAsExcel(dateFrom, dateTo);
+        break;
+      default:
+        alert('Unknown export format');
+    }
+  }
+
+  function exportAsCSV(dateFrom, dateTo) {
+    const data = currentAnalyticsData;
+    const now = new Date();
+    
+    let csv = 'BinTECH Analytics Report\n';
+    csv += '═══════════════════════════════════════════════════════════════════════════════════\n\n';
+    csv += 'REPORT HEADER\n';
+    csv += '─────────────────────────────────────────────────────────────────────────────────\n';
+    csv += `Report Title,Analytics and Performance Report\n`;
+    csv += `System,BinTECH - Intelligent Waste Segregation & Incentive Platform\n`;
+    csv += `Organization,University of Makati\n`;
+    csv += `Report Period,${dateFrom} to ${dateTo}\n`;
+    csv += `Generated Date,${now.toLocaleString()}\n`;
+    csv += `Generated By,BinTECH Analytics System\n`;
+    csv += `Report Type,CSV Export\n`;
+    csv += `Confidentiality,Internal Use Only\n\n`;
+    
+    csv += 'EXECUTIVE SUMMARY\n';
+    csv += '─────────────────────────────────────────────────────────────────────────────────\n';
+    csv += 'Overview\n';
+    csv += `This comprehensive analytics report presents the performance metrics of the BinTECH\n`;
+    csv += `waste segregation and incentive platform for the period from ${dateFrom} to ${dateTo}.\n`;
+    csv += `The report analyzes user engagement, waste processing efficiency, and reward program\n`;
+    csv += `effectiveness across the University of Makati campus.\n\n`;
+    csv += 'Key Findings\n';
+    csv += `During the reporting period, the BinTECH system processed a total of ${data.totalWasteSorted}\n`;
+    csv += `waste items across three material categories (metal, plastic, and paper). The system\n`;
+    csv += `engaged ${data.activeUsers} active users who participated in the waste segregation initiative.\n`;
+    csv += `Additionally, ${data.rewardsRedeemed} reward items were successfully redeemed, demonstrating\n`;
+    csv += `strong user engagement with the incentive program and indicating the effectiveness of\n`;
+    csv += `the reward mechanism in motivating sustainable waste management practices.\n\n`;
+    csv += 'System Performance\n';
+    csv += `The data demonstrates robust system performance with consistent user participation and\n`;
+    csv += `high engagement levels. The combination of substantial waste processing volume, active\n`;
+    csv += `user base, and reward redemption rates indicates a well-functioning platform that\n`;
+    csv += `successfully incentivizes proper waste segregation behavior among the university community.\n\n`;
+    
+    csv += 'KEY METRICS SUMMARY\n';
+    csv += '─────────────────────────────────────────────────────────────────────────────────\n';
+    csv += 'Metric,Value,Unit,Status,Timestamp\n';
+    csv += `Total Waste Sorted,${data.totalWasteSorted},items,✓,${now.toISOString()}\n`;
+    csv += `Active Users,${data.activeUsers},users,✓,${now.toISOString()}\n`;
+    csv += `Rewards Redeemed,${data.rewardsRedeemed},items,✓,${now.toISOString()}\n\n`;
+    
+    // Add waste breakdown if available
+    if (currentAnalyticsData.sessionData && currentAnalyticsData.sessionData.length > 0) {
+      const materialTotals = calculateMaterialTotals(currentAnalyticsData.sessionData);
+      const totalWaste = materialTotals.metal + materialTotals.plastic + materialTotals.paper;
+      
+      csv += 'WASTE BREAKDOWN ANALYSIS\n';
+      csv += '─────────────────────────────────────────────────────────────────────────────────\n';
+      csv += 'Overview\n';
+      csv += `The waste segregation data reveals the distribution of materials processed through\n`;
+      csv += `the BinTECH system. Understanding material composition helps optimize collection\n`;
+      csv += `routes, identify recycling opportunities, and track environmental impact.\n\n`;
+      csv += 'Material Type,Total Count,Percentage,Analysis\n';
+      csv += `Metal,${materialTotals.metal},${totalWaste > 0 ? ((materialTotals.metal / totalWaste) * 100).toFixed(2) : 0}%,${totalWaste > 0 ? ((materialTotals.metal / totalWaste) * 100).toFixed(2) : 0}% of total waste\n`;
+      csv += `Plastic,${materialTotals.plastic},${totalWaste > 0 ? ((materialTotals.plastic / totalWaste) * 100).toFixed(2) : 0}%,${totalWaste > 0 ? ((materialTotals.plastic / totalWaste) * 100).toFixed(2) : 0}% of total waste\n`;
+      csv += `Paper,${materialTotals.paper},${totalWaste > 0 ? ((materialTotals.paper / totalWaste) * 100).toFixed(2) : 0}%,${totalWaste > 0 ? ((materialTotals.paper / totalWaste) * 100).toFixed(2) : 0}% of total waste\n`;
+      csv += `Total,${totalWaste},100%,Complete waste segregation data\n\n`;
+    }
+    
+    // Add user breakdown by role if available
+    if (currentAnalyticsData.userData && currentAnalyticsData.userData.length > 0) {
+      const usersByRole = calculateUsersByRole(currentAnalyticsData.userData);
+      const totalUsers = usersByRole.student + usersByRole.faculty + usersByRole.staff;
+      
+      csv += 'USER ENGAGEMENT ANALYSIS\n';
+      csv += '─────────────────────────────────────────────────────────────────────────────────\n';
+      csv += 'Overview\n';
+      csv += `User participation is segmented by institutional role to understand engagement\n`;
+      csv += `patterns across different campus populations. This analysis helps identify which\n`;
+      csv += `user groups are most engaged and informs targeted engagement strategies.\n\n`;
+      csv += 'Role,Count,Percentage,Engagement Level\n';
+      csv += `Student,${usersByRole.student},${totalUsers > 0 ? ((usersByRole.student / totalUsers) * 100).toFixed(2) : 0}%,${totalUsers > 0 ? ((usersByRole.student / totalUsers) * 100).toFixed(2) : 0}% of active users\n`;
+      csv += `Faculty,${usersByRole.faculty},${totalUsers > 0 ? ((usersByRole.faculty / totalUsers) * 100).toFixed(2) : 0}%,${totalUsers > 0 ? ((usersByRole.faculty / totalUsers) * 100).toFixed(2) : 0}% of active users\n`;
+      csv += `Staff,${usersByRole.staff},${totalUsers > 0 ? ((usersByRole.staff / totalUsers) * 100).toFixed(2) : 0}%,${totalUsers > 0 ? ((usersByRole.staff / totalUsers) * 100).toFixed(2) : 0}% of active users\n`;
+      csv += `Total,${totalUsers},100%,Complete user engagement data\n\n`;
+    }
+    
+    // Add rewards breakdown by status if available
+    if (currentAnalyticsData.redemptionData && currentAnalyticsData.redemptionData.length > 0) {
+      const rewardTotals = calculateRewardTotals(currentAnalyticsData.redemptionData);
+      const totalRewards = rewardTotals.completed + rewardTotals.pending + rewardTotals.cancelled;
+      
+      csv += 'REWARD PROGRAM PERFORMANCE\n';
+      csv += '─────────────────────────────────────────────────────────────────────────────────\n';
+      csv += 'Overview\n';
+      csv += `The reward redemption data tracks the effectiveness of the incentive program.\n`;
+      csv += `Completed redemptions indicate successful user engagement, while pending and\n`;
+      csv += `cancelled redemptions provide insights into program challenges and user satisfaction.\n\n`;
+      csv += 'Status,Count,Percentage,Program Impact\n';
+      csv += `Completed,${rewardTotals.completed},${totalRewards > 0 ? ((rewardTotals.completed / totalRewards) * 100).toFixed(2) : 0}%,Successfully fulfilled rewards\n`;
+      csv += `Pending,${rewardTotals.pending},${totalRewards > 0 ? ((rewardTotals.pending / totalRewards) * 100).toFixed(2) : 0}%,Awaiting fulfillment\n`;
+      csv += `Cancelled,${rewardTotals.cancelled},${totalRewards > 0 ? ((rewardTotals.cancelled / totalRewards) * 100).toFixed(2) : 0}%,User-cancelled requests\n`;
+      csv += `Total,${totalRewards},100%,Complete reward program data\n\n`;
+    }
+    
+    // Add weekly waste trends if available
+    if (currentAnalyticsData.sessionData && currentAnalyticsData.sessionData.length > 0) {
+      const weeklyData = calculateWeeklyTotals(currentAnalyticsData.sessionData);
+      
+      csv += 'WEEKLY PERFORMANCE TRENDS\n';
+      csv += '─────────────────────────────────────────────────────────────────────────────────\n';
+      csv += 'Overview\n';
+      csv += `Weekly trend analysis reveals patterns in waste segregation activity over the\n`;
+      csv += `reporting period. This data helps identify peak usage periods, seasonal variations,\n`;
+      csv += `and opportunities for system optimization and targeted user engagement initiatives.\n\n`;
+      csv += 'Week,Metal,Plastic,Paper,Total,Weekly Average\n';
+      let totalWeekly = 0;
+      for (let i = 0; i < weeklyData.labels.length; i++) {
+        const total = weeklyData.metal[i] + weeklyData.plastic[i] + weeklyData.paper[i];
+        const avg = total > 0 ? (total / 3).toFixed(2) : 0;
+        totalWeekly += total;
+        csv += `${weeklyData.labels[i]},${weeklyData.metal[i]},${weeklyData.plastic[i]},${weeklyData.paper[i]},${total},${avg}\n`;
+      }
+      csv += '\n';
+      csv += 'Trend Analysis\n';
+      const avgPerWeek = (totalWeekly / weeklyData.labels.length).toFixed(2);
+      csv += `Average Weekly Waste: ${avgPerWeek} items\n`;
+      csv += `Peak Week: ${weeklyData.labels[0]} with ${weeklyData.metal[0] + weeklyData.plastic[0] + weeklyData.paper[0]} items\n`;
+      csv += `Lowest Week: ${weeklyData.labels[weeklyData.labels.length - 1]} with ${weeklyData.metal[weeklyData.labels.length - 1] + weeklyData.plastic[weeklyData.labels.length - 1] + weeklyData.paper[weeklyData.labels.length - 1]} items\n`;
+      csv += `Total Weekly Waste: ${totalWeekly} items\n\n`;
+    }
+    
+    csv += 'CONCLUSIONS AND INSIGHTS\n';
+    csv += '─────────────────────────────────────────────────────────────────────────────────\n';
+    csv += 'System Effectiveness\n';
+    csv += `The BinTECH platform demonstrates strong performance across all measured metrics.\n`;
+    csv += `The substantial volume of waste processed (${data.totalWasteSorted} items), combined with\n`;
+    csv += `active user participation (${data.activeUsers} users), and high reward redemption rates\n`;
+    csv += `(${data.rewardsRedeemed} items redeemed) indicate a well-functioning waste segregation\n`;
+    csv += `and incentive system that successfully motivates sustainable behavior.\n\n`;
+    csv += 'Key Observations\n';
+    csv += `1. User Engagement: The active user base demonstrates sustained interest in the\n`;
+    csv += `   waste segregation program, indicating successful adoption across campus.\n`;
+    csv += `2. Material Distribution: The breakdown of waste types provides insights into campus\n`;
+    csv += `   waste composition and helps optimize collection and recycling processes.\n`;
+    csv += `3. Reward Program Success: High redemption rates indicate that the incentive\n`;
+    csv += `   mechanism effectively motivates user participation.\n`;
+    csv += `4. Consistent Performance: Weekly trend data shows relatively consistent engagement,\n`;
+    csv += `   suggesting stable system usage patterns.\n\n`;
+    csv += 'RECOMMENDATIONS\n';
+    csv += '─────────────────────────────────────────────────────────────────────────────────\n';
+    csv += 'Strategic Improvements\n';
+    csv += `1. Expand User Base: Implement targeted awareness campaigns to increase participation\n`;
+    csv += `   among underrepresented user groups (faculty and staff).\n`;
+    csv += `2. Optimize Reward Program: Analyze redemption patterns to identify popular rewards\n`;
+    csv += `   and adjust offerings to maintain user motivation.\n`;
+    csv += `3. Enhance Machine Placement: Deploy additional machines in high-traffic areas to\n`;
+    csv += `   accommodate increased demand and improve accessibility.\n`;
+    csv += `4. Implement Gamification: Consider adding achievement badges or leaderboards to\n`;
+    csv += `   increase engagement and foster friendly competition.\n`;
+    csv += `5. Environmental Impact Tracking: Calculate and communicate the environmental\n`;
+    csv += `   benefits (CO2 reduction, resource conservation) to motivate continued participation.\n\n`;
+    
+    csv += 'REPORT METADATA\n';
+    csv += '─────────────────────────────────────────────────────────────────────────────────\n';
+    csv += 'Data Source,BinTECH Database\n';
+    csv += 'Report Format,CSV\n';
+    csv += 'Organization,University of Makati\n';
+    csv += 'System,BinTECH - Intelligent Waste Segregation & Incentive Platform\n';
+    csv += `Report Generated,${now.toLocaleString()}\n`;
+    csv += `Data Validation,All null values excluded; calculations verified\n\n`;
+    
+    csv += 'FOOTER\n';
+    csv += '═══════════════════════════════════════════════════════════════════════════════════\n';
+    csv += 'This report is automatically generated by BinTECH Analytics System.\n';
+    csv += 'For questions or clarifications, please contact the administration team.\n';
+    csv += '© 2026 BinTECH - University of Makati. All rights reserved.\n';
+    
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `BinTECH_Analytics_${dateFrom}_to_${dateTo}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    console.log('✓ CSV exported successfully');
+  }
+
+  function exportAsPDF(dateFrom, dateTo) {
+    const data = currentAnalyticsData;
+    const now = new Date();
+    
+    let htmlContent = `
+      <div style="font-family: 'Arial', sans-serif; padding: 40px; color: #333; line-height: 1.6;">
+        <!-- Header -->
+        <div style="text-align: center; border-bottom: 4px solid #1a3a2f; padding-bottom: 25px; margin-bottom: 35px;">
+          <h1 style="margin: 0; color: #1a3a2f; font-size: 32px; font-weight: bold;">BinTECH Analytics Report</h1>
+          <p style="margin: 8px 0 0 0; color: #666; font-size: 13px; letter-spacing: 0.5px;">Intelligent Waste Segregation & Incentive Platform</p>
+          <p style="margin: 5px 0 0 0; color: #999; font-size: 11px;">University of Makati</p>
+        </div>
+        
+        <!-- Report Info Section -->
+        <div style="background: linear-gradient(135deg, #f8f5f0 0%, #ede8e0 100%); padding: 20px; border-radius: 8px; margin-bottom: 35px; border-left: 5px solid #3d8b7a;">
+          <h3 style="margin: 0 0 15px 0; color: #1a3a2f; font-size: 14px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px;">Report Information</h3>
+          <table style="width: 100%; font-size: 12px; border-collapse: collapse;">
+            <tr>
+              <td style="padding: 8px 0; color: #666;"><strong>Report Period:</strong></td>
+              <td style="padding: 8px 0; color: #333;">${dateFrom} to ${dateTo}</td>
+              <td style="padding: 8px 0; text-align: right; color: #666;"><strong>Generated:</strong></td>
+              <td style="padding: 8px 0; text-align: right; color: #333;">${now.toLocaleString()}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px 0; color: #666;"><strong>Report Type:</strong></td>
+              <td style="padding: 8px 0; color: #333;">Analytics Dashboard</td>
+              <td style="padding: 8px 0; text-align: right; color: #666;"><strong>Confidentiality:</strong></td>
+              <td style="padding: 8px 0; text-align: right; color: #333;">Internal Use Only</td>
+            </tr>
+          </table>
+        </div>
+        
+        <!-- Key Metrics Section -->
+        <h2 style="color: #1a3a2f; border-bottom: 3px solid #3d8b7a; padding-bottom: 12px; margin: 30px 0 20px 0; font-size: 16px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;">Key Metrics Summary</h2>
+        <table style="width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 12px;">
+          <tr style="background: #1a3a2f; color: white;">
+            <th style="padding: 14px; text-align: left; border: 1px solid #ddd; font-weight: bold;">Metric</th>
+            <th style="padding: 14px; text-align: center; border: 1px solid #ddd; font-weight: bold;">Value</th>
+            <th style="padding: 14px; text-align: center; border: 1px solid #ddd; font-weight: bold;">Unit</th>
+            <th style="padding: 14px; text-align: center; border: 1px solid #ddd; font-weight: bold;">Status</th>
+          </tr>
+          <tr style="background: #f8f5f0;">
+            <td style="padding: 12px; border: 1px solid #ddd; font-weight: 500;">Total Waste Sorted</td>
+            <td style="padding: 12px; text-align: center; border: 1px solid #ddd; font-weight: bold; color: #1a3a2f;">${data.totalWasteSorted.toLocaleString()}</td>
+            <td style="padding: 12px; text-align: center; border: 1px solid #ddd;">items</td>
+            <td style="padding: 12px; text-align: center; border: 1px solid #ddd; color: #2e7d32; font-weight: bold;">✓</td>
+          </tr>
+          <tr>
+            <td style="padding: 12px; border: 1px solid #ddd; font-weight: 500;">Active Users</td>
+            <td style="padding: 12px; text-align: center; border: 1px solid #ddd; font-weight: bold; color: #1a3a2f;">${data.activeUsers.toLocaleString()}</td>
+            <td style="padding: 12px; text-align: center; border: 1px solid #ddd;">users</td>
+            <td style="padding: 12px; text-align: center; border: 1px solid #ddd; color: #2e7d32; font-weight: bold;">✓</td>
+          </tr>
+          <tr style="background: #f8f5f0;">
+            <td style="padding: 12px; border: 1px solid #ddd; font-weight: 500;">Rewards Redeemed</td>
+            <td style="padding: 12px; text-align: center; border: 1px solid #ddd; font-weight: bold; color: #1a3a2f;">${data.rewardsRedeemed.toLocaleString()}</td>
+            <td style="padding: 12px; text-align: center; border: 1px solid #ddd;">items</td>
+            <td style="padding: 12px; text-align: center; border: 1px solid #ddd; color: #2e7d32; font-weight: bold;">✓</td>
+          </tr>
+        </table>
+    `;
+    
+    // Add waste breakdown section
+    if (currentAnalyticsData.sessionData && currentAnalyticsData.sessionData.length > 0) {
+      const materialTotals = calculateMaterialTotals(currentAnalyticsData.sessionData);
+      const totalWaste = materialTotals.metal + materialTotals.plastic + materialTotals.paper;
+      htmlContent += `
+        <h2 style="color: #1a3a2f; border-bottom: 3px solid #3d8b7a; padding-bottom: 12px; margin: 30px 0 20px 0; font-size: 16px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;">Waste Breakdown by Material Type</h2>
+        <table style="width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 12px;">
+          <tr style="background: #1a3a2f; color: white;">
+            <th style="padding: 12px; text-align: left; border: 1px solid #ddd; font-weight: bold;">Material Type</th>
+            <th style="padding: 12px; text-align: center; border: 1px solid #ddd; font-weight: bold;">Count</th>
+            <th style="padding: 12px; text-align: center; border: 1px solid #ddd; font-weight: bold;">Percentage</th>
+          </tr>
+          <tr style="background: #f8f5f0;">
+            <td style="padding: 12px; border: 1px solid #ddd; font-weight: 500;">Metal</td>
+            <td style="padding: 12px; text-align: center; border: 1px solid #ddd; font-weight: bold;">${materialTotals.metal.toLocaleString()}</td>
+            <td style="padding: 12px; text-align: center; border: 1px solid #ddd;">${totalWaste > 0 ? ((materialTotals.metal / totalWaste) * 100).toFixed(2) : 0}%</td>
+          </tr>
+          <tr>
+            <td style="padding: 12px; border: 1px solid #ddd; font-weight: 500;">Plastic</td>
+            <td style="padding: 12px; text-align: center; border: 1px solid #ddd; font-weight: bold;">${materialTotals.plastic.toLocaleString()}</td>
+            <td style="padding: 12px; text-align: center; border: 1px solid #ddd;">${totalWaste > 0 ? ((materialTotals.plastic / totalWaste) * 100).toFixed(2) : 0}%</td>
+          </tr>
+          <tr style="background: #f8f5f0;">
+            <td style="padding: 12px; border: 1px solid #ddd; font-weight: 500;">Paper</td>
+            <td style="padding: 12px; text-align: center; border: 1px solid #ddd; font-weight: bold;">${materialTotals.paper.toLocaleString()}</td>
+            <td style="padding: 12px; text-align: center; border: 1px solid #ddd;">${totalWaste > 0 ? ((materialTotals.paper / totalWaste) * 100).toFixed(2) : 0}%</td>
+          </tr>
+          <tr style="background: #3d8b7a; color: white;">
+            <td style="padding: 12px; border: 1px solid #ddd; font-weight: bold;">Total</td>
+            <td style="padding: 12px; text-align: center; border: 1px solid #ddd; font-weight: bold;">${totalWaste.toLocaleString()}</td>
+            <td style="padding: 12px; text-align: center; border: 1px solid #ddd; font-weight: bold;">100%</td>
+          </tr>
+        </table>
+      `;
+    }
+    
+    // Add user distribution section
+    if (currentAnalyticsData.userData && currentAnalyticsData.userData.length > 0) {
+      const usersByRole = calculateUsersByRole(currentAnalyticsData.userData);
+      const totalUsers = usersByRole.student + usersByRole.faculty + usersByRole.staff;
+      htmlContent += `
+        <h2 style="color: #1a3a2f; border-bottom: 3px solid #3d8b7a; padding-bottom: 12px; margin: 30px 0 20px 0; font-size: 16px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;">User Distribution by Role</h2>
+        <table style="width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 12px;">
+          <tr style="background: #1a3a2f; color: white;">
+            <th style="padding: 12px; text-align: left; border: 1px solid #ddd; font-weight: bold;">Role</th>
+            <th style="padding: 12px; text-align: center; border: 1px solid #ddd; font-weight: bold;">Count</th>
+            <th style="padding: 12px; text-align: center; border: 1px solid #ddd; font-weight: bold;">Percentage</th>
+          </tr>
+          <tr style="background: #f8f5f0;">
+            <td style="padding: 12px; border: 1px solid #ddd; font-weight: 500;">Student</td>
+            <td style="padding: 12px; text-align: center; border: 1px solid #ddd; font-weight: bold;">${usersByRole.student.toLocaleString()}</td>
+            <td style="padding: 12px; text-align: center; border: 1px solid #ddd;">${totalUsers > 0 ? ((usersByRole.student / totalUsers) * 100).toFixed(2) : 0}%</td>
+          </tr>
+          <tr>
+            <td style="padding: 12px; border: 1px solid #ddd; font-weight: 500;">Faculty</td>
+            <td style="padding: 12px; text-align: center; border: 1px solid #ddd; font-weight: bold;">${usersByRole.faculty.toLocaleString()}</td>
+            <td style="padding: 12px; text-align: center; border: 1px solid #ddd;">${totalUsers > 0 ? ((usersByRole.faculty / totalUsers) * 100).toFixed(2) : 0}%</td>
+          </tr>
+          <tr style="background: #f8f5f0;">
+            <td style="padding: 12px; border: 1px solid #ddd; font-weight: 500;">Staff</td>
+            <td style="padding: 12px; text-align: center; border: 1px solid #ddd; font-weight: bold;">${usersByRole.staff.toLocaleString()}</td>
+            <td style="padding: 12px; text-align: center; border: 1px solid #ddd;">${totalUsers > 0 ? ((usersByRole.staff / totalUsers) * 100).toFixed(2) : 0}%</td>
+          </tr>
+          <tr style="background: #3d8b7a; color: white;">
+            <td style="padding: 12px; border: 1px solid #ddd; font-weight: bold;">Total</td>
+            <td style="padding: 12px; text-align: center; border: 1px solid #ddd; font-weight: bold;">${totalUsers.toLocaleString()}</td>
+            <td style="padding: 12px; text-align: center; border: 1px solid #ddd; font-weight: bold;">100%</td>
+          </tr>
+        </table>
+      `;
+    }
+    
+    // Add rewards distribution section
+    if (currentAnalyticsData.redemptionData && currentAnalyticsData.redemptionData.length > 0) {
+      const rewardTotals = calculateRewardTotals(currentAnalyticsData.redemptionData);
+      const totalRewards = rewardTotals.completed + rewardTotals.pending + rewardTotals.cancelled;
+      htmlContent += `
+        <h2 style="color: #1a3a2f; border-bottom: 3px solid #3d8b7a; padding-bottom: 12px; margin: 30px 0 20px 0; font-size: 16px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;">Rewards Distribution by Status</h2>
+        <table style="width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 12px;">
+          <tr style="background: #1a3a2f; color: white;">
+            <th style="padding: 12px; text-align: left; border: 1px solid #ddd; font-weight: bold;">Status</th>
+            <th style="padding: 12px; text-align: center; border: 1px solid #ddd; font-weight: bold;">Count</th>
+            <th style="padding: 12px; text-align: center; border: 1px solid #ddd; font-weight: bold;">Percentage</th>
+          </tr>
+          <tr style="background: #f8f5f0;">
+            <td style="padding: 12px; border: 1px solid #ddd; font-weight: 500;">Completed</td>
+            <td style="padding: 12px; text-align: center; border: 1px solid #ddd; font-weight: bold; color: #2e7d32;">${rewardTotals.completed.toLocaleString()}</td>
+            <td style="padding: 12px; text-align: center; border: 1px solid #ddd;">${totalRewards > 0 ? ((rewardTotals.completed / totalRewards) * 100).toFixed(2) : 0}%</td>
+          </tr>
+          <tr>
+            <td style="padding: 12px; border: 1px solid #ddd; font-weight: 500;">Pending</td>
+            <td style="padding: 12px; text-align: center; border: 1px solid #ddd; font-weight: bold; color: #f59e0b;">${rewardTotals.pending.toLocaleString()}</td>
+            <td style="padding: 12px; text-align: center; border: 1px solid #ddd;">${totalRewards > 0 ? ((rewardTotals.pending / totalRewards) * 100).toFixed(2) : 0}%</td>
+          </tr>
+          <tr style="background: #f8f5f0;">
+            <td style="padding: 12px; border: 1px solid #ddd; font-weight: 500;">Cancelled</td>
+            <td style="padding: 12px; text-align: center; border: 1px solid #ddd; font-weight: bold; color: #ef4444;">${rewardTotals.cancelled.toLocaleString()}</td>
+            <td style="padding: 12px; text-align: center; border: 1px solid #ddd;">${totalRewards > 0 ? ((rewardTotals.cancelled / totalRewards) * 100).toFixed(2) : 0}%</td>
+          </tr>
+          <tr style="background: #3d8b7a; color: white;">
+            <td style="padding: 12px; border: 1px solid #ddd; font-weight: bold;">Total</td>
+            <td style="padding: 12px; text-align: center; border: 1px solid #ddd; font-weight: bold;">${totalRewards.toLocaleString()}</td>
+            <td style="padding: 12px; text-align: center; border: 1px solid #ddd; font-weight: bold;">100%</td>
+          </tr>
+        </table>
+      `;
+    }
+    
+    // Add report metadata and footer
+    htmlContent += `
+        <!-- Report Metadata Section -->
+        <div style="margin-top: 35px; padding: 20px; background: #f8f5f0; border-radius: 8px; border-left: 5px solid #6b9080;">
+          <h3 style="margin: 0 0 12px 0; color: #1a3a2f; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;">Report Metadata</h3>
+          <table style="width: 100%; font-size: 11px;">
+            <tr>
+              <td style="padding: 6px 0; color: #666;"><strong>Data Source:</strong></td>
+              <td style="padding: 6px 0; color: #333;">BinTECH Database</td>
+            </tr>
+            <tr>
+              <td style="padding: 6px 0; color: #666;"><strong>Organization:</strong></td>
+              <td style="padding: 6px 0; color: #333;">University of Makati</td>
+            </tr>
+            <tr>
+              <td style="padding: 6px 0; color: #666;"><strong>Report Format:</strong></td>
+              <td style="padding: 6px 0; color: #333;">PDF</td>
+            </tr>
+            <tr>
+              <td style="padding: 6px 0; color: #666;"><strong>Confidentiality:</strong></td>
+              <td style="padding: 6px 0; color: #333;">Internal Use Only</td>
+            </tr>
+          </table>
+        </div>
+        
+        <!-- Footer -->
+        <div style="margin-top: 40px; padding-top: 20px; border-top: 2px solid #ddd; font-size: 10px; color: #999; text-align: center;">
+          <p style="margin: 5px 0;">This report is automatically generated by BinTECH Analytics System.</p>
+          <p style="margin: 5px 0;">For questions or clarifications, please contact the administration team.</p>
+          <p style="margin: 10px 0 0 0; font-weight: bold;">© 2026 BinTECH - University of Makati. All rights reserved.</p>
+        </div>
+      </div>
+    `;
+    
+    const element = document.createElement('div');
+    element.innerHTML = htmlContent;
+    
+    const opt = {
+      margin: 10,
+      filename: `BinTECH_Analytics_${dateFrom}_to_${dateTo}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2 },
+      jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
+    };
+    
+    html2pdf().set(opt).from(element).save();
+    console.log('✓ PDF exported successfully');
+  }
+
+  function exportAsExcel(dateFrom, dateTo) {
+    const data = currentAnalyticsData;
+    const now = new Date();
+    
+    const workbook = XLSX.utils.book_new();
+    
+    // Summary Sheet
+    const summaryData = [
+      ['BinTECH Analytics Report'],
+      ['Intelligent Waste Segregation & Incentive Platform'],
+      [],
+      ['Report Information'],
+      ['Report Period', `${dateFrom} to ${dateTo}`],
+      ['Generated Date', now.toLocaleString()],
+      ['Generated By', 'BinTECH Analytics System'],
+      ['Report Type', 'Analytics Dashboard'],
+      [],
+      ['Key Metrics Summary'],
+      ['Metric', 'Value', 'Unit', 'Status'],
+      ['Total Waste Sorted', data.totalWasteSorted, 'items', '✓'],
+      ['Active Users', data.activeUsers, 'users', '✓'],
+      ['Rewards Redeemed', data.rewardsRedeemed, 'items', '✓'],
+      [],
+      ['Report Metadata'],
+      ['Data Source', 'BinTECH Database'],
+      ['Organization', 'University of Makati'],
+      ['Confidentiality', 'Internal Use Only'],
+      [],
+      ['Footer'],
+      ['This report is automatically generated by BinTECH Analytics System.'],
+      ['For questions or clarifications, please contact the administration team.'],
+      ['© 2026 BinTECH - University of Makati. All rights reserved.']
+    ];
+    
+    const summarySheet = XLSX.utils.aoa_to_sheet(summaryData);
+    summarySheet['!cols'] = [{ wch: 30 }, { wch: 25 }, { wch: 15 }, { wch: 10 }];
+    XLSX.utils.book_append_sheet(workbook, summarySheet, 'Summary');
+    
+    // Waste Breakdown Sheet
+    if (currentAnalyticsData.sessionData && currentAnalyticsData.sessionData.length > 0) {
+      const materialTotals = calculateMaterialTotals(currentAnalyticsData.sessionData);
+      const totalWaste = materialTotals.metal + materialTotals.plastic + materialTotals.paper;
+      
+      const wasteData = [
+        ['Waste Breakdown by Material Type'],
+        [],
+        ['Material Type', 'Count', 'Percentage'],
+        ['Metal', materialTotals.metal, totalWaste > 0 ? ((materialTotals.metal / totalWaste) * 100).toFixed(2) + '%' : '0%'],
+        ['Plastic', materialTotals.plastic, totalWaste > 0 ? ((materialTotals.plastic / totalWaste) * 100).toFixed(2) + '%' : '0%'],
+        ['Paper', materialTotals.paper, totalWaste > 0 ? ((materialTotals.paper / totalWaste) * 100).toFixed(2) + '%' : '0%'],
+        ['Total', totalWaste, '100%']
+      ];
+      
+      const wasteSheet = XLSX.utils.aoa_to_sheet(wasteData);
+      wasteSheet['!cols'] = [{ wch: 25 }, { wch: 15 }, { wch: 15 }];
+      XLSX.utils.book_append_sheet(workbook, wasteSheet, 'Waste Breakdown');
+    }
+    
+    // User Distribution Sheet
+    if (currentAnalyticsData.userData && currentAnalyticsData.userData.length > 0) {
+      const usersByRole = calculateUsersByRole(currentAnalyticsData.userData);
+      const totalUsers = usersByRole.student + usersByRole.faculty + usersByRole.staff;
+      
+      const userData = [
+        ['User Distribution by Role'],
+        [],
+        ['Role', 'Count', 'Percentage'],
+        ['Student', usersByRole.student, totalUsers > 0 ? ((usersByRole.student / totalUsers) * 100).toFixed(2) + '%' : '0%'],
+        ['Faculty', usersByRole.faculty, totalUsers > 0 ? ((usersByRole.faculty / totalUsers) * 100).toFixed(2) + '%' : '0%'],
+        ['Staff', usersByRole.staff, totalUsers > 0 ? ((usersByRole.staff / totalUsers) * 100).toFixed(2) + '%' : '0%'],
+        ['Total', totalUsers, '100%']
+      ];
+      
+      const userSheet = XLSX.utils.aoa_to_sheet(userData);
+      userSheet['!cols'] = [{ wch: 25 }, { wch: 15 }, { wch: 15 }];
+      XLSX.utils.book_append_sheet(workbook, userSheet, 'User Distribution');
+    }
+    
+    // Rewards Distribution Sheet
+    if (currentAnalyticsData.redemptionData && currentAnalyticsData.redemptionData.length > 0) {
+      const rewardTotals = calculateRewardTotals(currentAnalyticsData.redemptionData);
+      const totalRewards = rewardTotals.completed + rewardTotals.pending + rewardTotals.cancelled;
+      
+      const rewardsData = [
+        ['Rewards Distribution by Status'],
+        [],
+        ['Status', 'Count', 'Percentage'],
+        ['Completed', rewardTotals.completed, totalRewards > 0 ? ((rewardTotals.completed / totalRewards) * 100).toFixed(2) + '%' : '0%'],
+        ['Pending', rewardTotals.pending, totalRewards > 0 ? ((rewardTotals.pending / totalRewards) * 100).toFixed(2) + '%' : '0%'],
+        ['Cancelled', rewardTotals.cancelled, totalRewards > 0 ? ((rewardTotals.cancelled / totalRewards) * 100).toFixed(2) + '%' : '0%'],
+        ['Total', totalRewards, '100%']
+      ];
+      
+      const rewardsSheet = XLSX.utils.aoa_to_sheet(rewardsData);
+      rewardsSheet['!cols'] = [{ wch: 25 }, { wch: 15 }, { wch: 15 }];
+      XLSX.utils.book_append_sheet(workbook, rewardsSheet, 'Rewards Distribution');
+    }
+    
+    // Weekly Trends Sheet
+    if (currentAnalyticsData.sessionData && currentAnalyticsData.sessionData.length > 0) {
+      const weeklyData = calculateWeeklyTotals(currentAnalyticsData.sessionData);
+      
+      const trendsData = [
+        ['Weekly Waste Sorting Trends'],
+        [],
+        ['Week', 'Metal', 'Plastic', 'Paper', 'Total']
+      ];
+      
+      for (let i = 0; i < weeklyData.labels.length; i++) {
+        const total = weeklyData.metal[i] + weeklyData.plastic[i] + weeklyData.paper[i];
+        trendsData.push([
+          weeklyData.labels[i],
+          weeklyData.metal[i],
+          weeklyData.plastic[i],
+          weeklyData.paper[i],
+          total
+        ]);
+      }
+      
+      const trendsSheet = XLSX.utils.aoa_to_sheet(trendsData);
+      trendsSheet['!cols'] = [{ wch: 15 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 12 }];
+      XLSX.utils.book_append_sheet(workbook, trendsSheet, 'Weekly Trends');
+    }
+    
+    XLSX.writeFile(workbook, `BinTECH_Analytics_${dateFrom}_to_${dateTo}.xlsx`);
+    
+    console.log('✓ Excel exported successfully');
+  }
+
+  // ============================================
+  // Load Analytics Data
+  // ============================================
+
+  async function loadAnalyticsData(dateFrom, dateTo) {
+    try {
+      console.log('📊 Loading analytics data...');
+      
+      const response = await fetch(`/api/admin/analytics?dateFrom=${dateFrom}&dateTo=${dateTo}`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const result = await response.json();
+      if (!result.success) {
+        throw new Error(result.message || 'Failed to load analytics');
+      }
+      
+      const data = result.analytics;
+      
+      // Fetch additional data for charts
+      const sessionResponse = await fetch(`/api/admin/analytics/sessions?dateFrom=${dateFrom}&dateTo=${dateTo}`);
+      const userResponse = await fetch(`/api/admin/analytics/users`);
+      const redemptionResponse = await fetch(`/api/admin/analytics/redemptions?dateFrom=${dateFrom}&dateTo=${dateTo}`);
+      
+      const sessionData = sessionResponse.ok ? await sessionResponse.json() : { data: [] };
+      const userData = userResponse.ok ? await userResponse.json() : { data: [] };
+      const redemptionData = redemptionResponse.ok ? await redemptionResponse.json() : { data: [] };
+      
+      // Store all data including session, user, and redemption data
+      currentAnalyticsData = {
+        ...data,
+        sessionData: sessionData.data || [],
+        userData: userData.data || [],
+        redemptionData: redemptionData.data || []
+      };
+      console.log('✓ Analytics data loaded:', currentAnalyticsData);
+      
+      // Update metrics
+      document.getElementById('metricWasteSorted').textContent = (currentAnalyticsData.totalWasteSorted || 0).toLocaleString();
+      document.getElementById('metricActiveUsers').textContent = (currentAnalyticsData.activeUsers || 0).toLocaleString();
+      document.getElementById('metricRewardsRedeemed').textContent = (currentAnalyticsData.rewardsRedeemed || 0).toLocaleString();
+      
+      // Initialize charts with real data from currentAnalyticsData
+      initWasteTrendsChart(currentAnalyticsData);
+      initMaterialDistributionChart(currentAnalyticsData);
+      initUserActivityChart(currentAnalyticsData);
+      initRewardsDistributionChart(currentAnalyticsData);
+      
+      console.log('✓ Analytics updated successfully');
+    } catch (error) {
+      console.error('❌ Error loading analytics data:', error);
+      alert('Error loading analytics data: ' + error.message);
+    }
+  }
+
+  // Admin page protection
+  function protectAdminPage() {
+    console.log('Admin page protection loading...');
+    
+    const user = JSON.parse(sessionStorage.getItem('bintech_user') || 'null');
+    console.log('User from session:', user);
+    
+    const role = String(user?.role || '').toLowerCase();
+    if (!user || (role !== 'admin' && role !== 'head')) {
+      console.log('Not an admin user, redirecting...');
+      sessionStorage.removeItem('bintech_user');
+      localStorage.removeItem('user');
+      localStorage.removeItem('isAdmin');
+      localStorage.removeItem('bintech_user');
+      window.location.href = '/';
+      return;
+    }
+    
+    console.log('Valid admin user, updating UI...');
+    
+    const initials = (user.First_Name?.charAt(0) || user.full_name?.charAt(0) || 'A') + 
+                     (user.Last_Name?.charAt(0) || user.full_name?.split(' ')[1]?.charAt(0) || '');
+    
+    const initialsEl = document.getElementById('adminInitials');
+    const nameEl = document.getElementById('adminName');
+    
+    if (initialsEl) {
+      initialsEl.textContent = initials.toUpperCase();
+      console.log('Updated admin initials');
+    }
+    
+    if (nameEl) {
+      nameEl.textContent = user.full_name || user.email || 'Administrator';
+      console.log('Updated admin name');
+    }
+    
+    console.log('Admin page initialized successfully');
+  }
+
+  // ============================================
+  // POPULATE ADMIN PROFILE
+  // ============================================
+  function populateAdminProfile() {
+    try {
+      const user = getLocalUser();
+      if (user) {
+        // Set admin name
+        const fullName = user.full_name || user.name || 'Admin';
+        const nameEl = document.getElementById('adminName');
+        if (nameEl) {
+          nameEl.textContent = fullName;
+        }
+        
+        // Set admin email
+        const emailEl = document.getElementById('adminEmail');
+        if (emailEl) {
+          emailEl.textContent = user.email || 'admin@example.com';
+        }
+        
+        // Set admin initials
+        const initials = fullName
+          .split(' ')
+          .map(word => word.charAt(0).toUpperCase())
+          .join('')
+          .substring(0, 2);
+        const initialsEl = document.getElementById('adminInitials');
+        if (initialsEl) {
+          initialsEl.textContent = initials || 'AD';
+        }
+        
+        console.log('[populateAdminProfile] ✓ Admin profile populated:', { name: fullName, email: user.email, initials });
+      } else {
+        console.warn('[populateAdminProfile] No user found in localStorage');
+      }
+    } catch (error) {
+      console.error('[populateAdminProfile] Error:', error);
+    }
+  }
+
+  // Run on page load
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+      populateAdminProfile();
+      protectAdminPage();
+      initializeDateFilters();
+      loadAnalyticsData(
+        document.getElementById('dateFrom').value,
+        document.getElementById('dateTo').value
+      );
+    });
+  } else {
+    populateAdminProfile();
+    protectAdminPage();
+    initializeDateFilters();
+    loadAnalyticsData(
+      document.getElementById('dateFrom').value,
+      document.getElementById('dateTo').value
+    );
+  }
+</script>
+
+<!--Admin Protection & User Info Script-->
+<script src="/js/auth-frontend-v2.js"></script>
+<script src="/js/admin.js"></script>
+<script src="/js/thesis-export-functions.js"></script>
+</body>
+</html>

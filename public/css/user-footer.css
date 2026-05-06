@@ -1,0 +1,253 @@
+/* User panels footer only: modern Bintech dark/glass footer */
+
+:root {
+  --bintech-footer-charcoal: #0d2f25;
+  --bintech-footer-charcoal-soft: #144033;
+  --bintech-footer-blue: #8fcf6b;
+  --bintech-footer-blue-strong: #d4e157;
+  --bintech-footer-line: rgba(255, 255, 255, 0.14);
+  --bintech-footer-text: rgba(235, 244, 255, 0.92);
+  --bintech-footer-text-soft: rgba(211, 222, 239, 0.72);
+}
+
+.bintech-user-footer {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(1200px 480px at -10% -20%, rgba(143, 207, 107, 0.2), transparent 65%),
+    radial-gradient(950px 420px at 110% 120%, rgba(212, 225, 87, 0.14), transparent 70%),
+    linear-gradient(140deg, var(--bintech-footer-charcoal), var(--bintech-footer-charcoal-soft));
+  color: var(--bintech-footer-text);
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.bintech-user-footer::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(143, 207, 107, 0.06), transparent 40%, rgba(212, 225, 87, 0.08));
+  pointer-events: none;
+}
+
+.bintech-user-footer__wrap {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 58px 24px 22px;
+  position: relative;
+  z-index: 1;
+}
+
+.bintech-user-footer__grid {
+  display: grid;
+  grid-template-columns: minmax(220px, 1.4fr) repeat(4, minmax(120px, 0.8fr)) minmax(250px, 1.2fr);
+  gap: 28px;
+}
+
+.bintech-user-footer__glass {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 16px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.bintech-brand-mark {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(145deg, var(--bintech-footer-blue), var(--bintech-footer-blue-strong));
+  box-shadow: 0 10px 26px rgba(143, 207, 107, 0.34);
+}
+
+.bintech-brand-mark svg {
+  width: 22px;
+  height: 22px;
+  color: #06111f;
+}
+
+.bintech-brand-title {
+  margin: 0;
+  font-size: 1.05rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  font-weight: 700;
+  font-family: 'Poppins', sans-serif;
+}
+
+.bintech-brand-copy {
+  margin-top: 14px;
+  line-height: 1.6;
+  color: var(--bintech-footer-text-soft);
+  font-size: 0.92rem;
+}
+
+.bintech-user-footer__nav h4,
+.bintech-user-footer__subscribe h4 {
+  margin: 0;
+  font-size: 0.74rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(206, 234, 190, 0.92);
+  font-weight: 600;
+  font-family: 'Poppins', sans-serif;
+}
+
+.bintech-user-footer__nav ul {
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 10px;
+}
+
+.bintech-user-footer__nav a {
+  color: var(--bintech-footer-text);
+  text-decoration: none;
+  font-size: 0.92rem;
+  transition: color 0.22s ease, transform 0.22s ease;
+  display: inline-block;
+}
+
+.bintech-user-footer__nav a:hover {
+  color: var(--bintech-footer-blue);
+  transform: translateX(2px);
+}
+
+.bintech-user-footer__subscribe {
+  padding: 16px;
+}
+
+.bintech-user-footer__subscribe p {
+  margin: 10px 0 14px;
+  color: var(--bintech-footer-text-soft);
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+.bintech-newsletter-form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.bintech-newsletter-form input {
+  flex: 1;
+  min-width: 0;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  background: rgba(5, 11, 19, 0.45);
+  color: #f2f8ff;
+  border-radius: 10px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.88rem;
+  padding: 10px 12px;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.bintech-newsletter-form input::placeholder {
+  color: rgba(198, 214, 238, 0.72);
+}
+
+.bintech-newsletter-form input:focus {
+  border-color: var(--bintech-footer-blue);
+  box-shadow: 0 0 0 3px rgba(143, 207, 107, 0.2);
+}
+
+.bintech-newsletter-form button {
+  border: none;
+  border-radius: 10px;
+  padding: 10px 15px;
+  min-width: 72px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #05111f;
+  background: linear-gradient(135deg, var(--bintech-footer-blue), #5dc8ff);
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.bintech-newsletter-form button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 20px rgba(143, 207, 107, 0.3);
+}
+
+.bintech-footer-bottom {
+  margin-top: 28px;
+  padding-top: 18px;
+  border-top: 1px solid var(--bintech-footer-line);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.bintech-footer-bottom p {
+  margin: 0;
+  color: var(--bintech-footer-text-soft);
+  font-size: 0.84rem;
+}
+
+.bintech-social-list {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.bintech-social-list a {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  color: #dbecff;
+  text-decoration: none;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.05);
+  transition: transform 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.bintech-social-list a:hover {
+  transform: translateY(-2px);
+  border-color: var(--bintech-footer-blue);
+  background: rgba(143, 207, 107, 0.22);
+}
+
+.bintech-social-list svg {
+  width: 15px;
+  height: 15px;
+}
+
+@media (max-width: 1200px) {
+  .bintech-user-footer__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 860px) {
+  .bintech-user-footer__wrap {
+    padding-top: 42px;
+  }
+
+  .bintech-user-footer__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 22px;
+  }
+}
+
+@media (max-width: 560px) {
+  .bintech-user-footer__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .bintech-newsletter-form {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .bintech-newsletter-form button {
+    width: 100%;
+  }
+}
