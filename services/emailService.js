@@ -1,14 +1,22 @@
 // Email Service for BinTECH
 // Handles sending confirmation emails, password reset emails, etc.
 
+const dns = require('node:dns');
 const nodemailer = require('nodemailer');
 require('dotenv').config();
+
+if (typeof dns.setDefaultResultOrder === 'function') {
+  dns.setDefaultResultOrder('ipv4first');
+}
 
 // Create transporter only when SMTP credentials are provided
 let transporter = null;
 function createTransporterIfConfigured() {
   const user = process.env.EMAIL_USER;
   const pass = process.env.EMAIL_PASSWORD;
+  const host = process.env.EMAIL_HOST || 'smtp.gmail.com';
+  const port = parseInt(process.env.EMAIL_PORT) || 587;
+
   if (!user || !pass) {
     console.warn('[Email Service] ⚠️ SMTP credentials not set - email sending disabled');
     return null;
@@ -16,9 +24,18 @@ function createTransporterIfConfigured() {
 
   try {
     const t = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-      port: parseInt(process.env.EMAIL_PORT) || 587,
+      host,
+      port,
       secure: false, // true for 465, false for other ports
+      family: 4,
+      requireTLS: true,
+      connectionTimeout: Number(process.env.EMAIL_CONNECTION_TIMEOUT_MS) || 10000,
+      greetingTimeout: Number(process.env.EMAIL_GREETING_TIMEOUT_MS) || 10000,
+      socketTimeout: Number(process.env.EMAIL_SOCKET_TIMEOUT_MS) || 15000,
+      tls: {
+        servername: host,
+        minVersion: 'TLSv1.2'
+      },
       auth: { user, pass }
     });
 
@@ -431,7 +448,7 @@ The BinTECH Team
     }
 
     try {
-      const info = await transporter.sendMail(mailOptions);
+      const info = await sendMailWithTimeout(mailOptions);
       console.log('✅ Welcome email sent to', email);
       console.log('   Message ID:', info && info.messageId);
       return true;
