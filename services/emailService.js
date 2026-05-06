@@ -36,6 +36,26 @@ function createTransporterIfConfigured() {
 
 transporter = createTransporterIfConfigured();
 
+async function sendMailWithTimeout(mailOptions, timeoutMs = Number(process.env.EMAIL_SEND_TIMEOUT_MS) || 15000) {
+  if (!transporter) {
+    throw new Error('SMTP transporter is not configured');
+  }
+
+  let timeoutId;
+  try {
+    return await Promise.race([
+      transporter.sendMail(mailOptions),
+      new Promise((_, reject) => {
+        timeoutId = setTimeout(() => reject(new Error(`Email send timed out after ${timeoutMs}ms`)), timeoutMs);
+      })
+    ]);
+  } finally {
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+  }
+}
+
 /**
  * Send simple welcome email after signup
  * @param {string} email - User's email address
@@ -163,7 +183,7 @@ The BinTECH Team
     }
 
     try {
-      const info = await transporter.sendMail(mailOptions);
+      const info = await sendMailWithTimeout(mailOptions);
       console.log('✅ Welcome email sent to', email);
       console.log('   Message ID:', info && info.messageId);
       return true;
@@ -172,6 +192,11 @@ The BinTECH Team
       console.error(error && error.stack ? error.stack : 'No stack available');
       return false;
     }
+  } catch (error) {
+    console.error('❌ Error in sendSignupWelcomeEmail for', email, '-', error && error.message ? error.message : error);
+    console.error(error && error.stack ? error.stack : 'No stack available');
+    return false;
+  }
 }
 
 /**
@@ -268,7 +293,7 @@ The BinTECH Team
     }
 
     try {
-      const info = await transporter.sendMail(mailOptions);
+      const info = await sendMailWithTimeout(mailOptions);
       console.log('✅ Password reset email sent to', email);
       console.log('   Message ID:', info && info.messageId);
       return true;
@@ -277,6 +302,11 @@ The BinTECH Team
       console.error(error && error.stack ? error.stack : 'No stack available');
       return false;
     }
+  } catch (error) {
+    console.error('❌ Error in sendPasswordResetEmail for', email, '-', error && error.message ? error.message : error);
+    console.error(error && error.stack ? error.stack : 'No stack available');
+    return false;
+  }
 }
 
 /**
@@ -410,6 +440,11 @@ The BinTECH Team
       console.error(error && error.stack ? error.stack : 'No stack available');
       return false;
     }
+  } catch (error) {
+    console.error('❌ Error in sendWelcomeEmail for', email, '-', error && error.message ? error.message : error);
+    console.error(error && error.stack ? error.stack : 'No stack available');
+    return false;
+  }
 }
 
 /**
@@ -420,24 +455,24 @@ The BinTECH Team
  * @returns {Promise<boolean>} - Success status
  */
 async function sendOTPEmail(email, otp, firstName) {
+  // If transporter not configured, log OTP for debugging and return success
+  if (!transporter) {
+    console.warn('[Email Service] ⚠️ SMTP not configured; skipping OTP send');
+    console.warn('[Email Service] 📧 OTP for testing purposes:', otp);
+    console.warn('[Email Service] 📧 Would be sent to:', email);
+    return true;
+  }
+
+  const mailOptions = {
+    from: `BinTECH <${process.env.EMAIL_USER}>`,
+    to: String(email).trim().toLowerCase(),
+    subject: 'Your BinTECH Password Recovery Code',
+    html: generateOTPEmailTemplate(firstName, otp),
+    text: `Your OTP is: ${otp}. This code expires in 10 minutes.`
+  };
+
   try {
-    // If transporter not configured, log OTP for debugging and return success
-    if (!transporter) {
-      console.warn('[Email Service] ⚠️ SMTP not configured; skipping OTP send');
-      console.warn('[Email Service] 📧 OTP for testing purposes:', otp);
-      console.warn('[Email Service] 📧 Would be sent to:', email);
-      return true;
-    }
-
-    const mailOptions = {
-      from: `BinTECH <${process.env.EMAIL_USER}>`,
-      to: String(email).trim().toLowerCase(),
-      subject: 'Your BinTECH Password Recovery Code',
-      html: generateOTPEmailTemplate(firstName, otp),
-      text: `Your OTP is: ${otp}. This code expires in 10 minutes.`
-    };
-
-    const info = await transporter.sendMail(mailOptions);
+    const info = await sendMailWithTimeout(mailOptions);
     console.log('✅ OTP email sent to', email);
     console.log('   Message ID:', info && info.messageId);
     return true;
@@ -549,7 +584,7 @@ The BinTECH Team
     }
 
     try {
-      const info = await transporter.sendMail(mailOptions);
+      const info = await sendMailWithTimeout(mailOptions);
       console.log('✅ Password reset confirmation email sent to', email);
       console.log('   Message ID:', info && info.messageId);
       return true;
@@ -558,6 +593,11 @@ The BinTECH Team
       console.error(error && error.stack ? error.stack : 'No stack available');
       return false;
     }
+  } catch (error) {
+    console.error('❌ Error in sendPasswordResetConfirmation for', email, '-', error && error.message ? error.message : error);
+    console.error(error && error.stack ? error.stack : 'No stack available');
+    return false;
+  }
 }
 
 /**
@@ -584,7 +624,7 @@ async function sendEmail(to, subject, html, text) {
     }
 
     try {
-      const info = await transporter.sendMail(mailOptions);
+      const info = await sendMailWithTimeout(mailOptions);
       console.log('✅ Email sent to', to);
       console.log('   Message ID:', info && info.messageId);
       return true;
@@ -593,6 +633,11 @@ async function sendEmail(to, subject, html, text) {
       console.error(error && error.stack ? error.stack : 'No stack available');
       return false;
     }
+  } catch (error) {
+    console.error('❌ Error in sendEmail for', to, '-', error && error.message ? error.message : error);
+    console.error(error && error.stack ? error.stack : 'No stack available');
+    return false;
+  }
 }
 
 module.exports = {

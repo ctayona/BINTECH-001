@@ -614,16 +614,17 @@ exports.register = async (req, res) => {
 
     // Step 5: Send welcome email (no verification needed - user is already logged in)
     console.log(`\nSending welcome email to ${email}...`);
-    const emailSent = await emailService.sendSignupWelcomeEmail(
-      email,
-      firstName
-    );
-    
-    if (emailSent) {
-      console.log(`✅ Welcome email sent successfully to ${email}`);
-    } else {
-      console.warn(`⚠️ Failed to send welcome email to ${email}, but account was created`);
-    }
+    void emailService.sendSignupWelcomeEmail(email, firstName)
+      .then((emailSent) => {
+        if (emailSent) {
+          console.log(`✅ Welcome email sent successfully to ${email}`);
+        } else {
+          console.warn(`⚠️ Failed to send welcome email to ${email}, but account was created`);
+        }
+      })
+      .catch((emailError) => {
+        console.error(`❌ Unexpected welcome email failure for ${email}:`, emailError && emailError.message ? emailError.message : emailError);
+      });
 
     // Step 6: Return success with combined user data
     res.status(201).json({
@@ -640,7 +641,7 @@ exports.register = async (req, res) => {
         campus_id: staffAccountId || campusId || null,
         account_id: staffAccountId || null
       },
-      emailSent: emailSent
+      emailSent: true
     });
   } catch (error) {
     console.error('Registration error:', error);
