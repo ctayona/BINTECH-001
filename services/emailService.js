@@ -2,6 +2,7 @@
 // Handles sending confirmation emails, password reset emails, etc.
 
 const dns = require('node:dns').promises;
+const { Resolver } = require('node:dns');
 const nodemailer = require('nodemailer');
 require('dotenv').config();
 
@@ -16,31 +17,54 @@ const EMAIL_USER = process.env.EMAIL_USER;
 const EMAIL_PASSWORD = process.env.EMAIL_PASSWORD;
 const EMAIL_HOST = process.env.EMAIL_HOST || 'smtp.gmail.com';
 const EMAIL_PORT = parseInt(process.env.EMAIL_PORT) || 587;
+const EMAIL_IPv4_ADDRESS = process.env.EMAIL_IPv4_ADDRESS || null; // Allow manual override
 
 console.log('[Email Service] Configuration:');
 console.log('  EMAIL_HOST:', EMAIL_HOST);
 console.log('  EMAIL_PORT:', EMAIL_PORT);
 console.log('  EMAIL_USER:', EMAIL_USER ? `${EMAIL_USER.substring(0, 3)}...` : 'NOT SET');
 console.log('  EMAIL_PASSWORD:', EMAIL_PASSWORD ? 'SET' : 'NOT SET');
+console.log('  EMAIL_IPv4_ADDRESS:', EMAIL_IPv4_ADDRESS ? `Override: ${EMAIL_IPv4_ADDRESS}` : 'Not set (auto-resolve)');
 
 // Resolve hostname to IPv4 address at startup
-let resolvedIPv4Address = null;
+let resolvedIPv4Address = EMAIL_IPv4_ADDRESS || null; // Start with manual override if provided
+
 async function resolveHostnameToIPv4() {
+  if (EMAIL_IPv4_ADDRESS) {
+    console.log(`[Email Service] ✅ Using manual IPv4 override: ${EMAIL_IPv4_ADDRESS}`);
+    return EMAIL_IPv4_ADDRESS;
+  }
+
   try {
-    console.log(`[Email Service] 🔍 Resolving ${EMAIL_HOST} to IPv4 address...`);
-    const address = await dns.resolve4(EMAIL_HOST);
-    if (address && address.length > 0) {
-      resolvedIPv4Address = address[0];
-      console.log(`[Email Service] ✅ Resolved ${EMAIL_HOST} to IPv4: ${resolvedIPv4Address}`);
+    console.log(`[Email Service] 🔍 Attempting system DNS to resolve ${EMAIL_HOST} to IPv4...`);
+    const systemAddresses = await dns.resolve4(EMAIL_HOST);
+    if (systemAddresses && systemAddresses.length > 0) {
+      resolvedIPv4Address = systemAddresses[0];
+      console.log(`[Email Service] ✅ System DNS resolved ${EMAIL_HOST} to IPv4: ${resolvedIPv4Address}`);
       return resolvedIPv4Address;
-    } else {
-      console.warn(`[Email Service] ⚠️ No IPv4 addresses found for ${EMAIL_HOST}`);
-      return null;
     }
   } catch (error) {
-    console.error(`[Email Service] ❌ Failed to resolve ${EMAIL_HOST}:`, error && error.message ? error.message : error);
-    return null;
+    console.warn(`[Email Service] ⚠️ System DNS failed:`, error && error.message ? error.message : error);
   }
+
+  // Fallback to Google DNS (8.8.8.8)
+  try {
+    console.log(`[Email Service] 🔍 Attempting Google DNS (8.8.8.8) to resolve ${EMAIL_HOST}...`);
+    const googleResolver = new Resolver();
+    googleResolver.setServers(['8.8.8.8', '8.8.4.4']);
+    
+    const googleAddresses = await googleResolver.resolve4(EMAIL_HOST);
+    if (googleAddresses && googleAddresses.length > 0) {
+      resolvedIPv4Address = googleAddresses[0];
+      console.log(`[Email Service] ✅ Google DNS resolved ${EMAIL_HOST} to IPv4: ${resolvedIPv4Address}`);
+      return resolvedIPv4Address;
+    }
+  } catch (error) {
+    console.warn(`[Email Service] ⚠️ Google DNS failed:`, error && error.message ? error.message : error);
+  }
+
+  console.warn(`[Email Service] ⚠️ Could not resolve ${EMAIL_HOST} to IPv4. Will fall back to hostname.`);
+  return null;
 }
 
 // Resolve on startup
