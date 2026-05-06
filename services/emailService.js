@@ -2,12 +2,29 @@
 // Handles sending confirmation emails, password reset emails, etc.
 
 const dns = require('node:dns');
+const { promisify } = require('util');
 const nodemailer = require('nodemailer');
 require('dotenv').config();
 
+// Force IPv4-first DNS resolution globally
 if (typeof dns.setDefaultResultOrder === 'function') {
   dns.setDefaultResultOrder('ipv4first');
+  console.log('[Email Service] 🔧 DNS configured to use IPv4 first');
 }
+
+// Custom DNS lookup that filters for IPv4 only
+const dnsLookup = (hostname, options, callback) => {
+  dns.lookup(hostname, { family: 4, ...options }, (err, address, family) => {
+    if (err) {
+      // Fallback to IPv6 if IPv4 fails
+      console.warn(`[Email Service] ⚠️ IPv4 lookup failed for ${hostname}, trying IPv6:`, err.message);
+      dns.lookup(hostname, { family: 6, ...options }, callback);
+    } else {
+      console.log(`[Email Service] ✓ Resolved ${hostname} to IPv4: ${address}`);
+      callback(err, address, family);
+    }
+  });
+};
 
 // Create transporter only when SMTP credentials are provided
 let transporter = null;
@@ -28,6 +45,7 @@ function createTransporterIfConfigured() {
       port,
       secure: false, // true for 465, false for other ports
       family: 4,
+      lookup: dnsLookup,
       requireTLS: true,
       connectionTimeout: Number(process.env.EMAIL_CONNECTION_TIMEOUT_MS) || 10000,
       greetingTimeout: Number(process.env.EMAIL_GREETING_TIMEOUT_MS) || 10000,
@@ -66,6 +84,7 @@ function buildTransporterCandidate({ host, port, secure }) {
     port,
     secure,
     family: 4,
+    lookup: dnsLookup,
     requireTLS: !secure,
     connectionTimeout: Number(process.env.EMAIL_CONNECTION_TIMEOUT_MS) || 10000,
     greetingTimeout: Number(process.env.EMAIL_GREETING_TIMEOUT_MS) || 10000,
@@ -410,6 +429,70 @@ The BinTECH Team
  */
 async function sendWelcomeEmail(email, firstName) {
   return sendSignupWelcomeEmail(email, firstName);
+}
+
+/**
+ * Generate OTP email HTML template
+ * @param {string} firstName - User's first name
+ * @param {string} otp - One-time password
+ * @returns {string} - HTML email template
+ */
+function generateOTPEmailTemplate(firstName, otp) {
+  return `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <style>
+          body { font-family: 'Poppins', Arial, sans-serif; line-height: 1.6; color: #333; }
+          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+          .header { background: linear-gradient(135deg, #0f3b2e 0%, #1f4f3b 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
+          .header h1 { margin: 0; font-size: 28px; }
+          .content { background: #f5f5f5; padding: 30px; border-radius: 0 0 8px 8px; }
+          .otp-box { background: white; border: 3px solid #d4e157; padding: 30px; text-align: center; border-radius: 8px; margin: 30px 0; }
+          .otp-code { font-size: 48px; letter-spacing: 5px; font-weight: bold; color: #0f3b2e; font-family: 'Courier New', monospace; }
+          .otp-label { color: #666; font-size: 14px; margin-top: 10px; }
+          .warning { background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; border-radius: 4px; color: #856404; }
+          .footer { text-align: center; color: #666; font-size: 12px; margin-top: 20px; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>🔐 Password Recovery</h1>
+          </div>
+          
+          <div class="content">
+            <p>Hi <strong>${firstName}</strong>,</p>
+            
+            <p>We received a request to reset your BinTECH password. Here's your one-time password (OTP):</p>
+            
+            <div class="otp-box">
+              <div class="otp-code">${otp}</div>
+              <div class="otp-label">Valid for 10 minutes</div>
+            </div>
+            
+            <p>Enter this code in the password recovery form to proceed with resetting your password.</p>
+            
+            <div class="warning">
+              <strong>⚠️ Security Notice:</strong><br>
+              If you didn't request this password reset, please ignore this email or contact our support team immediately.
+            </div>
+            
+            <p style="color: #666; font-size: 12px;">
+              This OTP will expire in 10 minutes for security reasons.
+            </p>
+            
+            <p>If you have any questions, contact our support team.<br><strong>The BinTECH Team</strong></p>
+          </div>
+          
+          <div class="footer">
+            <p>© 2024 BinTECH - University of Makati. All rights reserved.</p>
+            <p>This is an automated email. Please do not reply to this message.</p>
+          </div>
+        </div>
+      </body>
+    </html>
+  `;
 }
 
 /**
