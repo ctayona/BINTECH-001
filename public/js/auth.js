@@ -711,8 +711,43 @@ function navigateTo(page) {
 // ============================================
 function handleLogout() {
   if (confirm('Are you sure you want to logout?')) {
+    // Show logout notification modal
+    const notification = document.createElement('div');
+    notification.id = 'logoutNotification';
+    notification.innerHTML = `
+      <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.5); display: flex; align-items: center; justify-content: center; z-index: 9999;">
+        <div style="background: white; border-radius: 16px; padding: 40px; text-align: center; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3); animation: slideUp 0.3s ease-out;">
+          <div style="width: 60px; height: 60px; background: #3d8b7a; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
+            <svg style="width: 32px; height: 32px; color: white;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+            </svg>
+          </div>
+          <h2 style="color: #1a3a2f; font-size: 24px; font-weight: 600; margin: 0 0 8px 0;">You're Logged Out</h2>
+          <p style="color: #6b9080; font-size: 14px; margin: 0 0 24px 0;">You have been successfully logged out.</p>
+          <p style="color: #999; font-size: 12px; margin: 0;">Redirecting to home page...</p>
+        </div>
+      </div>
+      <style>
+        @keyframes slideUp {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+      </style>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Clear session and redirect after a short delay
     AuthManager.logout();
-    window.location.href = '/';
+    setTimeout(() => {
+      window.location.href = '/';
+    }, 1500);
   }
 }
 
