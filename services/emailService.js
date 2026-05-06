@@ -1,13 +1,13 @@
 // Email Service for BinTECH
 // Handles sending confirmation emails, password reset emails, etc.
 
-const dns = require('node:dns');
+const dns = require('node:dns').promises;
 const nodemailer = require('nodemailer');
 require('dotenv').config();
 
 // Force IPv4-first DNS resolution globally
-if (typeof dns.setDefaultResultOrder === 'function') {
-  dns.setDefaultResultOrder('ipv4first');
+if (typeof require('node:dns').setDefaultResultOrder === 'function') {
+  require('node:dns').setDefaultResultOrder('ipv4first');
   console.log('[Email Service] 🔧 DNS configured to use IPv4 first');
 }
 
@@ -23,6 +23,29 @@ console.log('  EMAIL_PORT:', EMAIL_PORT);
 console.log('  EMAIL_USER:', EMAIL_USER ? `${EMAIL_USER.substring(0, 3)}...` : 'NOT SET');
 console.log('  EMAIL_PASSWORD:', EMAIL_PASSWORD ? 'SET' : 'NOT SET');
 
+// Resolve hostname to IPv4 address at startup
+let resolvedIPv4Address = null;
+async function resolveHostnameToIPv4() {
+  try {
+    console.log(`[Email Service] 🔍 Resolving ${EMAIL_HOST} to IPv4 address...`);
+    const address = await dns.resolve4(EMAIL_HOST);
+    if (address && address.length > 0) {
+      resolvedIPv4Address = address[0];
+      console.log(`[Email Service] ✅ Resolved ${EMAIL_HOST} to IPv4: ${resolvedIPv4Address}`);
+      return resolvedIPv4Address;
+    } else {
+      console.warn(`[Email Service] ⚠️ No IPv4 addresses found for ${EMAIL_HOST}`);
+      return null;
+    }
+  } catch (error) {
+    console.error(`[Email Service] ❌ Failed to resolve ${EMAIL_HOST}:`, error && error.message ? error.message : error);
+    return null;
+  }
+}
+
+// Resolve on startup
+resolveHostnameToIPv4().catch(err => console.error('[Email Service] Startup resolution failed:', err));
+
 // Create transporter only when SMTP credentials are provided
 let transporter = null;
 function createTransporterIfConfigured() {
@@ -33,8 +56,11 @@ function createTransporterIfConfigured() {
   }
 
   try {
+    // Use resolved IPv4 address if available, otherwise fall back to hostname
+    const host = resolvedIPv4Address || EMAIL_HOST;
+    
     const t = nodemailer.createTransport({
-      host: EMAIL_HOST,
+      host,
       port: EMAIL_PORT,
       secure: EMAIL_PORT === 465, // true for 465, false for 587
       family: 4, // Force IPv4
@@ -43,9 +69,9 @@ function createTransporterIfConfigured() {
       greetingTimeout: Number(process.env.EMAIL_GREETING_TIMEOUT_MS) || 15000,
       socketTimeout: Number(process.env.EMAIL_SOCKET_TIMEOUT_MS) || 20000,
       tls: {
-        servername: EMAIL_HOST,
+        servername: EMAIL_HOST, // For SNI, use original hostname
         minVersion: 'TLSv1.2',
-        rejectUnauthorized: false // Allow self-signed certs if needed
+        rejectUnauthorized: false
       },
       auth: { 
         user: EMAIL_USER, 
@@ -69,7 +95,7 @@ function createTransporterIfConfigured() {
 
 transporter = createTransporterIfConfigured();
 
-function buildTransporterCandidate({ host, port, secure }) {
+function buildTransporterCandidate({ host, sniHostname, port, secure }) {
   if (!EMAIL_USER || !EMAIL_PASSWORD) {
     return null;
   }
@@ -84,9 +110,9 @@ function buildTransporterCandidate({ host, port, secure }) {
     greetingTimeout: Number(process.env.EMAIL_GREETING_TIMEOUT_MS) || 15000,
     socketTimeout: Number(process.env.EMAIL_SOCKET_TIMEOUT_MS) || 20000,
     tls: {
-      servername: host,
+      servername: sniHostname || host, // Use original hostname for SNI
       minVersion: 'TLSv1.2',
-      rejectUnauthorized: false // Allow self-signed certs if needed
+      rejectUnauthorized: false
     },
     auth: { 
       user: EMAIL_USER, 
@@ -98,16 +124,17 @@ function buildTransporterCandidate({ host, port, secure }) {
 }
 
 async function sendMailWithFallback(mailOptions, timeoutMs = Number(process.env.EMAIL_SEND_TIMEOUT_MS) || 30000) {
-  const host = EMAIL_HOST;
+  const host = resolvedIPv4Address || EMAIL_HOST; // Use resolved IPv4 address, fall back to hostname
+  const sniHostname = EMAIL_HOST; // Always use original hostname for SNI
   const primaryPort = parseInt(process.env.EMAIL_PORT) || 587;
   
   // Try primary port first with 2 attempts, then fallback port with 2 attempts
   const candidates = [
-    { host, port: primaryPort, secure: primaryPort === 465 },
-    { host, port: primaryPort, secure: primaryPort === 465 }, // Retry same port
-    { host, port: 465, secure: true },
-    { host, port: 465, secure: true }, // Retry port 465
-    { host, port: 587, secure: false }
+    { host, sniHostname, port: primaryPort, secure: primaryPort === 465 },
+    { host, sniHostname, port: primaryPort, secure: primaryPort === 465 }, // Retry same port
+    { host, sniHostname, port: 465, secure: true },
+    { host, sniHostname, port: 465, secure: true }, // Retry port 465
+    { host, sniHostname, port: 587, secure: false }
   ];
 
   let lastError = null;
@@ -122,7 +149,8 @@ async function sendMailWithFallback(mailOptions, timeoutMs = Number(process.env.
 
     let timeoutId;
     try {
-      console.log(`[Email Service] 📧 Attempt ${attemptNumber}/${candidates.length}: Connecting to ${candidate.host}:${candidate.port} (secure=${candidate.secure}, family=4, timeout=${timeoutMs}ms)`);
+      const hostDisplay = resolvedIPv4Address ? `${candidate.sniHostname}(${candidate.host})` : candidate.host;
+      console.log(`[Email Service] 📧 Attempt ${attemptNumber}/${candidates.length}: Connecting to ${hostDisplay}:${candidate.port} (secure=${candidate.secure}, family=4, timeout=${timeoutMs}ms)`);
       
       const info = await Promise.race([
         candidateTransporter.sendMail(mailOptions),
