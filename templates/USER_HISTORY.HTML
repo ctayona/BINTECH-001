@@ -177,7 +177,7 @@
       <!-- Left - User Welcome -->
       <div class="flex items-center space-x-3">
        <img src="/PICS/BINTECHLOGO.png" alt="BinTECH Logo" class="h-10 w-auto" style="object-fit: contain;">
-       <div class="hidden sm:block">
+      <div class="nav-welcome show">
         <p class="text-[#D4E157]/70 text-xs uppercase tracking-wider">Welcome Back</p>
         <p id="nav-user-name" class="text-white font-semibold text-sm">MARIO SALLY</p>
        </div>
@@ -207,10 +207,6 @@
      </div>
     </div>
     <div id="mobile-nav-panel" class="mobile-nav-panel md:hidden border-t border-white/15 bg-[#143D2E]/95 px-4 py-4 space-y-3" data-open="false" style="display:none;">
-      <div class="mb-3 pb-3 border-b border-white/15">
-        <p class="text-[#D4E157]/70 text-xs uppercase tracking-wider">Welcome Back</p>
-        <p id="nav-user-name" class="text-white font-semibold text-sm">User</p>
-      </div>
       <a href="/dashboard" class="block text-white/90 text-sm font-medium">Dashboard</a>
       <a href="/profile" class="block text-white/90 text-sm font-medium">Profile</a>
       <a href="/rewards" class="block text-white/90 text-sm font-medium">Rewards</a>
@@ -469,8 +465,9 @@
     document.body.style.fontSize = `${fontSize}px`;
     
     const userName = config.user_name || defaultConfig.user_name;
-    const navUserName = document.getElementById('nav-user-name');
-    if (navUserName) navUserName.textContent = userName;
+    document.querySelectorAll('#nav-user-name, #mobile-nav-user-name').forEach((el) => {
+      el.textContent = userName;
+    });
     
     const pageTitle = config.page_title || defaultConfig.page_title;
     const pageTitleEl = document.getElementById('page-title');
@@ -632,11 +629,12 @@
     }
      
     const user = JSON.parse(userDataStr);
-    const navUserName = document.getElementById('nav-user-name');
     const navPoints = document.getElementById('nav-points');
     const effectiveUserId = user.system_id || user.campus_id || user.id || '';
      
-    if (navUserName) navUserName.textContent = (user.full_name || user.email || 'User').toUpperCase();
+    document.querySelectorAll('#nav-user-name, #mobile-nav-user-name').forEach((el) => {
+      el.textContent = (user.full_name || user.email || 'User').toUpperCase();
+    });
 
     const query = new URLSearchParams();
     if (effectiveUserId) query.set('userId', effectiveUserId);

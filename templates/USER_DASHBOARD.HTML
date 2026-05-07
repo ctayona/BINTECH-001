@@ -163,7 +163,7 @@
      <div class="flex items-center justify-between h-16"><!-- Left - User Welcome -->
       <div class="flex items-center space-x-3">
        <img src="/PICS/BINTECHLOGO.png" alt="BinTECH Logo" class="h-10 w-auto" style="object-fit: contain;">
-       <div class="hidden sm:block">
+      <div class="nav-welcome show">
         <p class="text-[#D4E157]/70 text-xs uppercase tracking-wider">Welcome Back</p>
         <p id="nav-user-name" class="text-white font-semibold text-sm">MARIO SALLY</p>
        </div>
@@ -184,10 +184,6 @@
      </div>
     </div>
     <div id="mobile-nav-panel" class="mobile-nav-panel md:hidden border-t border-white/15 bg-[#143D2E]/95 px-4 py-4 space-y-3" data-open="false" style="display:none;">
-      <div class="mb-3 pb-3 border-b border-white/15">
-        <p class="text-[#D4E157]/70 text-xs uppercase tracking-wider">Welcome Back</p>
-        <p id="nav-user-name" class="text-white font-semibold text-sm">User</p>
-      </div>
       <a href="/dashboard" class="block text-[#D4E157] text-sm font-medium">Dashboard</a>
       <a href="/profile" class="block text-white/90 text-sm font-medium">Profile</a>
       <a href="/rewards" class="block text-white/90 text-sm font-medium">Rewards</a>
@@ -450,8 +446,9 @@
       
       // Update editable text content
       const userName = config.user_name || defaultConfig.user_name;
-      const navUserName = document.getElementById('nav-user-name');
-      if (navUserName) navUserName.textContent = userName;
+      document.querySelectorAll('#nav-user-name, #mobile-nav-user-name').forEach((el) => {
+        el.textContent = userName;
+      });
       
       const totalPoints = config.points_display || defaultConfig.points_display;
       const totalPointsEl = document.getElementById('total-points');
@@ -775,11 +772,10 @@
     console.log('Valid user, updating UI with:', user.full_name || user.email);
     
     // Update nav-user-name specifically
-    const navUserName = document.getElementById('nav-user-name');
-    if (navUserName) {
-      navUserName.textContent = (user.full_name || user.email || 'User').toUpperCase();
-      console.log('Updated nav-user-name');
-    }
+    document.querySelectorAll('#nav-user-name, #mobile-nav-user-name').forEach((el) => {
+      el.textContent = (user.full_name || user.email || 'User').toUpperCase();
+    });
+    console.log('Updated nav-user-name');
     
     // Update points display if available
     const pointsDisplay = document.getElementById('nav-points');
