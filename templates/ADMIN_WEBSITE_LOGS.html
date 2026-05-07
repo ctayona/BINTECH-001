@@ -113,7 +113,7 @@
 
       <div id="tabsContainer" class="space-y-8 hidden">
         <div class="tab-panel active" data-panel="accounts">
-          <div class="overflow-x-auto rounded-2xl border border-creamDark">
+          <div class="overflow-auto max-h-[420px] rounded-2xl border border-creamDark">
             <table class="min-w-full text-sm">
               <thead class="bg-cream/60 text-moss uppercase text-xs tracking-wide">
                 <tr>
@@ -131,7 +131,7 @@
         </div>
 
         <div class="tab-panel" data-panel="sessions">
-          <div class="overflow-x-auto rounded-2xl border border-creamDark">
+          <div class="overflow-auto max-h-[420px] rounded-2xl border border-creamDark">
             <table class="min-w-full text-sm">
               <thead class="bg-cream/60 text-moss uppercase text-xs tracking-wide">
                 <tr>
@@ -149,7 +149,7 @@
         </div>
 
         <div class="tab-panel" data-panel="rewards">
-          <div class="overflow-x-auto rounded-2xl border border-creamDark">
+          <div class="overflow-auto max-h-[420px] rounded-2xl border border-creamDark">
             <table class="min-w-full text-sm">
               <thead class="bg-cream/60 text-moss uppercase text-xs tracking-wide">
                 <tr>
@@ -166,7 +166,7 @@
         </div>
 
         <div class="tab-panel" data-panel="redemptions">
-          <div class="overflow-x-auto rounded-2xl border border-creamDark">
+          <div class="overflow-auto max-h-[420px] rounded-2xl border border-creamDark">
             <table class="min-w-full text-sm">
               <thead class="bg-cream/60 text-moss uppercase text-xs tracking-wide">
                 <tr>
@@ -286,8 +286,8 @@
     table.innerHTML = rows.map((row) => `
       <tr>
         <td class="px-4 py-3 text-moss">${escapeHtml(formatDateTime(row.createdAt))}</td>
-        <td class="px-4 py-3 font-semibold text-forest">${escapeHtml(row.userName || row.userEmail || 'Unknown')}</td>
-        <td class="px-4 py-3 text-moss">${escapeHtml(row.userEmail || row.gmail || 'Unknown')}</td>
+        <td class="px-4 py-3"><div class="font-semibold text-forest">${escapeHtml(row.userName)}</div><div class="text-xs text-moss">${escapeHtml(row.userEmail)}</div></td>
+        <td class="px-4 py-3 text-moss">${escapeHtml(row.gmail || row.userEmail || 'Unknown')}</td>
         <td class="px-4 py-3 text-moss">${escapeHtml(row.rewardName)}</td>
         <td class="px-4 py-3 font-semibold text-teal">${escapeHtml(row.pointsSpent)} pts</td>
         <td class="px-4 py-3"><span class="inline-flex px-2 py-1 rounded-full text-xs font-semibold bg-forest/10 text-forest">${escapeHtml(row.status)}</span></td>
@@ -306,7 +306,7 @@
     renderAccounts(filter(state.accountCreations, ['name', 'email', 'role', 'source', 'systemId', 'createdAt']));
     renderSessions(filter(state.machineSessions, ['machineId', 'email', 'status', 'startedAt']));
     renderRewards(filter(state.rewardCreations, ['name', 'description', 'createdAt']));
-    renderRedemptions(filter(state.rewardRedemptions, ['userName', 'userEmail', 'rewardName', 'status', 'createdAt']));
+    renderRedemptions(filter(state.rewardRedemptions, ['userName', 'userEmail', 'gmail', 'rewardName', 'status', 'createdAt']));
   }
 
   function getAdminRequestHeaders() {

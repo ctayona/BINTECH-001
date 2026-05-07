@@ -429,21 +429,21 @@
                 <path d="M13 3L4 14h6l-1 7 11-13h-6l1-5z" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
             </span>
-            <p class="bintech-brand-title">BinTECH</p>
+            <p class="bintech-brand-title">Bintech</p>
           </div>
-          <p class="bintech-brand-copy">BinTECH manages EcoPoints, reward redemptions, disposal history, and profile activity for the University of Makati waste sorting platform.</p>
+          <p class="bintech-brand-copy">Bintech builds secure, intuitive financial technology for modern users, blending speed, trust, and smarter money workflows.</p>
         </section>
-        <nav class="bintech-user-footer__nav"><h4>Account</h4><ul><li><a href="/profile">My Profile</a></li><li><a href="/dashboard">Dashboard</a></li></ul></nav>
-        <nav class="bintech-user-footer__nav"><h4>System</h4><ul><li><a href="/rewards">Rewards</a></li><li><a href="/history">Transaction History</a></li></ul></nav>
-        <nav class="bintech-user-footer__nav"><h4>Actions</h4><ul><li><a href="/qr-scanner">Transfer Points</a></li><li><a href="/how-it-works">How It Works</a></li></ul></nav>
-        <nav class="bintech-user-footer__nav"><h4>Support</h4><ul><li><a href="mailto:support@bintech.local">Email Support</a></li><li><a href="#" onclick="window.scrollTo({ top: 0, behavior: 'smooth' }); return false;">Back to Top</a></li></ul></nav>
+        <nav class="bintech-user-footer__nav"><h4>Quick Actions</h4><ul><li><a href="/dashboard">Open Dashboard</a></li><li><a href="/qr-scanner">Transfer Points</a></li><li><a href="/history">View History</a></li><li><a href="/profile">Edit Profile</a></li></ul></nav>
+        <nav class="bintech-user-footer__nav"><h4>Rewards</h4><ul><li><a href="/rewards">Browse Rewards</a></li><li><a href="/rewards?tab=featured">Featured Items</a></li></ul></nav>
+        <nav class="bintech-user-footer__nav"><h4>Support</h4><ul><li><a href="mailto:support@bintech.local">Email Support</a></li><li><a href="/how-it-works">How It Works</a></li><li><a href="/admin/website-logs">Activity Logs</a></li></ul></nav>
+        <nav class="bintech-user-footer__nav"><h4>Account</h4><ul><li><a href="/profile">Manage Profile</a></li><li><a href="#" onclick="handleLogout(); return false;">Logout</a></li></ul></nav>
         <section class="bintech-user-footer__subscribe bintech-user-footer__glass">
-          <h4>Quick Actions</h4>
-          <p>Jump straight to the BinTECH features you use most often.</p>
-          <form class="bintech-newsletter-form" onsubmit="event.preventDefault(); window.location.href='/qr-scanner';">
-            <input type="text" value="Open Transfer Points" readonly>
-            <button type="submit">Open</button>
-          </form>
+          <h4>System Snapshot</h4>
+          <p>Use BinTECH to sort waste, earn EcoPoints, transfer points, and review your redemption activity from one place.</p>
+          <div class="bintech-newsletter-form">
+            <button type="button" onclick="window.location.href='/qr-scanner'">Start Scan</button>
+            <button type="button" onclick="window.location.href='/history'">History</button>
+          </div>
         </section>
       </div>
       <div class="bintech-footer-bottom">

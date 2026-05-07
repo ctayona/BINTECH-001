@@ -33,53 +33,52 @@
     .card-shadow { box-shadow: 0 4px 20px rgba(15, 59, 46, 0.12); }
     
     .nav-link {
-        <section>
-          <div class="flex items-center gap-3">
-            <span class="bintech-brand-mark" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
-                <path d="M13 3L4 14h6l-1 7 11-13h-6l1-5z" stroke-linecap="round" stroke-linejoin="round"></path>
-              </svg>
-            </span>
-            <p class="bintech-brand-title">BinTECH</p>
-          </div>
-          <p class="bintech-brand-copy">BinTECH keeps your account identity, points, and profile details organized so you can manage your campus activity clearly.</p>
-        </section>
-        <nav class="bintech-user-footer__nav" aria-label="Account links">
-          <h4>Account</h4>
-          <ul>
-            <li><a href="/dashboard">Dashboard</a></li>
-            <li><a href="/profile">Profile</a></li>
-          </ul>
-        </nav>
-        <nav class="bintech-user-footer__nav" aria-label="System links">
-          <h4>System</h4>
-          <ul>
-            <li><a href="/rewards">Rewards</a></li>
-            <li><a href="/history">History</a></li>
-          </ul>
-        </nav>
-        <nav class="bintech-user-footer__nav" aria-label="Action links">
-          <h4>Actions</h4>
-          <ul>
-            <li><a href="/qr-scanner">Transfer Points</a></li>
-            <li><a href="#" onclick="window.scrollTo({ top: 0, behavior: 'smooth' }); return false;">Back to Top</a></li>
-          </ul>
-        </nav>
-        <nav class="bintech-user-footer__nav" aria-label="Support links">
-          <h4>Support</h4>
-          <ul>
-            <li><a href="mailto:support@bintech.local">Email Support</a></li>
-            <li><a href="/how-it-works">Help Guide</a></li>
-          </ul>
-        </nav>
-        <section class="bintech-user-footer__subscribe bintech-user-footer__glass">
-          <h4>Quick Access</h4>
-          <p>Use these shortcuts to move around the system faster.</p>
-          <form class="bintech-newsletter-form" onsubmit="event.preventDefault(); window.location.href='/profile';">
-            <input type="text" value="Open Profile" readonly>
-            <button type="submit">Open</button>
-          </form>
-        </section>
+      position: relative;
+      transition: color 0.3s ease;
+    }
+    .nav-link::after {
+      content: '';
+      position: absolute;
+      bottom: -4px;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: var(--accent-yellow);
+      transition: width 0.3s ease;
+    }
+    .nav-link:hover::after, .nav-link.active::after { width: 100%; }
+    
+    .form-input {
+      border: 1.5px solid #E0E0E0;
+      transition: all 0.3s ease;
+      font-family: 'Poppins', sans-serif;
+    }
+    .form-input:focus {
+      border-color: var(--accent-yellow);
+      box-shadow: 0 0 0 3px rgba(212, 225, 87, 0.15);
+      outline: none;
+    }
+    .form-input:disabled {
+      background-color: #f5f5f5;
+      color: #999;
+      cursor: not-allowed;
+    }
+    
+    .save-btn {
+      background: linear-gradient(135deg, var(--card-green), #4CAF50);
+      transition: all 0.3s ease;
+      font-weight: 600;
+    }
+    .save-btn:hover:not(:disabled) {
+      background: linear-gradient(135deg, #4CAF50, var(--card-green));
+      transform: scale(1.02);
+    }
+    .save-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    
+    .cancel-btn {
+      border: 1.5px solid var(--primary-dark);
+      color: var(--primary-dark);
+      transition: all 0.3s ease;
       font-weight: 600;
     }
     .cancel-btn:hover { background-color: var(--page-bg); }
@@ -545,43 +544,46 @@
           <p class="bintech-brand-copy">Bintech builds secure, intuitive financial technology for modern users, blending speed, trust, and smarter money workflows.</p>
         </section>
 
-        <nav class="bintech-user-footer__nav" aria-label="Company links">
-          <h4>Company</h4>
+        <nav class="bintech-user-footer__nav" aria-label="Quick actions">
+          <h4>Quick Actions</h4>
           <ul>
-            <li><a href="#">About</a></li>
-            <li><a href="#">Contact</a></li>
+            <li><a href="/dashboard">Open Dashboard</a></li>
+            <li><a href="/qr-scanner">Transfer Points</a></li>
+            <li><a href="/history">View History</a></li>
+            <li><a href="/rewards">Browse Rewards</a></li>
           </ul>
         </nav>
 
-        <nav class="bintech-user-footer__nav" aria-label="Products links">
-          <h4>Products</h4>
+        <nav class="bintech-user-footer__nav" aria-label="Profile links">
+          <h4>Profile</h4>
           <ul>
-            <li><a href="#">Rewards</a></li>
+            <li><a href="/profile">Manage Profile</a></li>
+            <li><a href="#" onclick="handleLogout(); return false;">Logout</a></li>
           </ul>
         </nav>
 
-        <nav class="bintech-user-footer__nav" aria-label="Resources links">
-          <h4>Resources</h4>
+        <nav class="bintech-user-footer__nav" aria-label="Support links">
+          <h4>Support</h4>
           <ul>
-            <li><a href="#">Help Center</a></li>
-            <li><a href="#">Developers</a></li>
+            <li><a href="/how-it-works">How It Works</a></li>
+            <li><a href="mailto:support@bintech.local">Email Support</a></li>
           </ul>
         </nav>
 
-        <nav class="bintech-user-footer__nav" aria-label="Legal links">
-          <h4>Legal</h4>
+        <nav class="bintech-user-footer__nav" aria-label="System links">
+          <h4>System</h4>
           <ul>
-            <li><a href="#">Terms</a></li>
-            <li><a href="#">Privacy</a></li>
+            <li><a href="/admin/website-logs">Activity Logs</a></li>
+            <li><a href="/dashboard#points">Points Overview</a></li>
           </ul>
         </nav>
 
         <section class="bintech-user-footer__subscribe bintech-user-footer__glass">
-          <h4>Subscribe To Our Newsletter</h4>
-          <p>Get product releases, security updates, and fintech insights delivered monthly.</p>
+          <h4>System Snapshot</h4>
+          <p>Update your profile, check your points, and jump directly into rewards or scanning when needed.</p>
           <form class="bintech-newsletter-form" onsubmit="event.preventDefault();">
-            <input type="email" placeholder="you@domain.com" aria-label="Email address">
-            <button type="submit">Join</button>
+            <button type="button" onclick="window.location.href='/profile'">Profile</button>
+            <button type="button" onclick="window.location.href='/dashboard'">Dashboard</button>
           </form>
         </section>
       </div>
@@ -889,12 +891,11 @@
         });
 
         // Update profile card display
-        const fullName = [profile.full_name, profile.first_name, profile.middle_name, profile.last_name]
-          .filter(Boolean)
-          .join(' ')
-          .replace(/\s+/g, ' ')
-          .trim();
-        const initials = `${(profile.first_name?.charAt(0) || 'U').toUpperCase()}${(profile.last_name?.charAt(0) || 'U').toUpperCase()}`;
+        const fullName = String(
+          profile.full_name
+          || [profile.first_name, profile.middle_name, profile.last_name].filter(Boolean).join(' ')
+        ).replace(/\s+/g, ' ').trim();
+        const initials = `${(profile.first_name?.charAt(0) || profile.full_name?.charAt(0) || 'U').toUpperCase()}${(profile.last_name?.charAt(0) || profile.full_name?.split(' ')?.[1]?.charAt(0) || 'P').toUpperCase()}`;
         
         console.log('Setting display values - Full Name:', fullName, 'Initials:', initials);
         document.getElementById('profileFullName').textContent = fullName || 'User Profile';
@@ -1222,12 +1223,12 @@
         sessionStorage.setItem('user', JSON.stringify(currentUser));
 
         // Update display
-        const fullName = [firstName, middleName, lastName].filter(Boolean).join(' ').replace(/\s+/g, ' ').trim();
+        const fullName = [firstName, document.getElementById('middleName')?.value.trim(), lastName].filter(Boolean).join(' ').replace(/\s+/g, ' ').trim();
         const initials = firstName.charAt(0) + lastName.charAt(0);
         document.getElementById('profileFullName').textContent = fullName;
         document.getElementById('profileInitials').textContent = initials.toUpperCase();
         document.querySelectorAll('#nav-user-name, #mobile-nav-user-name').forEach((el) => {
-          el.textContent = firstName;
+          el.textContent = fullName;
         });
 
         // Show success and exit edit mode

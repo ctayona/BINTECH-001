@@ -1276,28 +1276,16 @@ exports.getWebsiteLogs = async (req, res) => {
         .limit(100)
     );
 
-    const extractAccountName = (account) => {
-      const firstName = account.first_name || account.First_Name || account.firstname || account.Firstname || '';
-      const middleName = account.middle_name || account.Middle_Name || account.middlename || account.Middlename || '';
-      const lastName = account.last_name || account.Last_Name || account.lastname || account.Lastname || '';
-      const username = account.username || account.user_name || account.display_name || account.name || account.nick_name || '';
-      const emailLocalPart = String(account.email || '').trim().split('@')[0] || '';
-
-      return String(
-        account.full_name
-        || account.Full_Name
-        || username
-        || `${firstName} ${middleName} ${lastName}`.replace(/\s+/g, ' ').trim()
-        || emailLocalPart
-        || 'Unknown'
-      ).trim();
-    };
-
     // Fetch user accounts by system identifier/email for direct redemption lookup
     const userAccountsByUUID = new Map();
     if (userAccounts && Array.isArray(userAccounts)) {
       userAccounts.forEach((account) => {
-        const accountName = extractAccountName(account);
+        const accountName = String(
+          account.full_name
+          || `${account.first_name || ''} ${account.middle_name || ''} ${account.last_name || ''}`.replace(/\s+/g, ' ').trim()
+          || account.email
+          || 'Unknown'
+        ).trim();
         const accountEmail = String(account.email || '').trim();
         const accountIdentifier = String(account.system_id || account.id || '').trim();
 
@@ -1341,7 +1329,7 @@ exports.getWebsiteLogs = async (req, res) => {
       const fullName = String(
         row.full_name
         || `${firstName} ${middleName} ${lastName}`.replace(/\s+/g, ' ').trim()
-        || normalizedEmail.split('@')[0]
+        || email
         || 'Unknown'
       ).trim();
       const role = String(roleOverride || row.role || 'user').trim();
@@ -1397,8 +1385,8 @@ exports.getWebsiteLogs = async (req, res) => {
     (facultyAccounts || []).forEach((row) => registerAccount(row, 'faculty_accounts', 'faculty'));
     (otherAccounts || []).forEach((row) => registerAccount(row, 'other_accounts', 'staff'));
     (adminAccounts || []).forEach((row) => {
-      const firstName = row.First_Name || row.first_name || row.firstname || row.full_name?.split(' ')[0] || '';
-      const lastName = row.Last_Name || row.last_name || row.lastname || row.full_name?.split(' ').slice(1).join(' ') || '';
+      const firstName = row.First_Name || row.full_name?.split(' ')[0] || '';
+      const lastName = row.Last_Name || row.full_name?.split(' ').slice(1).join(' ') || '';
       registerAccount(
         {
           ...row,
@@ -1440,37 +1428,14 @@ exports.getWebsiteLogs = async (req, res) => {
     const redemptionLogs = (redemptions || []).map((redemption) => {
       const redemptionUserKey = String(redemption.user_id || '').trim();
       const redemptionEmailKey = String(redemption.gmail || redemption.email || '').trim().toLowerCase();
-      
-      // Prefer email-based lookup for redemption rows, then fallback to id-based lookups
-      let account = (redemptionEmailKey ? userAccountsByUUID.get(redemptionEmailKey) : null)
-        || (redemptionEmailKey ? userAccountMap.get(redemptionEmailKey) : null)
-        || userAccountsByUUID.get(redemptionUserKey)
+
+      // Prefer the most specific account mapping first, then fall back to generic records.
+      let account = (redemptionEmailKey ? userAccountMap.get(redemptionEmailKey) : null)
         || userAccountMap.get(redemptionUserKey)
         || userAccountMap.get(redemptionUserKey.toLowerCase())
-        || (redemptionEmailKey ? userAccountMap.get(redemptionEmailKey) : null)
+        || (redemptionEmailKey ? userAccountsByUUID.get(redemptionEmailKey) : null)
+        || userAccountsByUUID.get(redemptionUserKey)
         || null;
-
-      if (!account && redemptionEmailKey) {
-        const emailMatch = (userAccounts || [])
-          .find((row) => String(row.email || '').trim().toLowerCase() === redemptionEmailKey);
-        if (emailMatch) {
-          account = {
-            name: extractAccountName(emailMatch),
-            email: String(emailMatch.email || '').trim()
-          };
-        }
-      }
-
-      if (!account && redemptionUserKey) {
-        const idMatch = (userAccounts || [])
-          .find((row) => String(row.system_id || row.id || row.student_id || row.faculty_id || row.account_id || row.campus_id || '').trim() === redemptionUserKey);
-        if (idMatch) {
-          account = {
-            name: extractAccountName(idMatch),
-            email: String(idMatch.email || '').trim()
-          };
-        }
-      }
       
       const reward = rewardLookup.get(String(redemption.reward_id || '')) || null;
       const redemptionEmail = String(redemption.gmail || redemption.email || account?.email || '').trim();
@@ -1478,7 +1443,7 @@ exports.getWebsiteLogs = async (req, res) => {
       return {
         id: redemption.id,
         userId: redemption.user_id,
-        userName: account?.name || 'Unknown user',
+        userName: account?.name || redemption.user_id || 'Unknown user',
         userEmail: redemptionEmail || 'Unknown',
         gmail: redemptionEmail || 'Unknown',
         rewardId: redemption.reward_id,

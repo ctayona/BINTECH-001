@@ -42,53 +42,52 @@
     }
     
     .nav-link {
-        <section>
-          <div class="flex items-center gap-3">
-            <span class="bintech-brand-mark" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
-                <path d="M13 3L4 14h6l-1 7 11-13h-6l1-5z" stroke-linecap="round" stroke-linejoin="round"></path>
-              </svg>
-            </span>
-            <p class="bintech-brand-title">BinTECH</p>
-          </div>
-          <p class="bintech-brand-copy">BinTECH tracks your points, rewards, and disposal history so you can manage your account and impact in one place.</p>
-        </section>
-        <nav class="bintech-user-footer__nav" aria-label="Account links">
-          <h4>Account</h4>
-          <ul>
-            <li><a href="/profile">My Profile</a></li>
-            <li><a href="/dashboard">Dashboard</a></li>
-          </ul>
-        </nav>
-        <nav class="bintech-user-footer__nav" aria-label="System links">
-          <h4>System</h4>
-          <ul>
-            <li><a href="/rewards">Rewards</a></li>
-            <li><a href="/history">History</a></li>
-          </ul>
-        </nav>
-        <nav class="bintech-user-footer__nav" aria-label="Action links">
-          <h4>Actions</h4>
-          <ul>
-            <li><a href="/qr-scanner">Transfer Points</a></li>
-            <li><a href="#" onclick="window.scrollTo({ top: 0, behavior: 'smooth' }); return false;">Back to Top</a></li>
-          </ul>
-        </nav>
-        <nav class="bintech-user-footer__nav" aria-label="Support links">
-          <h4>Support</h4>
-          <ul>
-            <li><a href="mailto:support@bintech.local">Email Support</a></li>
-            <li><a href="/how-it-works">Help Guide</a></li>
-          </ul>
-        </nav>
-        <section class="bintech-user-footer__subscribe bintech-user-footer__glass">
-          <h4>Quick Access</h4>
-          <p>Jump to the most used BinTECH pages without leaving the footer.</p>
-          <form class="bintech-newsletter-form" onsubmit="event.preventDefault(); window.location.href='/rewards';">
-            <input type="text" value="Open Rewards" readonly>
-            <button type="submit">Open</button>
-          </form>
-        </section>
+      position: relative;
+      transition: color 0.3s ease;
+    }
+    
+    .nav-link::after {
+      content: '';
+      position: absolute;
+      bottom: -4px;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: var(--accent-yellow);
+      transition: width 0.3s ease;
+    }
+    
+    .nav-link:hover::after,
+    .nav-link.active::after {
+      width: 100%;
+    }
+    
+    .progress-bar {
+      background: linear-gradient(90deg, var(--card-green), var(--accent-yellow));
+    }
+    
+    .stat-card {
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .stat-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 24px rgba(15, 59, 46, 0.15);
+    }
+    
+    .claim-btn {
+      background: linear-gradient(135deg, var(--card-green), #4CAF50);
+      transition: all 0.3s ease;
+    }
+    
+    .claim-btn:hover {
+      background: linear-gradient(135deg, #4CAF50, var(--card-green));
+      transform: scale(1.02);
+    }
+    
+    @keyframes pulse-glow {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(212, 225, 87, 0.4); }
+      50% { box-shadow: 0 0 20px 4px rgba(212, 225, 87, 0.6); }
     }
     
     .points-badge {
@@ -332,43 +331,46 @@
           <p class="bintech-brand-copy">Bintech builds secure, intuitive financial technology for modern users, blending speed, trust, and smarter money workflows.</p>
         </section>
 
-        <nav class="bintech-user-footer__nav" aria-label="Company links">
-          <h4>Company</h4>
+        <nav class="bintech-user-footer__nav" aria-label="Quick actions">
+          <h4>Quick Actions</h4>
           <ul>
-            <li><a href="#">About</a></li>
-            <li><a href="#">Contact</a></li>
+            <li><a href="/dashboard">Open Dashboard</a></li>
+            <li><a href="/qr-scanner">Transfer Points</a></li>
+            <li><a href="/history">View History</a></li>
+            <li><a href="/profile">Edit Profile</a></li>
           </ul>
         </nav>
 
-        <nav class="bintech-user-footer__nav" aria-label="Products links">
-          <h4>Products</h4>
+        <nav class="bintech-user-footer__nav" aria-label="Rewards links">
+          <h4>Rewards</h4>
           <ul>
-            <li><a href="#">Rewards</a></li>
+            <li><a href="/rewards">Browse Rewards</a></li>
+            <li><a href="/rewards?tab=featured">Featured Items</a></li>
           </ul>
         </nav>
 
-        <nav class="bintech-user-footer__nav" aria-label="Resources links">
-          <h4>Resources</h4>
+        <nav class="bintech-user-footer__nav" aria-label="Support links">
+          <h4>Support</h4>
           <ul>
-            <li><a href="#">Help Center</a></li>
-            <li><a href="#">Developers</a></li>
+            <li><a href="/how-it-works">How It Works</a></li>
+            <li><a href="mailto:support@bintech.local">Email Support</a></li>
           </ul>
         </nav>
 
-        <nav class="bintech-user-footer__nav" aria-label="Legal links">
-          <h4>Legal</h4>
+        <nav class="bintech-user-footer__nav" aria-label="Account links">
+          <h4>Account</h4>
           <ul>
-            <li><a href="#">Terms</a></li>
-            <li><a href="#">Privacy</a></li>
+            <li><a href="/profile">Manage Profile</a></li>
+            <li><a href="#" onclick="handleLogout(); return false;">Logout</a></li>
           </ul>
         </nav>
 
         <section class="bintech-user-footer__subscribe bintech-user-footer__glass">
-          <h4>Subscribe To Our Newsletter</h4>
-          <p>Get product releases, security updates, and fintech insights delivered monthly.</p>
+          <h4>System Snapshot</h4>
+          <p>Track EcoPoints, manage your account, and jump straight to scanning or history when you need it.</p>
           <form class="bintech-newsletter-form" onsubmit="event.preventDefault();">
-            <input type="email" placeholder="you@domain.com" aria-label="Email address">
-            <button type="submit">Join</button>
+            <button type="button" onclick="window.location.href='/qr-scanner'">Start Scan</button>
+            <button type="button" onclick="window.location.href='/history'">History</button>
           </form>
         </section>
       </div>

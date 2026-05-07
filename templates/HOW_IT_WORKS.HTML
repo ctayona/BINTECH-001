@@ -1,58 +1,57 @@
 <!doctype html>
 <html lang="en" class="h-full">
  <head>
-        <section>
-          <div class="flex items-center gap-3">
-            <span class="bintech-brand-mark" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
-                <path d="M13 3L4 14h6l-1 7 11-13h-6l1-5z" stroke-linecap="round" stroke-linejoin="round"></path>
-              </svg>
-            </span>
-            <p class="bintech-brand-title">BinTECH</p>
-          </div>
-          <p class="bintech-brand-copy">BinTECH helps students sort waste, earn EcoPoints, redeem rewards, and review the impact of every disposal session.</p>
-        </section>
-
-        <nav class="bintech-user-footer__nav" aria-label="Account links">
-          <h4>Account</h4>
-          <ul>
-            <li><a href="/profile">My Profile</a></li>
-            <li><a href="/dashboard">Dashboard</a></li>
-          </ul>
-        </nav>
-
-        <nav class="bintech-user-footer__nav" aria-label="System links">
-          <h4>System</h4>
-          <ul>
-            <li><a href="/rewards">Rewards</a></li>
-            <li><a href="/history">History</a></li>
-          </ul>
-        </nav>
-
-        <nav class="bintech-user-footer__nav" aria-label="Action links">
-          <h4>Actions</h4>
-          <ul>
-            <li><a href="/qr-scanner">Transfer Points</a></li>
-            <li><a href="#" onclick="window.scrollTo({ top: 0, behavior: 'smooth' }); return false;">Back to Top</a></li>
-          </ul>
-        </nav>
-
-        <nav class="bintech-user-footer__nav" aria-label="Support links">
-          <h4>Support</h4>
-          <ul>
-            <li><a href="mailto:support@bintech.local">Email Support</a></li>
-            <li><a href="/how-it-works">Help Guide</a></li>
-          </ul>
-        </nav>
-
-        <section class="bintech-user-footer__subscribe bintech-user-footer__glass">
-          <h4>Quick Access</h4>
-          <p>Use the shortcut below to jump directly into the system.</p>
-          <form class="bintech-newsletter-form" onsubmit="event.preventDefault(); window.location.href='/dashboard';">
-            <input type="text" value="Open Dashboard" readonly>
-            <button type="submit">Open</button>
-          </form>
-        </section>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BinTECH - How It Works</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&amp;family=Poppins:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+  <link href="/css/user-footer.css" rel="stylesheet">
+  <style>
+    :root {
+      --primary-dark: #0F3B2E;
+      --secondary-gradient-start: #143D2E;
+      --secondary-gradient-end: #1F4F3B;
+      --accent-yellow: #D4E157;
+      --card-green: #5DAE60;
+      --page-bg: #E8ECEB;
+    }
+    
+    * {
+      box-sizing: border-box;
+    }
+    
+    html, body {
+      height: 100%;
+    }
+    
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-color: var(--page-bg);
+      margin: 0;
+      padding: 0;
+    }
+    
+    .font-playfair {
+      font-family: 'Playfair Display', serif;
+    }
+    
+    .gradient-dark {
+      background: linear-gradient(135deg, var(--secondary-gradient-start), var(--secondary-gradient-end));
+    }
+    
+    .card-shadow {
+      box-shadow: 0 4px 20px rgba(15, 59, 46, 0.12);
+    }
+    
+    .nav-link {
+      position: relative;
+      transition: color 0.3s ease;
+    }
+    
+    .nav-link::after {
+      content: '';
       position: absolute;
       bottom: -4px;
       left: 0;

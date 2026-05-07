@@ -135,7 +135,7 @@
         </div>
       </div>
 
-      <div class="overflow-x-auto">
+      <div class="overflow-x-auto overflow-y-auto max-h-[460px]">
         <table>
           <thead>
             <tr id="tableHeadRow"></tr>
@@ -157,7 +157,7 @@
             <svg class="w-4 h-4 text-moss absolute right-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
           </div>
         </div>
-        <div class="overflow-x-auto">
+        <div class="overflow-x-auto overflow-y-auto max-h-[420px]">
           <table>
             <thead>
               <tr>
@@ -2941,8 +2941,13 @@
     const adminsBtn = document.getElementById('adminsTabBtn');
     const archiveBtn = document.getElementById('archiveHistoryTabBtn');
     const userRoleFilters = document.getElementById('userRoleFilters');
-    const mainTable = document.querySelector('.overflow-x-auto table').parentElement;
+    const mainTable = document.getElementById('usersTableBody')?.closest('table')?.parentElement;
     const archiveSection = document.getElementById('archiveHistorySection');
+
+    if (!mainTable || !archiveSection) {
+      console.error('Account tables not found for tab switching.');
+      return;
+    }
 
     // Hide all sections
     mainTable.classList.add('hidden');
