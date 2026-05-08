@@ -434,6 +434,7 @@ async function sendWelcomeEmail(email, firstName) {
 }
 
 module.exports = {
+  sendEmailViaSendGrid,
   sendSignupWelcomeEmail,
   sendOTPEmail,
   sendPasswordResetConfirmation,

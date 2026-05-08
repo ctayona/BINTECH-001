@@ -1237,6 +1237,8 @@
         submitBtn.disabled = false;
         submitBtn.textContent = originalText;
         toggleEditMode(); // Exit edit mode
+        // Refresh the page so all components (nav, session storage, SDKs) reload with updated data
+        setTimeout(() => { window.location.reload(); }, 600);
 
       } catch (error) {
         console.error('Error saving profile:', error);

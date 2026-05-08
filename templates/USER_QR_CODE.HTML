@@ -605,6 +605,78 @@
             }
         }
 
+        /* Modal and Transfer Styles */
+        .modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 1rem;
+            padding: 2rem;
+            max-width: 500px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.3s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .close-modal {
+            cursor: pointer;
+            color: #999;
+            transition: color 0.2s ease;
+        }
+
+        .close-modal:hover {
+            color: #333;
+        }
+
+        .transfer-btn {
+            background: linear-gradient(135deg, #D4E157, #C4D050);
+            color: #0F3B2E !important;
+            font-weight: 600;
+        }
+
+        .transfer-btn:hover {
+            background: linear-gradient(135deg, #E4F050, #D4E157);
+            transform: translateY(-2px);
+        }
+
+        .transfer-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .quick-select-btn {
+            cursor: pointer;
+            font-size: 0.875rem;
+            transition: all 0.3s ease;
+        }
+
+        .quick-select-btn:hover {
+            transform: translateY(-2px);
+            background: rgba(212, 225, 87, 0.1);
+        }
+
         @media (min-width: 768px) {
             .mobile-nav-toggle {
                 display: none;
@@ -661,6 +733,7 @@
             </div>
             <div id="mobile-nav-panel" class="mobile-nav-panel" data-open="false" style="display:none;padding:0.9rem 1rem 1rem;border-top:1px solid rgba(255,255,255,.15);background:rgba(20,61,46,.95)">
                 <a href="/dashboard" class="nav-link" style="display:block;margin-bottom:0.7rem;">Dashboard</a>
+                <a href="/profile" class="nav-link" style="display:block;margin-bottom:0.7rem;">Profile</a>
                 <a href="/rewards" class="nav-link" style="display:block;margin-bottom:0.7rem;">Rewards</a>
                 <a href="/history" class="nav-link" style="display:block;margin-bottom:0.7rem;">History</a>
                 <a href="/how-it-works" class="nav-link" style="display:block;margin-bottom:0.7rem;">How It Works</a>
@@ -699,6 +772,78 @@
                         <button class="btn btn-primary" id="start-scanner" onclick="startScanner()">Start Scanner</button>
                         <button class="btn btn-secondary" id="stop-scanner" onclick="stopScanner()" style="display: none;">Stop Scanner</button>
                         <button class="btn btn-secondary" id="manual-entry" onclick="openManualEntry()">Manual Entry</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Share EcoPoints (copied from Rewards page for parity) -->
+            <div class="gradient-dark rounded-2xl card-shadow p-8 mb-8 text-white" style="margin-top:1.5rem;">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
+                    <div>
+                        <h2 class="font-playfair text-3xl mb-1">Share EcoPoints</h2>
+                        <p class="text-white/70">Spread the green — send points to a friend</p>
+                    </div>
+                    <div class="mt-4 md:mt-0 border-2 border-[#D4E157]/50 rounded-xl px-6 py-3 bg-white/10">
+                        <p class="text-white/70 text-xs uppercase tracking-wider mb-1">YOUR BALANCE</p>
+                        <p class="font-playfair text-3xl text-[#D4E157]"><span id="balance-display">0</span></p>
+                    </div>
+                </div>
+
+                <div class="mb-6">
+                    <label class="block text-sm font-semibold text-white/90 mb-2 uppercase tracking-wider">RECIPIENT EMAIL</label>
+                    <input type="email" id="recipient-email" class="w-full bg-white/10 border border-white/20 text-white px-4 py-3 rounded-lg placeholder-white/50 focus:outline-none focus:border-[#D4E157]/50" placeholder="e.g., student@umak.edu.ph">
+                    <p class="text-red-400 text-sm mt-1 hidden" id="email-error">Please enter a valid email address.</p>
+                </div>
+
+                <div class="mb-6">
+                    <p class="text-sm font-semibold text-white/90 mb-3 uppercase tracking-wider">QUICK SELECT</p>
+                    <div class="grid grid-cols-3 gap-3">
+                        <button class="quick-select-btn border-2 border-[#D4E157]/30 hover:border-[#D4E157] text-white py-2 rounded-lg transition-all" data-amount="10">10 pts</button>
+                        <button class="quick-select-btn border-2 border-white/20 hover:border-[#D4E157] text-white py-2 rounded-lg transition-all" data-amount="25">25 pts</button>
+                        <button class="quick-select-btn border-2 border-white/20 hover:border-[#D4E157] text-white py-2 rounded-lg transition-all" data-amount="50">50 pts</button>
+                        <button class="quick-select-btn border-2 border-white/20 hover:border-[#D4E157] text-white py-2 rounded-lg transition-all" data-amount="75">75 pts</button>
+                        <button class="quick-select-btn border-2 border-white/20 hover:border-[#D4E157] text-white py-2 rounded-lg transition-all" data-amount="100">100 pts</button>
+                        <button class="quick-select-btn border-2 border-white/20 hover:border-[#D4E157] text-white py-2 rounded-lg transition-all" data-amount="custom">Custom</button>
+                    </div>
+                </div>
+
+                <div class="mb-8">
+                    <div class="flex justify-between items-center mb-2">
+                        <label class="text-sm font-semibold text-white/90">Transfer amount</label>
+                        <span class="text-[#D4E157] font-bold text-lg"><span id="amount-display">10</span> pts</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="text-white/70 text-sm">Min 10</span>
+                        <input type="range" id="transfer-amount" class="flex-1 h-2 bg-white/20 rounded-lg appearance-none cursor-pointer" style="accent-color: #D4E157;" min="10" max="100" value="10">
+                        <span class="text-white/70 text-sm">Max 100</span>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between">
+                    <p class="text-xs text-white/60">⏱ Max 100 pts per transaction</p>
+                    <button class="transfer-btn text-[#0F3B2E] px-8 py-3 rounded-lg font-semibold hover:shadow-lg transition-all flex items-center gap-2" id="transfer-btn">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8m0 8l-6-4m6 4l6-4"/></svg>
+                        Send Points
+                    </button>
+                </div>
+            </div>
+
+            <!-- Transfer Confirm Modal (copied) -->
+            <div id="transfer-confirm-modal" class="modal-backdrop" style="display:none;">
+                <div class="modal-content" style="max-width:420px;">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="font-playfair text-2xl text-[#0F3B2E]">Confirm Transfer</h2>
+                        <span class="close-modal text-2xl" onclick="closeTransferConfirmModal()">×</span>
+                    </div>
+                    <div class="bg-[#0F3B2E]/5 rounded-lg p-4 mb-6">
+                        <p class="text-[#0F3B2E] mb-3">You're about to transfer:</p>
+                        <p class="text-3xl font-bold text-[#5DAE60] mb-2"><span id="confirm-amount">10</span> Points</p>
+                        <p class="text-[#0F3B2E]/70 text-sm">to <span id="confirm-recipient" class="font-semibold text-[#0F3B2E]">recipient@umak.edu.ph</span></p>
+                    </div>
+                    <p class="text-[#0F3B2E]/60 text-sm mb-6">This action cannot be undone. Please confirm you want to proceed.</p>
+                    <div class="flex gap-3 justify-end">
+                        <button class="px-6 py-2 rounded-lg font-semibold border border-[#0F3B2E] text-[#0F3B2E] hover:bg-[#0F3B2E]/5 transition-all" onclick="closeTransferConfirmModal()">Cancel</button>
+                        <button class="px-6 py-2 rounded-lg font-semibold bg-gradient-to-r from-[#5DAE60] to-[#4CAF50] text-white hover:shadow-lg transition-all" onclick="confirmTransfer()">Yes, Transfer</button>
                     </div>
                 </div>
             </div>
@@ -783,6 +928,48 @@
 
                 // Auto-attach to active machine session so live counters are visible immediately.
                 attachExistingMachineSession();
+                // Attach transfer UI listeners (share points parity with Rewards page)
+                document.getElementById('transfer-btn')?.addEventListener('click', function() {
+                    const email = document.getElementById('recipient-email')?.value || '';
+                    const amount = Number(document.getElementById('transfer-amount')?.value || 0);
+                    const emailError = document.getElementById('email-error');
+                    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+                    if (!email || !emailRegex.test(email)) {
+                        emailError?.classList.remove('hidden');
+                        return;
+                    }
+                    emailError?.classList.add('hidden');
+
+                    if (!amount || amount < 10 || amount > 100) {
+                        alert('Transfer amount must be between 10 and 100 points');
+                        return;
+                    }
+
+                    // Show confirmation modal
+                    showTransferConfirmModal((user.email || ''), email, amount);
+                });
+
+                document.querySelectorAll('.quick-select-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const val = btn.dataset.amount;
+                        if (val === 'custom') {
+                            const custom = prompt('Enter amount (10-100):', '10');
+                            const n = Number(custom || 10);
+                            if (!n || n < 10 || n > 100) return;
+                            document.getElementById('transfer-amount').value = n;
+                            document.getElementById('amount-display').textContent = n;
+                        } else {
+                            const n = Number(val || 10);
+                            document.getElementById('transfer-amount').value = n;
+                            document.getElementById('amount-display').textContent = n;
+                        }
+                    });
+                });
+
+                document.getElementById('transfer-amount')?.addEventListener('input', (e) => {
+                    document.getElementById('amount-display').textContent = e.target.value;
+                });
             } else {
                 window.location.href = '/';
             }
@@ -1157,6 +1344,69 @@
                 showStatus('Error ending session: ' + error.message, 'error');
                 console.error('End session error:', error);
             }
+        }
+
+        // ================= Transfer functions (copied from Rewards page) =================
+        let pendingTransfer = null;
+        function showTransferConfirmModal(senderEmail, receiverEmail, amount) {
+            document.getElementById('confirm-amount').textContent = amount;
+            document.getElementById('confirm-recipient').textContent = receiverEmail;
+            const modal = document.getElementById('transfer-confirm-modal');
+            if (modal) modal.style.display = 'block';
+            pendingTransfer = { senderEmail, receiverEmail, amount };
+        }
+
+        function closeTransferConfirmModal() {
+            const modal = document.getElementById('transfer-confirm-modal');
+            if (modal) modal.style.display = 'none';
+            pendingTransfer = null;
+        }
+
+        function confirmTransfer() {
+            if (!pendingTransfer) {
+                alert('No transfer data. Please try again.');
+                return;
+            }
+
+            const { senderEmail, receiverEmail, amount } = pendingTransfer;
+            const transferBtn = document.getElementById('transfer-btn');
+            const originalContent = transferBtn ? transferBtn.innerHTML : 'Send Points';
+
+            closeTransferConfirmModal();
+            if (transferBtn) {
+                transferBtn.disabled = true;
+                transferBtn.textContent = 'Processing...';
+            }
+
+            fetch('/api/rewards/transfer/peer', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ senderEmail, receiverEmail, pointsAmount: amount })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    if (transferBtn) transferBtn.textContent = 'TRANSFER SENT! ✓';
+                    alert(`Successfully transferred ${amount} points to ${receiverEmail}!`);
+                    setTimeout(() => {
+                        if (transferBtn) { transferBtn.innerHTML = originalContent; transferBtn.disabled = false; }
+                        document.getElementById('recipient-email').value = '';
+                        document.getElementById('transfer-amount').value = '10';
+                        document.getElementById('amount-display').textContent = '10';
+                        if (data.transfer?.senderNewBalance !== undefined) {
+                            syncLivePoints(data.transfer.senderNewBalance);
+                        }
+                    }, 1500);
+                } else {
+                    alert('Transfer failed: ' + (data.message || 'Unknown error'));
+                    if (transferBtn) { transferBtn.innerHTML = originalContent; transferBtn.disabled = false; }
+                }
+            })
+            .catch(error => {
+                console.error('Transfer error:', error);
+                alert('Transfer failed: ' + error.message);
+                if (transferBtn) { transferBtn.innerHTML = originalContent; transferBtn.disabled = false; }
+            });
         }
 
         function handleLogout() {

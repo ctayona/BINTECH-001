@@ -5,6 +5,7 @@
 const supabase = require('../config/supabase');
 const bcrypt = require('bcrypt');
 const emailService = require('../services/emailService');
+const { URL } = require('url');
 
 // ============================================
 // Helper Function: Classify Email Role
@@ -313,11 +314,13 @@ exports.register = async (req, res) => {
       console.log(`✓ Generated staff account_id: ${staffAccountId}`);
     }
     
-    // For faculty with external email (non-UMak): generate staff account_id
+    // For faculty with external email (non-UMak): generate faculty_id
     // This allows faculty to sign up with Gmail, Yahoo, etc.
     if (userRole === 'faculty' && !campusId) {
-      staffAccountId = await generateStaffAccountId();
-      console.log(`✓ Generated account_id for external faculty email: ${staffAccountId}`);
+      // Generate faculty_id with FIX prefix for external faculty
+      const timestamp = Date.now().toString().slice(-5);
+      staffAccountId = 'FIX' + timestamp;
+      console.log(`✓ Generated faculty_id for external faculty email: ${staffAccountId}`);
     }
     
     console.log(`\n=== Registration Details ===`);
@@ -513,15 +516,15 @@ exports.register = async (req, res) => {
       roleSpecificData[idColumnName] = campusId;
       console.log(`Adding ${idColumnName}: ${campusId}`);
     } else if (userRole === 'faculty') {
-      // Faculty: use faculty_id from UMak email OR account_id for external emails
+      // Faculty: use faculty_id from UMak email OR generated faculty_id for external emails
       if (campusId) {
         // UMak faculty email (e.g., firstname.lastname@umak.edu.ph)
         roleSpecificData[idColumnName] = campusId;
         console.log(`Adding ${idColumnName}: ${campusId}`);
       } else {
-        // External faculty email (e.g., Gmail) - use generated account_id
-        roleSpecificData.account_id = staffAccountId;
-        console.log(`Adding account_id for external faculty: ${staffAccountId}`);
+        // External faculty email (e.g., Gmail) - use generated faculty_id
+        roleSpecificData[idColumnName] = staffAccountId;
+        console.log(`Adding ${idColumnName}: ${staffAccountId}`);
       }
     } else if (userRole === 'staff') {
       // Staff: use account_id (generated OTH+numbers format that was stored separately)
@@ -531,8 +534,47 @@ exports.register = async (req, res) => {
     
     // Add Google profile picture if available (from Google signup)
     if (profile_picture) {
-      roleSpecificData.profile_picture = profile_picture;
-      console.log(`✓ Adding Google profile picture URL: ${profile_picture.substring(0, 50)}...`);
+      // If an external Google photo URL is provided, fetch and store in 'google-photo' bucket
+      try {
+        console.log('✓ Google profile picture provided - attempting to store in google-photo bucket');
+        const isExternal = /googleusercontent\.com|lh3\.googleusercontent\.com|googleapis\.com/i.test(profile_picture);
+        if (isExternal) {
+          // Download image and upload to Supabase google-photo bucket
+          const fetchResp = await fetch(profile_picture);
+          if (!fetchResp.ok) {
+            console.warn('Could not fetch external Google photo - status', fetchResp.status);
+            roleSpecificData.profile_picture = profile_picture; // fallback to original
+          } else {
+            const buffer = Buffer.from(await fetchResp.arrayBuffer());
+            const contentType = fetchResp.headers.get('content-type') || 'image/jpeg';
+            const timestamp = Date.now();
+            const ext = contentType.split('/').pop().split(';')[0] || 'jpg';
+            const filename = `${systemId || 'user'}_${timestamp}_gphoto.${ext}`;
+
+            const { data: uploadData, error: uploadError } = await supabase.storage
+              .from('google-photo')
+              .upload(filename, buffer, { contentType });
+
+            if (uploadError) {
+              console.warn('Failed to upload google photo to google-photo:', uploadError.message || uploadError);
+              roleSpecificData.profile_picture = profile_picture;
+            } else {
+              // create signed url
+              const { data: signedData, error: signedError } = await supabase.storage
+                .from('google-photo')
+                .createSignedUrl(filename, 60 * 60 * 24 * 365 * 5);
+
+              roleSpecificData.profile_picture = (!signedError && signedData) ? signedData.signedUrl : uploadData?.path || profile_picture;
+              console.log('✓ Google photo saved to google-photo as', filename);
+            }
+          }
+        } else {
+          roleSpecificData.profile_picture = profile_picture;
+        }
+      } catch (err) {
+        console.warn('Error handling google profile picture during registration:', err);
+        roleSpecificData.profile_picture = profile_picture;
+      }
     }
 
     console.log(`Inserting into ${roleTableName}:`, roleSpecificData);
@@ -1490,7 +1532,68 @@ exports.updateProfile = async (req, res) => {
     }
     
     // Add profile picture (available for all roles)
-    if (profile_picture) updateObject.profile_picture = profile_picture;
+    if (profile_picture) {
+      try {
+        // Fetch existing role record to find current profile picture (for removal if needed)
+        const { data: existingRoleRow } = await supabase
+          .from(roleTable)
+          .select('profile_picture')
+          .eq('system_id', system_id)
+          .maybeSingle();
+
+        // If incoming profile_picture points to google-photo, copy it into profile-pictures
+        const incomingIsGoogleBucket = /google-photo/i.test(String(profile_picture || ''));
+
+        if (incomingIsGoogleBucket) {
+          // Download incoming image (signed URL should allow access)
+          const resp = await fetch(profile_picture);
+          if (resp.ok) {
+            const buf = Buffer.from(await resp.arrayBuffer());
+            const ct = resp.headers.get('content-type') || 'image/jpeg';
+            const ext = ct.split('/').pop().split(';')[0] || 'jpg';
+            const newFilename = `${system_id}_${Date.now()}_profile.${ext}`;
+
+            const { data: uploadData, error: uploadErr } = await supabase.storage
+              .from('profile-pictures')
+              .upload(newFilename, buf, { contentType: ct });
+
+            if (!uploadErr) {
+              const { data: signed } = await supabase.storage
+                .from('profile-pictures')
+                .createSignedUrl(newFilename, 60 * 60 * 24 * 365 * 5);
+
+              updateObject.profile_picture = signed?.signedUrl || uploadData?.path || profile_picture;
+
+              // Delete previous profile picture if it exists and is in profile-pictures
+              try {
+                const prevUrl = existingRoleRow?.profile_picture || null;
+                if (prevUrl && /profile-pictures/i.test(prevUrl)) {
+                  // Extract filename from URL
+                  const parts = prevUrl.split('/');
+                  const prevFilename = parts[parts.length - 1].split('?')[0];
+                  await supabase.storage.from('profile-pictures').remove([prevFilename]);
+                  console.log('✓ Deleted previous profile-pictures file:', prevFilename);
+                }
+              } catch (delErr) {
+                console.warn('Could not delete previous profile picture:', delErr);
+              }
+            } else {
+              console.warn('Failed to upload google photo into profile-pictures:', uploadErr);
+              updateObject.profile_picture = profile_picture; // fallback
+            }
+          } else {
+            console.warn('Could not fetch google-photo URL during sync, status:', resp.status);
+            updateObject.profile_picture = profile_picture;
+          }
+        } else {
+          // Not a google-photo sync request: just set whatever URL/value was provided
+          updateObject.profile_picture = profile_picture;
+        }
+      } catch (err) {
+        console.error('Error while handling profile_picture sync:', err);
+        updateObject.profile_picture = profile_picture;
+      }
+    }
 
     console.log('Update object:', updateObject);
 
