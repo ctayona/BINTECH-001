@@ -627,6 +627,10 @@ async function handleSignup(event) {
       'role-is-null': role === null
     });
 
+    // Check if Google profile picture was stored (from Google sign-up)
+    const googleProfilePictureInput = form.querySelector('input[name="googleProfilePicture"]');
+    const googleProfilePicture = googleProfilePictureInput ? googleProfilePictureInput.value : null;
+
     const signupBody = {
       email,
       password,
@@ -636,9 +640,16 @@ async function handleSignup(event) {
       role
     };
 
+    // Add Google profile picture if present
+    if (googleProfilePicture) {
+      signupBody.profile_picture = googleProfilePicture;
+      console.log('✓ Google profile picture included in signup request');
+    }
+
     console.log('✓ Basic signup body created:', {
       email, firstName, lastName, role,
-      'role-check': `role="${role}" (type: ${typeof role})`
+      'role-check': `role="${role}" (type: ${typeof role})`,
+      'has-google-picture': !!googleProfilePicture
     });
 
     console.log('ℹ Manual signup');
@@ -889,7 +900,20 @@ async function handleGoogleSignUp(response) {
         console.log(`  ✓ Email: ${email}`);
       }
 
-      showSuccess('✓ Form auto-filled! Complete the form and click "Create Account"');
+      // Store Google picture URL in a hidden field so handleSignup can send it to backend
+      if (picture) {
+        let hiddenPictureInput = signupForm.querySelector('input[name="googleProfilePicture"]');
+        if (!hiddenPictureInput) {
+          hiddenPictureInput = document.createElement('input');
+          hiddenPictureInput.type = 'hidden';
+          hiddenPictureInput.name = 'googleProfilePicture';
+          signupForm.appendChild(hiddenPictureInput);
+        }
+        hiddenPictureInput.value = picture;
+        console.log(`  ✓ Google Picture URL stored for backend: ${picture.substring(0, 50)}...`);
+      }
+
+      showSuccess('✓ Form auto-filled with Google profile! Complete the form and click "Create Account"');
       console.log('[Google Auth Signup] Form auto-filled successfully. User should now complete password fields.');
 
     } catch (decodeError) {

@@ -150,13 +150,24 @@
     <nav class="gradient-dark sticky top-0 z-50">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex items-center justify-between h-16">
-          <!-- Left - User Welcome -->
+          <!-- Left - Logo + Profile Photo + User Info (All clickable) -->
           <div class="flex items-center space-x-3">
-            <img src="/PICS/BINTECHLOGO.png" alt="BinTECH Logo" class="h-10 w-auto" style="object-fit: contain;">
-            <div class="nav-welcome show">
+            <!-- Logo -->
+            <a href="/profile" class="hover:opacity-80 transition-opacity cursor-pointer flex-shrink-0">
+              <img src="/PICS/BINTECHLOGO.png" alt="BinTECH Logo" class="h-10 w-auto" style="object-fit: contain;">
+            </a>
+            
+            <!-- Profile Photo -->
+            <a href="/profile" class="hover:opacity-80 transition-opacity cursor-pointer flex-shrink-0">
+              <img id="nav-profile-picture" src="" alt="Profile" class="h-12 w-12 rounded-full object-cover border-2 border-[#D4E157]/50 hidden" />
+              <div id="nav-profile-initials" class="h-12 w-12 rounded-full bg-[#D4E157]/20 flex items-center justify-center text-[#D4E157] font-bold text-sm border-2 border-[#D4E157]/50">--</div>
+            </a>
+            
+            <!-- User Info (Name + Label) -->
+            <a href="/profile" class="nav-welcome show hover:opacity-80 transition-opacity cursor-pointer">
               <p class="text-[#D4E157]/70 text-xs uppercase tracking-wider">My Profile</p>
               <p id="nav-user-name" class="text-white font-semibold text-sm">User Name</p>
-            </div>
+            </a>
           </div>
           
           <!-- Center - Navigation Links -->
@@ -867,6 +878,24 @@
           document.getElementById('profilePictureImg').src = profile.profile_picture;
           document.getElementById('profilePictureImg').classList.remove('hidden');
           document.getElementById('profileInitials').classList.add('hidden');
+          
+          // Also update navbar profile picture
+          const navProfileImg = document.getElementById('nav-profile-picture');
+          const navProfileInitials = document.getElementById('nav-profile-initials');
+          if (navProfileImg && navProfileInitials) {
+            navProfileImg.src = profile.profile_picture;
+            navProfileImg.classList.remove('hidden');
+            navProfileInitials.classList.add('hidden');
+          }
+        } else {
+          // Show initials in navbar if no picture
+          const firstName = profile.first_name || 'U';
+          const lastName = profile.last_name || 'U';
+          const initials = (firstName.charAt(0) + lastName.charAt(0)).toUpperCase();
+          const navProfileInitials = document.getElementById('nav-profile-initials');
+          if (navProfileInitials) {
+            navProfileInitials.textContent = initials;
+          }
         }
         
         if (profile.campus_id) {
@@ -1057,6 +1086,15 @@
         document.getElementById('profilePictureImg').src = profile.profile_picture;
         document.getElementById('profilePictureImg').classList.remove('hidden');
         document.getElementById('profileInitials').classList.add('hidden');
+        
+        // Also update navbar profile picture
+        const navProfileImg = document.getElementById('nav-profile-picture');
+        const navProfileInitials = document.getElementById('nav-profile-initials');
+        if (navProfileImg && navProfileInitials) {
+          navProfileImg.src = profile.profile_picture;
+          navProfileImg.classList.remove('hidden');
+          navProfileInitials.classList.add('hidden');
+        }
         
         showSuccess('✓ Google profile photo synced successfully!');
         console.log('✓ Google profile photo synced');
