@@ -152,9 +152,10 @@
         <div class="flex items-center justify-between h-16">
           <!-- Left - Logo + Profile Photo + User Info (All clickable) -->
           <div class="flex items-center space-x-3">
-            <!-- Logo -->
-            <a href="/profile" class="hover:opacity-80 transition-opacity cursor-pointer flex-shrink-0">
-              <img src="/PICS/BINTECHLOGO.png" alt="BinTECH Logo" class="h-10 w-auto" style="object-fit: contain;">
+            <!-- Logo with brand text -->
+            <a href="/profile" class="hover:opacity-80 transition-opacity cursor-pointer flex-shrink-0" style="display:flex;align-items:center;gap:8px">
+              <span style="color:#ffffff;font-weight:700;letter-spacing:0.04em">BINTECH</span>
+              <img src="/PICS/BINTECHLOGO.png" alt="BinTECH Logo" style="height:48px;object-fit:contain;margin-top:-8px;">
             </a>
             
             <!-- Profile Photo -->
@@ -171,12 +172,13 @@
           </div>
           
           <!-- Center - Navigation Links -->
-          <div class="hidden md:flex items-center space-x-8">
-            <a href="/dashboard" class="nav-link text-white/80 hover:text-white text-sm font-medium">Dashboard</a>
-            <a href="/rewards" class="nav-link text-white/80 hover:text-white text-sm font-medium">Rewards</a>
-            <a href="/history" class="nav-link text-white/80 hover:text-white text-sm font-medium">History</a>
-            <a href="/how-it-works" class="nav-link text-white/80 hover:text-white text-sm font-medium">How It Works</a>
-            <a href="/qr-scanner" class="nav-link text-white/80 hover:text-white text-sm font-medium flex items-center gap-1"><span>💳</span> Transfer Points</a>
+          <div class="hidden md:flex items-center space-x-6">
+            <a href="/dashboard" class="nav-link text-white/70 hover:text-white font-medium text-sm transition">Dashboard</a>
+            <a href="/profile" class="nav-link text-white/70 hover:text-white font-medium text-sm transition">Profile</a>
+            <a href="/rewards" class="nav-link text-white/70 hover:text-white font-medium text-sm transition">Rewards</a>
+            <a href="/history" class="nav-link text-white/70 hover:text-white font-medium text-sm transition">History</a>
+            <a href="/how-it-works" class="nav-link text-white/70 hover:text-white font-medium text-sm transition">How It Works</a>
+            <a href="/qr-scanner" class="nav-link text-white/70 hover:text-white font-medium text-sm transition">Transfer Points</a>
           </div>
           
           <!-- Right - Points & Logout -->
@@ -196,14 +198,20 @@
           </div>
         </div>
       </div>
-      <div id="mobile-nav-panel" class="mobile-nav-panel md:hidden border-t border-white/15 bg-[#143D2E]/95 px-4 py-4 space-y-3" data-open="false" style="display:none;">
-        <a href="/dashboard" class="block text-white/90 text-sm font-medium">Dashboard</a>
-        <a href="/profile" class="block text-[#D4E157] text-sm font-medium">Profile</a>
-        <a href="/rewards" class="block text-white/90 text-sm font-medium">Rewards</a>
-        <a href="/history" class="block text-white/90 text-sm font-medium">History</a>
-        <a href="/how-it-works" class="block text-white/90 text-sm font-medium">How It Works</a>
-        <a href="/qr-scanner" class="block text-white/90 text-sm font-medium">Transfer Points</a>
-        <div class="pt-2 border-t border-white/15 flex items-center justify-between">
+      <div id="mobile-nav-panel" class="mobile-nav-panel md:hidden border-t border-white/15 bg-[#143D2E]/95 px-4 py-4" data-open="false" style="display:none;">
+        <div class="flex items-center gap-2 mb-4 pb-3 border-b border-white/15">
+          <img src="/PICS/BINTECHLOGO.png" alt="BinTECH" style="height:32px;object-fit:contain;">
+          <span id="mobile-nav-user-name" class="text-white font-semibold text-sm">User</span>
+        </div>
+        <div class="space-y-3">
+          <a href="/dashboard" class="block text-white/90 hover:text-[#D4E157] text-sm font-medium transition">Dashboard</a>
+          <a href="/profile" class="block text-[#D4E157] text-sm font-medium">Profile</a>
+          <a href="/rewards" class="block text-white/90 hover:text-[#D4E157] text-sm font-medium transition">Rewards</a>
+          <a href="/history" class="block text-white/90 hover:text-[#D4E157] text-sm font-medium transition">History</a>
+          <a href="/how-it-works" class="block text-white/90 hover:text-[#D4E157] text-sm font-medium transition">How It Works</a>
+          <a href="/qr-scanner" class="block text-white/90 hover:text-[#D4E157] text-sm font-medium transition">Transfer Points</a>
+        </div>
+        <div class="pt-3 border-t border-white/15 flex items-center justify-between">
           <span id="mobile-nav-points" class="text-[#D4E157] text-sm font-semibold">0 Points</span>
           <button onclick="handleLogout()" class="px-3 py-1.5 text-white/80 text-xs border border-white/30 rounded-full hover:bg-white/10">Logout</button>
         </div>
@@ -546,9 +554,7 @@
         <section>
           <div class="flex items-center gap-3">
             <span class="bintech-brand-mark" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
-                <path d="M13 3L4 14h6l-1 7 11-13h-6l1-5z" stroke-linecap="round" stroke-linejoin="round"></path>
-              </svg>
+              <img src="/PICS/BINTECHLOGO.png" alt="BinTECH Logo" style="height:28px;object-fit:contain" />
             </span>
             <p class="bintech-brand-title">Bintech</p>
           </div>
@@ -601,6 +607,9 @@
 
       <div class="bintech-footer-bottom">
         <p>© 2026 Bintech. All rights reserved.</p>
+        <div style="display:flex;align-items:center;gap:8px">
+          <img src="/PICS/BINTECHLOGO.png" alt="BinTECH Logo" style="height:28px;object-fit:contain" />
+        </div>
         <div class="bintech-social-list" aria-label="Social media">
           <a href="#" aria-label="X">
             <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.901 3H21l-4.588 5.244L21.808 21h-4.226l-3.31-4.889L9.996 21H7.896l4.907-5.609L2.192 3h4.332l2.993 4.422L13.099 3h5.802zm-1.48 16h1.171L7.946 4.89H6.69L17.42 19z"></path></svg>
@@ -1069,7 +1078,8 @@
             firstname: profile.first_name,
             lastName: profile.last_name,
             middleName: profile.middle_name,
-            profile_picture: profile.profile_picture
+            profile_picture: profile.profile_picture,
+            sync_google_photo: true
           })
         });
 
@@ -1082,22 +1092,42 @@
           throw new Error(updateData.message || 'Failed to update profile');
         }
 
+        const updatedProfilePicture = updateData?.profile?.profile_picture || profile.profile_picture;
+
+        // Persist updated profile into sessionStorage so other pages pick it up immediately
+        try {
+          const stored = sessionStorage.getItem('bintech_user');
+          if (stored) {
+            const userObj = JSON.parse(stored);
+            userObj.profile_picture = updatedProfilePicture;
+            sessionStorage.setItem('bintech_user', JSON.stringify(userObj));
+            // Also update other keys used across the app
+            sessionStorage.setItem('user', JSON.stringify(userObj));
+            localStorage.setItem('user', JSON.stringify(userObj));
+          }
+        } catch (e) {
+          console.warn('Could not update sessionStorage with new profile picture', e);
+        }
+
         // Refresh the profile picture display
-        document.getElementById('profilePictureImg').src = profile.profile_picture;
+        document.getElementById('profilePictureImg').src = updatedProfilePicture;
         document.getElementById('profilePictureImg').classList.remove('hidden');
         document.getElementById('profileInitials').classList.add('hidden');
         
-        // Also update navbar profile picture
+        // Also update navbar profile picture immediately on this page
         const navProfileImg = document.getElementById('nav-profile-picture');
         const navProfileInitials = document.getElementById('nav-profile-initials');
         if (navProfileImg && navProfileInitials) {
-          navProfileImg.src = profile.profile_picture;
+          navProfileImg.src = updatedProfilePicture;
           navProfileImg.classList.remove('hidden');
           navProfileInitials.classList.add('hidden');
         }
-        
+
         showSuccess('✓ Google profile photo synced successfully!');
         console.log('✓ Google profile photo synced');
+
+        // Reload the page so other pages will read the updated sessionStorage on navigation
+        setTimeout(() => { try { window.location.reload(); } catch (e) { console.warn('reload failed', e); } }, 600);
       } catch (error) {
         console.error('Error syncing Google profile photo:', error);
         showError('Failed to sync Google profile photo: ' + error.message);
@@ -1507,17 +1537,60 @@
       }
     }
 
-    function initializeUserMobileMenu() {
+     function initializeUserMobileMenu() {
       const toggle = document.getElementById('mobile-nav-toggle');
       const panel = document.getElementById('mobile-nav-panel');
       const navPoints = document.getElementById('nav-points');
       const mobilePoints = document.getElementById('mobile-nav-points');
       if (!toggle || !panel) return;
 
+      const navRow = toggle.closest('.flex.items-center.justify-between') || toggle.closest('.nav-container');
+      const leftSection = navRow ? navRow.firstElementChild : null;
+      const rightSection = toggle.parentElement;
+      const userDataStr = sessionStorage.getItem('bintech_user');
+      let mobileDisplayName = 'User';
+      if (userDataStr) {
+        try {
+          const userData = JSON.parse(userDataStr);
+          mobileDisplayName = userData?.full_name || userData?.name || userData?.email || 'User';
+        } catch (error) {
+          mobileDisplayName = 'User';
+        }
+      }
+
+      let topLabel = navRow ? navRow.querySelector('.bintech-mobile-top-label') : null;
+      if (!topLabel && rightSection) {
+        topLabel = document.createElement('span');
+        topLabel.className = 'bintech-mobile-top-label';
+        topLabel.textContent = mobileDisplayName;
+        topLabel.style.display = 'none';
+        topLabel.style.color = '#ffffff';
+        topLabel.style.fontWeight = '700';
+        topLabel.style.fontSize = '0.95rem';
+        topLabel.style.letterSpacing = '0.04em';
+        topLabel.style.marginRight = '0.5rem';
+        rightSection.insertBefore(topLabel, toggle);
+      }
+
+      if (!panel.querySelector('.bintech-mobile-panel-brand')) {
+        panel.insertAdjacentHTML('afterbegin', '<div class="bintech-mobile-panel-brand" style="display:flex;align-items:center;gap:8px;padding-bottom:10px;margin-bottom:10px;border-bottom:1px solid rgba(255,255,255,.15)"><img src="/PICS/BINTECHLOGO.png" alt="BinTECH Logo" style="height:24px;object-fit:contain"><span style="color:#fff;font-weight:700;letter-spacing:.04em">BINTECH</span></div>');
+      }
+
       const closeMenu = () => {
         panel.dataset.open = 'false';
         panel.style.display = 'none';
         toggle.setAttribute('aria-expanded', 'false');
+      };
+
+      const applyMobileHeaderPolish = () => {
+        if (window.innerWidth < 768) {
+          if (leftSection) leftSection.style.display = 'none';
+          if (topLabel) topLabel.style.display = 'inline-flex';
+        } else {
+          if (leftSection) leftSection.style.display = '';
+          if (topLabel) topLabel.style.display = 'none';
+          closeMenu();
+        }
       };
 
       const openMenu = () => {
@@ -1541,17 +1614,14 @@
         link.addEventListener('click', closeMenu);
       });
 
-      window.addEventListener('resize', () => {
-        if (window.innerWidth >= 768) {
-          closeMenu();
-        }
-      });
+      window.addEventListener('resize', applyMobileHeaderPolish);
 
       document.addEventListener('keydown', (event) => {
         if (event.key === 'Escape') {
           closeMenu();
         }
       });
+      applyMobileHeaderPolish();
     }
 
     // ============================================

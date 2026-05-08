@@ -1,0 +1,3 @@
+Solution Explanation
+
+BinTECH is a smart waste segregation solution that combines a website and ESP32-powered kiosk to improve how waste is disposed of in schools. The website handles user registration, login, QR-based session pairing, rewards tracking, and history viewing, while the hardware automatically detects and sorts waste during each session. Together, they reduce manual sorting errors, prevent contamination of recyclables, and motivate users through a points and rewards system. Admins and maintenance staff can also monitor bins, sessions, logs, and system status in real time, making the whole process more efficient and reliable.

@@ -23,6 +23,176 @@ function createToastContainer() {
   return container;
 }
 
+// Ensure mobile top username element and styles exist (created dynamically)
+function ensureMobileTopUsername() {
+  try {
+    if (document.getElementById('mobile-top-username')) return;
+
+    const styleId = 'bintech-mobile-top-username-style';
+    if (!document.getElementById(styleId)) {
+      const s = document.createElement('style');
+      s.id = styleId;
+      s.textContent = `
+        @media (max-width: 767px) {
+          .bintech-brand-text { display: none !important; }
+          #mobile-top-username { display: inline-block !important; margin-right: 8px; color: #ffffff; font-weight:700; }
+        }
+      `;
+      document.head.appendChild(s);
+    }
+
+    // Find the primary profile/brand anchor
+    const logoAnchor = document.querySelector('a[href="/profile"]');
+    if (!logoAnchor) return;
+
+    // Mark existing brand span so it can be hidden on small screens
+    const brandSpan = logoAnchor.querySelector('span');
+    if (brandSpan) brandSpan.classList.add('bintech-brand-text');
+
+    const mobileSpan = document.createElement('span');
+    mobileSpan.id = 'mobile-top-username';
+    mobileSpan.style.display = 'none';
+    mobileSpan.setAttribute('aria-hidden', 'true');
+    // insert before first child so it appears left of the logo image on small screens
+    logoAnchor.insertBefore(mobileSpan, logoAnchor.firstChild);
+  } catch (e) {
+    // silent
+  }
+}
+
+// Populate admin sidebar/profile widgets across admin pages
+function populateAdminProfile() {
+  try {
+    const admin = JSON.parse(sessionStorage.getItem('bintech_user') || 'null');
+    if (!admin) return;
+
+    const nameEl = document.getElementById('adminName');
+    const emailEl = document.getElementById('adminEmail');
+    const initialsEl = document.getElementById('adminInitials');
+    const profileImg = document.getElementById('admin-profile-picture');
+
+    const fullName = admin.full_name || [admin.first_name, admin.last_name].filter(Boolean).join(' ') || admin.email || 'Admin';
+    const email = admin.email || admin.Email || '';
+
+    if (nameEl) nameEl.textContent = fullName;
+    if (emailEl) emailEl.textContent = email || 'Administrator';
+
+    const initials = (admin.first_name?.charAt(0) || admin.full_name?.charAt(0) || 'A') + (admin.last_name?.charAt(0) || '');
+    if (initialsEl) initialsEl.textContent = initials.toUpperCase();
+
+    if (admin.profile_picture && profileImg) {
+      profileImg.src = admin.profile_picture;
+      profileImg.classList.remove('hidden');
+      if (initialsEl) initialsEl.classList.add('hidden');
+    }
+  } catch (e) {
+    console.warn('populateAdminProfile failed', e);
+  }
+}
+
+function initializeAdminSidebarToggle() {
+  const sidebar = document.querySelector('aside');
+  const main = document.querySelector('main');
+
+  if (!sidebar || !main || !sidebar.classList.contains('bg-forest')) return;
+  if (document.getElementById('bintech-admin-sidebar-toggle')) return;
+
+  if (!document.getElementById('bintech-admin-sidebar-toggle-style')) {
+    const toggleStyle = document.createElement('style');
+    toggleStyle.id = 'bintech-admin-sidebar-toggle-style';
+    toggleStyle.textContent = `
+      /* animate aside with transform instead of display:none for smooth drawer effect */
+      aside {
+        margin-left: 0;
+        transition: transform 280ms ease;
+        transition-property: transform, margin-left;
+        will-change: transform;
+      }
+
+      body.bintech-admin-sidebar-collapsed aside {
+        transform: translateX(-110%);
+        margin-left: -16rem;
+      }
+
+      #bintech-admin-sidebar-toggle {
+        position: fixed;
+        top: 50%;
+        left: calc(16rem - 18px);
+        z-index: 130;
+        width: 44px;
+        height: 44px;
+        border-radius: 9999px;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        background: rgba(26, 58, 47, 0.96);
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 6px 18px rgba(0,0,0,0.18);
+        backdrop-filter: blur(6px);
+        cursor: pointer;
+        transform: translateY(-50%);
+        transition: transform 0.25s ease, left 0.28s ease;
+      }
+
+      body.bintech-admin-sidebar-collapsed #bintech-admin-sidebar-toggle {
+        left: -18px;
+      }
+
+      #bintech-admin-sidebar-toggle.open {
+        transform: translateY(-50%) rotate(180deg);
+      }
+
+      #bintech-admin-sidebar-toggle:hover {
+        left: calc(16rem - 22px);
+      }
+
+      body.bintech-admin-sidebar-collapsed #bintech-admin-sidebar-toggle:hover {
+        left: -22px;
+      }
+
+      @media (max-width: 1024px) {
+        #bintech-admin-sidebar-toggle {
+          display: none;
+        }
+      }
+    `;
+    document.head.appendChild(toggleStyle);
+  }
+
+  const toggleButton = document.createElement('button');
+  toggleButton.id = 'bintech-admin-sidebar-toggle';
+  toggleButton.type = 'button';
+  toggleButton.setAttribute('aria-label', 'Toggle admin sidebar');
+  toggleButton.innerHTML = `
+    <svg class="bintech-admin-sidebar-toggle-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M15 18l-6-6 6-6" />
+    </svg>
+  `;
+
+  const updateIcon = () => {
+    const collapsed = document.body.classList.contains('bintech-admin-sidebar-collapsed');
+    toggleButton.innerHTML = collapsed
+      ? '<svg class="bintech-admin-sidebar-toggle-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 18l6-6-6-6" /></svg>'
+      : '<svg class="bintech-admin-sidebar-toggle-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 18l-6-6 6-6" /></svg>';
+  };
+
+  toggleButton.addEventListener('click', () => {
+    const collapsed = document.body.classList.toggle('bintech-admin-sidebar-collapsed');
+    if (collapsed) {
+      toggleButton.classList.add('open');
+    } else {
+      toggleButton.classList.remove('open');
+    }
+    updateIcon();
+  });
+
+  // Initialize button state based on body class
+  if (document.body.classList.contains('bintech-admin-sidebar-collapsed')) toggleButton.classList.add('open');
+  updateIcon();
+  document.body.appendChild(toggleButton);
+}
+
 function showToast(message, type = 'info', duration = 3000) {
   const container = createToastContainer();
   const toast = document.createElement('div');
@@ -128,6 +298,32 @@ class AuthManager {
   }
 }
 
+// Global logout helper used by templates. Posts to backend for audit/logging then clears client session.
+window.handleLogout = async function() {
+  try {
+    const user = AuthManager.getUser();
+    const payload = { email: user?.email || user?.Email || user?.email_address || null };
+    if (payload.email) {
+      // Best-effort: inform backend about logout for audit trail
+      try {
+        await fetch('/auth/logout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+      } catch (e) {
+        console.warn('Logout audit POST failed', e);
+      }
+    }
+  } catch (e) {
+    console.warn('handleLogout: could not determine user to send logout audit', e);
+  } finally {
+    AuthManager.logout();
+    // small delay for fetch to reach server if it was sent
+    setTimeout(() => { window.location.href = '/'; }, 120);
+  }
+};
+
 // ============================================
 // User Account Display Functions
 // ============================================
@@ -170,6 +366,17 @@ function updateAccountDisplay() {
     el.textContent = initials.toUpperCase();
   });
 
+  // Mobile top bar username (for small screens where brand text is hidden)
+  try {
+    const mobileTop = document.getElementById('mobile-top-username');
+    if (mobileTop) mobileTop.textContent = user.full_name || user.email || 'User';
+
+    const mobileNavUserName = document.getElementById('mobile-nav-user-name');
+    if (mobileNavUserName) mobileNavUserName.textContent = user.full_name || user.email || 'User';
+  } catch (e) {
+    // ignore
+  }
+
   // Update profile picture initial
   document.querySelectorAll('.user-avatar, [class*="avatar"]').forEach(el => {
     if (!el.querySelector('img')) {
@@ -200,12 +407,21 @@ function updateAuthUI() {
 
 // Initialize account info on page load
 function initializeUserDisplay() {
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-      updateAuthUI();
-    });
-  } else {
+  // Prevent double-initialization when the script appears multiple times
+  if (window.__bintech_auth_initialized) return;
+  window.__bintech_auth_initialized = true;
+
+  const boot = () => {
     updateAuthUI();
+    ensureMobileTopUsername();
+    initializeAdminSidebarToggle();
+    populateAdminProfile();
+  };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', boot);
+  } else {
+    boot();
   }
 }
 

@@ -168,6 +168,63 @@ function getIdColumnNameByRole(role) {
   return idColumnMap[role.toLowerCase()] || 'staff_id';
 }
 
+function parseStorageObjectFromUrl(fileUrl) {
+  try {
+    if (!fileUrl) return null;
+    const parsed = new URL(String(fileUrl));
+    const path = parsed.pathname || '';
+    const match = path.match(/\/object\/(?:sign|public)\/([^/]+)\/(.+)$/);
+    if (!match) return null;
+
+    const bucket = decodeURIComponent(match[1]);
+    const objectPath = decodeURIComponent(match[2]);
+    if (!bucket || !objectPath) return null;
+
+    return { bucket, objectPath };
+  } catch (error) {
+    return null;
+  }
+}
+
+async function getLatestGmailPictureSignedUrl(systemId) {
+  if (!systemId) return null;
+
+  const { data: files, error: listError } = await supabase.storage
+    .from('gmail-pictures')
+    .list('', {
+      limit: 100,
+      offset: 0,
+      sortBy: { column: 'created_at', order: 'desc' }
+    });
+
+  if (listError) {
+    throw new Error(`Could not list gmail-pictures: ${listError.message || listError}`);
+  }
+
+  const prefix = `${systemId}_`;
+  const candidates = (files || []).filter((file) =>
+    String(file?.name || '').startsWith(prefix) && /_gphoto\./i.test(String(file?.name || ''))
+  );
+
+  if (candidates.length === 0) {
+    return null;
+  }
+
+  const latest = candidates[0];
+  const { data: signedData, error: signedError } = await supabase.storage
+    .from('gmail-pictures')
+    .createSignedUrl(latest.name, 60 * 60);
+
+  if (signedError || !signedData?.signedUrl) {
+    throw new Error(`Could not create signed URL for gmail-pictures object: ${signedError?.message || 'No URL returned'}`);
+  }
+
+  return {
+    name: latest.name,
+    signedUrl: signedData.signedUrl
+  };
+}
+
 // ============================================
 // Helper Function: Cleanup Orphaned Accounts
 // ============================================
@@ -1478,7 +1535,7 @@ exports.updateProfile = async (req, res) => {
       system_id, firstname, middleName, lastName, email,
       birthdate, sex, program, yearLevel, cor,
       department, position, designation, institution,
-      profile_picture
+      profile_picture, sync_google_photo
     } = req.body;
 
     if (!system_id || !firstname || !lastName) {
@@ -1546,9 +1603,28 @@ exports.updateProfile = async (req, res) => {
     }
     
     // Add profile picture (available for all roles)
-    if (profile_picture) {
+    if (profile_picture || sync_google_photo) {
       try {
-        console.log('Processing profile picture update:', profile_picture.substring(0, 100) + '...');
+        let incomingProfilePicture = profile_picture;
+
+        if (sync_google_photo) {
+          console.log('🔄 Sync Google photo requested - fetching latest original from gmail-pictures bucket...');
+          const latestGmailPicture = await getLatestGmailPictureSignedUrl(system_id);
+          if (!latestGmailPicture) {
+            return res.status(400).json({
+              success: false,
+              message: 'No original Google photo found in gmail-pictures for this account'
+            });
+          }
+          incomingProfilePicture = latestGmailPicture.signedUrl;
+          console.log(`✓ Using latest gmail-pictures photo: ${latestGmailPicture.name}`);
+        }
+
+        if (!incomingProfilePicture) {
+          throw new Error('No profile picture source available for sync/update');
+        }
+
+        console.log('Processing profile picture update:', String(incomingProfilePicture).substring(0, 100) + '...');
         
         // Fetch existing role record to find current profile picture (for removal if needed)
         const { data: existingRoleRow } = await supabase
@@ -1558,16 +1634,16 @@ exports.updateProfile = async (req, res) => {
           .maybeSingle();
 
         // If incoming profile_picture points to gmail-pictures, copy it into profile-pictures
-        const incomingIsGmailBucket = /gmail-pictures/i.test(String(profile_picture || ''));
+        const incomingIsGmailBucket = /gmail-pictures/i.test(String(incomingProfilePicture || ''));
 
         if (incomingIsGmailBucket) {
           console.log('📸 Detected google photo from gmail-pictures - syncing to profile-pictures...');
           try {
             // Download incoming image from gmail-pictures signed URL
-            const resp = await fetch(profile_picture);
+            const resp = await fetch(incomingProfilePicture);
             if (!resp.ok) {
               console.error('❌ Failed to fetch from gmail-pictures, status:', resp.status);
-              updateObject.profile_picture = profile_picture;
+              updateObject.profile_picture = incomingProfilePicture;
             } else {
               console.log('✓ Successfully fetched image from gmail-pictures');
               const buf = Buffer.from(await resp.arrayBuffer());
@@ -1582,7 +1658,7 @@ exports.updateProfile = async (req, res) => {
 
               if (uploadErr) {
                 console.error('❌ Failed to upload to profile-pictures:', uploadErr);
-                updateObject.profile_picture = profile_picture; // fallback
+                updateObject.profile_picture = incomingProfilePicture; // fallback
               } else {
                 console.log('✓ Image uploaded to profile-pictures');
                 const { data: signed, error: signErr } = await supabase.storage
@@ -1591,7 +1667,7 @@ exports.updateProfile = async (req, res) => {
 
                 if (signErr) {
                   console.error('❌ Failed to create signed URL:', signErr);
-                  updateObject.profile_picture = profile_picture;
+                  updateObject.profile_picture = incomingProfilePicture;
                 } else {
                   updateObject.profile_picture = signed.signedUrl;
                   console.log('✓ Created signed URL for profile-pictures');
@@ -1600,16 +1676,19 @@ exports.updateProfile = async (req, res) => {
                 // Delete previous profile picture if it exists and is in profile-pictures
                 try {
                   const prevUrl = existingRoleRow?.profile_picture || null;
-                  if (prevUrl && /profile-pictures/i.test(prevUrl)) {
-                    // Extract filename from URL (handle both signed and public URLs)
-                    const urlParts = new URL(prevUrl).pathname.split('/');
-                    const prevFilename = urlParts[urlParts.length - 1].split('?')[0];
-                    console.log(`Deleting previous profile picture: ${prevFilename}`);
-                    const { error: delErr } = await supabase.storage.from('profile-pictures').remove([prevFilename]);
-                    if (delErr) {
-                      console.warn('Could not delete previous profile picture:', delErr);
-                    } else {
-                      console.log('✓ Deleted previous profile-pictures file:', prevFilename);
+                  if (prevUrl) {
+                    const prevStorage = parseStorageObjectFromUrl(prevUrl);
+                    const allowedDeleteBuckets = new Set(['profile-pictures', 'cor-uploads']);
+                    if (prevStorage && allowedDeleteBuckets.has(prevStorage.bucket)) {
+                      console.log(`Deleting previous profile picture: ${prevStorage.bucket}/${prevStorage.objectPath}`);
+                      const { error: delErr } = await supabase.storage
+                        .from(prevStorage.bucket)
+                        .remove([prevStorage.objectPath]);
+                      if (delErr) {
+                        console.warn('Could not delete previous profile picture:', delErr);
+                      } else {
+                        console.log('✓ Deleted previous profile picture object from bucket');
+                      }
                     }
                   }
                 } catch (delErr) {
@@ -1619,16 +1698,18 @@ exports.updateProfile = async (req, res) => {
             }
           } catch (fetchErr) {
             console.error('❌ Error fetching/syncing google photo:', fetchErr);
-            updateObject.profile_picture = profile_picture;
+            updateObject.profile_picture = incomingProfilePicture;
           }
         } else {
           // Not a google-photo sync request: just set whatever URL/value was provided
           console.log('Profile picture from non-gmail source, setting directly');
-          updateObject.profile_picture = profile_picture;
+          updateObject.profile_picture = incomingProfilePicture;
         }
       } catch (err) {
         console.error('❌ Error while handling profile_picture sync:', err);
-        updateObject.profile_picture = profile_picture;
+        if (profile_picture) {
+          updateObject.profile_picture = profile_picture;
+        }
       }
     }
 

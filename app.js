@@ -90,13 +90,9 @@ const binsRoutes = require('./routes/bins');
 // Frontend Routes - Serve Template HTML files with Auth Integration
 app.get('/', serveTemplateWithAuth('LANDING_PAGE.HTML'));
 
-app.get('/how-it-works', (req, res) => {
-  res.sendFile(path.join(__dirname, 'templates', 'HOW_IT_WORKS.HTML'));
-});
+app.get('/how-it-works', serveTemplateWithAuth('HOW_IT_WORKS.HTML'));
 
-app.get('/rewards', (req, res) => {
-  res.sendFile(path.join(__dirname, 'templates', 'REWARDS.HTML'));
-});
+app.get('/rewards', serveTemplateWithAuth('REWARDS.HTML'));
 
 // Login Page
 app.get('/login', (req, res) => {

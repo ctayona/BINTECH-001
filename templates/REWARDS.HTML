@@ -283,19 +283,30 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex items-center justify-between h-16">
         <div class="flex items-center space-x-3">
-          <img src="/PICS/BINTECHLOGO.png" alt="BinTECH Logo" class="h-10 w-auto" style="object-fit: contain;">
+          <a href="/profile" class="hover:opacity-80 transition-opacity" style="display:flex;align-items:center;gap:8px">
+            <span style="color:#ffffff;font-weight:700;letter-spacing:0.04em">BINTECH</span>
+            <img src="/PICS/BINTECHLOGO.png" alt="BinTECH Logo" class="" style="height:48px;object-fit:contain;margin-top:-8px;">
+          </a>
+          <a href="/profile" class="hover:opacity-80 transition-opacity">
+            <img id="nav-profile-picture" src="" alt="Profile" class="h-10 w-10 rounded-full object-cover border-2 border-[#D4E157]/50 hidden">
+            <div id="nav-profile-initials" class="h-10 w-10 rounded-full bg-[#D4E157]/20 flex items-center justify-center text-[#D4E157] font-bold text-xs border-2 border-[#D4E157]/50">--</div>
+          </a>
           <div class="nav-welcome show">
             <p class="text-[#D4E157]/70 text-xs uppercase tracking-wider">Welcome Back</p>
-            <p id="nav-user-name" class="text-white font-semibold text-sm">MARIO SALLY</p>
+            <a href="/profile" class="text-white font-semibold text-sm hover:text-[#D4E157] transition-colors">
+              <span id="nav-user-name">MARIO SALLY</span>
+            </a>
           </div>
         </div>
 
-        <div class="hidden md:flex items-center space-x-8">
-          <a href="/dashboard" class="nav-link text-white/80 hover:text-white text-sm font-medium">Dashboard</a>
-          <a href="/rewards" class="nav-link active text-[#D4E157] text-sm font-medium">Rewards</a>
-          <a href="/history" class="nav-link text-white/80 hover:text-white text-sm font-medium">History</a>
-          <a href="/how-it-works" class="nav-link text-white/80 hover:text-white text-sm font-medium">How It Works</a>
-          <a href="/qr-scanner" class="nav-link text-white/80 hover:text-white text-sm font-medium flex items-center gap-1">💳 Transfer Points</a>
+        <!-- Center - Navigation Links -->
+        <div class="hidden md:flex items-center space-x-6">
+          <a href="/dashboard" class="nav-link text-white/70 hover:text-white font-medium text-sm transition">Dashboard</a>
+          <a href="/profile" class="nav-link text-white/70 hover:text-white font-medium text-sm transition">Profile</a>
+          <a href="/rewards" class="nav-link text-white/70 hover:text-white font-medium text-sm transition">Rewards</a>
+          <a href="/history" class="nav-link text-white/70 hover:text-white font-medium text-sm transition">History</a>
+          <a href="/how-it-works" class="nav-link text-white/70 hover:text-white font-medium text-sm transition">How It Works</a>
+          <a href="/qr-scanner" class="nav-link text-white/70 hover:text-white font-medium text-sm transition">Transfer Points</a>
         </div>
 
         <div class="flex items-center space-x-3">
@@ -313,14 +324,20 @@
       </div>
     </div>
 
-    <div id="mobile-nav-panel" class="mobile-nav-panel md:hidden border-t border-white/15 bg-[#143D2E]/95 px-4 py-4 space-y-3" data-open="false" style="display:none;">
-      <a href="/dashboard" class="block text-white/90 text-sm font-medium">Dashboard</a>
-      <a href="/profile" class="block text-white/90 text-sm font-medium">Profile</a>
-      <a href="/rewards" class="block text-[#D4E157] text-sm font-medium">Rewards</a>
-      <a href="/history" class="block text-white/90 text-sm font-medium">History</a>
-      <a href="/how-it-works" class="block text-white/90 text-sm font-medium">How It Works</a>
-      <a href="/qr-scanner" class="block text-white/90 text-sm font-medium">Transfer Points</a>
-      <div class="pt-2 border-t border-white/15 flex items-center justify-between">
+    <div id="mobile-nav-panel" class="mobile-nav-panel md:hidden border-t border-white/15 bg-[#143D2E]/95 px-4 py-4" data-open="false" style="display:none;">
+      <div class="flex items-center gap-2 mb-4 pb-3 border-b border-white/15">
+        <img src="/PICS/BINTECHLOGO.png" alt="BinTECH" style="height:32px;object-fit:contain;">
+        <span id="mobile-nav-user-name" class="text-white font-semibold text-sm">User</span>
+      </div>
+      <div class="space-y-3">
+        <a href="/dashboard" class="block text-white/90 hover:text-[#D4E157] text-sm font-medium transition">Dashboard</a>
+        <a href="/profile" class="block text-white/90 hover:text-[#D4E157] text-sm font-medium transition">Profile</a>
+        <a href="/rewards" class="block text-[#D4E157] text-sm font-medium">Rewards</a>
+        <a href="/history" class="block text-white/90 hover:text-[#D4E157] text-sm font-medium transition">History</a>
+        <a href="/how-it-works" class="block text-white/90 hover:text-[#D4E157] text-sm font-medium transition">How It Works</a>
+        <a href="/qr-scanner" class="block text-white/90 hover:text-[#D4E157] text-sm font-medium transition">Transfer Points</a>
+      </div>
+      <div class="pt-3 border-t border-white/15 flex items-center justify-between">
         <span id="mobile-nav-points" class="text-[#D4E157] text-sm font-semibold">0 Points</span>
         <button onclick="handleLogout()" class="px-3 py-1.5 text-white/80 text-xs border border-white/30 rounded-full hover:bg-white/10">Logout</button>
       </div>
@@ -425,9 +442,7 @@
         <section>
           <div class="flex items-center gap-3">
             <span class="bintech-brand-mark" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
-                <path d="M13 3L4 14h6l-1 7 11-13h-6l1-5z" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
+              <img src="/PICS/BINTECHLOGO.png" alt="BinTECH Logo" style="height:28px;object-fit:contain" />
             </span>
             <p class="bintech-brand-title">Bintech</p>
           </div>
@@ -448,6 +463,9 @@
       </div>
       <div class="bintech-footer-bottom">
         <p>© 2026 Bintech. All rights reserved.</p>
+        <div style="display:flex;align-items:center;gap:8px">
+          <img src="/PICS/BINTECHLOGO.png" alt="BinTECH Logo" style="height:28px;object-fit:contain" />
+        </div>
         <div class="bintech-social-list">
           <a href="#" aria-label="X"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.901 3H21l-4.588 5.244L21.808 21h-4.226l-3.31-4.889L9.996 21H7.896l4.907-5.609L2.192 3h4.332l2.993 4.422L13.099 3h5.802zm-1.48 16h1.171L7.946 4.89H6.69L17.42 19z"/></svg></a>
           <a href="#" aria-label="LinkedIn"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6.94 8.5A1.55 1.55 0 1 1 6.94 5.4 1.55 1.55 0 0 1 6.94 8.5zM5.62 9.75h2.64V18H5.62V9.75zm4.13 0h2.53v1.13h.03c.35-.67 1.22-1.37 2.5-1.37 2.67 0 3.16 1.76 3.16 4.05V18h-2.64v-3.93c0-.94-.02-2.14-1.3-2.14-1.3 0-1.5 1.02-1.5 2.07V18H9.75V9.75z"/></svg></a>
@@ -1248,6 +1266,38 @@ function initializeUserMobileMenu() {
   const mobilePoints = document.getElementById('mobile-nav-points');
   
   if (!toggle || !panel) return;
+
+  const navRow = toggle.closest('.flex.items-center.justify-between') || toggle.closest('.nav-container');
+  const leftSection = navRow ? navRow.firstElementChild : null;
+  const rightSection = toggle.parentElement;
+  const userDataStr = sessionStorage.getItem('bintech_user');
+  let mobileDisplayName = 'User';
+  if (userDataStr) {
+    try {
+      const userData = JSON.parse(userDataStr);
+      mobileDisplayName = userData?.full_name || userData?.name || userData?.email || 'User';
+    } catch (error) {
+      mobileDisplayName = 'User';
+    }
+  }
+
+  let topLabel = navRow ? navRow.querySelector('.bintech-mobile-top-label') : null;
+  if (!topLabel && rightSection) {
+    topLabel = document.createElement('span');
+    topLabel.className = 'bintech-mobile-top-label';
+    topLabel.textContent = mobileDisplayName;
+    topLabel.style.display = 'none';
+    topLabel.style.color = '#ffffff';
+    topLabel.style.fontWeight = '700';
+    topLabel.style.fontSize = '0.95rem';
+    topLabel.style.letterSpacing = '0.04em';
+    topLabel.style.marginRight = '0.5rem';
+    rightSection.insertBefore(topLabel, toggle);
+  }
+
+  if (!panel.querySelector('.bintech-mobile-panel-brand')) {
+    panel.insertAdjacentHTML('afterbegin', '<div class="bintech-mobile-panel-brand" style="display:flex;align-items:center;gap:8px;padding-bottom:10px;margin-bottom:10px;border-bottom:1px solid rgba(255,255,255,.15)"><img src="/PICS/BINTECHLOGO.png" alt="BinTECH Logo" style="height:24px;object-fit:contain"><span style="color:#fff;font-weight:700;letter-spacing:.04em">BINTECH</span></div>');
+  }
   
   const syncPoints = () => {
     if (navPoints && mobilePoints) mobilePoints.textContent = navPoints.textContent;
@@ -1257,6 +1307,17 @@ function initializeUserMobileMenu() {
     panel.dataset.open = 'false';
     panel.style.display = 'none';
     toggle.setAttribute('aria-expanded', 'false');
+  };
+
+  const applyMobileHeaderPolish = () => {
+    if (window.innerWidth < 768) {
+      if (leftSection) leftSection.style.display = 'none';
+      if (topLabel) topLabel.style.display = 'inline-flex';
+    } else {
+      if (leftSection) leftSection.style.display = '';
+      if (topLabel) topLabel.style.display = 'none';
+      closeMenu();
+    }
   };
   
   const openMenu = () => {
@@ -1271,10 +1332,35 @@ function initializeUserMobileMenu() {
   });
   
   panel.querySelectorAll('a').forEach(link => link.addEventListener('click', closeMenu));
-  window.addEventListener('resize', () => { if (window.innerWidth >= 768) closeMenu(); });
+  window.addEventListener('resize', applyMobileHeaderPolish);
   document.addEventListener('keydown', (event) => { if (event.key === 'Escape') closeMenu(); });
   
+  applyMobileHeaderPolish();
   syncPoints();
+}
+
+function updateNavbarProfile(user) {
+  const navProfilePicture = document.getElementById('nav-profile-picture');
+  const navProfileInitials = document.getElementById('nav-profile-initials');
+  const fullName = user.full_name || user.email || 'User';
+  const parts = String(fullName).trim().split(' ').filter(Boolean);
+  const initials = ((parts[0]?.charAt(0) || fullName.charAt(0) || 'U') + (parts[1]?.charAt(0) || 'S')).toUpperCase();
+
+  if (navProfileInitials) {
+    navProfileInitials.textContent = initials;
+    navProfileInitials.classList.remove('hidden');
+  }
+
+  if (navProfilePicture) {
+    if (user.profile_picture) {
+      navProfilePicture.src = user.profile_picture;
+      navProfilePicture.classList.remove('hidden');
+      navProfileInitials?.classList.add('hidden');
+    } else {
+      navProfilePicture.classList.add('hidden');
+      navProfilePicture.removeAttribute('src');
+    }
+  }
 }
 
 function updateUserInfo() {
@@ -1286,6 +1372,8 @@ function updateUserInfo() {
     document.querySelectorAll('#nav-user-name, #mobile-nav-user-name').forEach((el) => {
       el.textContent = (user.full_name || user.email || 'User').toUpperCase();
     });
+
+    updateNavbarProfile(user);
     
     if (user.points !== undefined) {
       syncLivePoints(user.points);
