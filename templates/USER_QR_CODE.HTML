@@ -91,7 +91,7 @@
 
         .nav-profile-picture {
             object-fit: cover;
-            display: none;
+            display: block;
         }
 
         .nav-profile-initials {
@@ -190,6 +190,92 @@
         .nav-link:hover::after,
         .nav-link.active::after {
             width: 100%;
+        }
+
+        /* Dropdown Styles */
+        .nav-dropdown {
+            position: relative;
+        }
+
+        .nav-dropdown-toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: rgba(255, 255, 255, 0.7);
+            font-weight: 500;
+            font-size: 0.875rem;
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid transparent;
+            background: transparent;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .nav-dropdown-toggle:hover {
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .nav-dropdown-toggle svg {
+            width: 16px;
+            height: 16px;
+            transition: transform 0.3s ease;
+        }
+
+        .nav-dropdown-toggle.open svg {
+            transform: rotate(180deg);
+        }
+
+        .nav-dropdown-menu {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            margin-top: 8px;
+            min-width: 220px;
+            background: #0F3B2E;
+            border: 1px solid rgba(212, 225, 87, 0.2);
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-8px);
+            transition: all 0.3s ease;
+            z-index: 100;
+            overflow: hidden;
+        }
+
+        .nav-dropdown.open .nav-dropdown-menu {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .nav-dropdown-menu a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+        }
+
+        .nav-dropdown-menu a:hover {
+            background: rgba(212, 225, 87, 0.15);
+            color: #D4E157;
+            border-left-color: #D4E157;
+            padding-left: 19px;
+        }
+
+        .nav-dropdown-menu a.active {
+            background: rgba(212, 225, 87, 0.2);
+            color: #D4E157;
+            border-left-color: #D4E157;
         }
 
         .nav-right {
@@ -903,7 +989,7 @@
             <div class="nav-container">
                 <!-- Left -->
                 <div class="nav-left">
-                    <a href="/profile" class="nav-logo-link" aria-label="Go to profile" style="display:flex;align-items:center;gap:8px">
+                    <a href="/profile" class="nav-logo-link hidden md:flex" aria-label="Go to profile" style="align-items:center;gap:8px">
                         <span style="color:#ffffff;font-weight:700;letter-spacing:0.04em">BINTECH</span>
                         <img src="/PICS/BINTECHLOGO.png" alt="BinTECH Logo" style="height:48px;object-fit:contain;margin-top:-8px;">
                     </a>
@@ -920,14 +1006,36 @@
                 </div>
 
                 <!-- Center -->
-                <div class="nav-center show">
-                    <div class="flex items-center space-x-6">
-                        <a href="/dashboard" class="nav-link text-white/70 hover:text-white font-medium text-sm transition">Dashboard</a>
-                        <a href="/profile" class="nav-link text-white/70 hover:text-white font-medium text-sm transition">Profile</a>
-                        <a href="/rewards" class="nav-link text-white/70 hover:text-white font-medium text-sm transition">Rewards</a>
-                        <a href="/history" class="nav-link text-white/70 hover:text-white font-medium text-sm transition">History</a>
-                        <a href="/how-it-works" class="nav-link text-white/70 hover:text-white font-medium text-sm transition">How It Works</a>
-                        <a href="/qr-scanner" class="nav-link text-white/70 hover:text-white font-medium text-sm transition">Transfer Points</a>
+                <div class="nav-center show nav-dropdown">
+                    <button class="nav-dropdown-toggle" id="nav-dropdown-btn" aria-label="Pages" aria-expanded="false">
+                        <span>Pages</span>
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" /></svg>
+                    </button>
+                    <div class="nav-dropdown-menu">
+                        <a href="/dashboard" class="nav-page-link" data-page="dashboard">
+                            <span>📊</span>
+                            <span>Dashboard</span>
+                        </a>
+                        <a href="/profile" class="nav-page-link" data-page="profile">
+                            <span>👤</span>
+                            <span>Profile</span>
+                        </a>
+                        <a href="/rewards" class="nav-page-link" data-page="rewards">
+                            <span>🎁</span>
+                            <span>Rewards</span>
+                        </a>
+                        <a href="/history" class="nav-page-link" data-page="history">
+                            <span>📜</span>
+                            <span>History</span>
+                        </a>
+                        <a href="/how-it-works" class="nav-page-link" data-page="how-it-works">
+                            <span>ℹ️</span>
+                            <span>How It Works</span>
+                        </a>
+                        <a href="/qr-scanner" class="nav-page-link" data-page="qr-scanner">
+                            <span>📱</span>
+                            <span>Transfer Points</span>
+                        </a>
                     </div>
                 </div>
 
@@ -943,11 +1051,8 @@
                     <button class="logout-btn" onclick="handleLogout()">Logout</button>
                 </div>
             </div>
+            <!-- Mobile Menu Panel: Navigation -->
             <div id="mobile-nav-panel" class="mobile-nav-panel" data-open="false" style="display:none;padding:0.9rem 1rem 1rem;border-top:1px solid rgba(255,255,255,.15);background:rgba(20,61,46,.95)">
-                <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:1rem;padding-bottom:0.75rem;border-bottom:1px solid rgba(255,255,255,.15);">
-                    <img src="/PICS/BINTECHLOGO.png" alt="BinTECH" style="height:32px;object-fit:contain;">
-                    <span id="mobile-nav-user-name" style="color:white;font-weight:600;font-size:0.875rem;">User</span>
-                </div>
                 <div style="display:flex;flex-direction:column;gap:0.75rem;">
                     <a href="/dashboard" class="nav-link" style="display:block;color:rgba(255,255,255,.9);font-size:0.875rem;font-weight:500;">Dashboard</a>
                     <a href="/profile" class="nav-link" style="display:block;color:rgba(255,255,255,.9);font-size:0.875rem;font-weight:500;">Profile</a>
@@ -1169,6 +1274,48 @@
             }
         }
 
+        // Navigation Dropdown Handler
+        function initializeNavDropdown() {
+            const dropdownBtn = document.getElementById('nav-dropdown-btn');
+            const dropdownContainer = document.querySelector('.nav-dropdown');
+            const pageLinks = document.querySelectorAll('.nav-page-link');
+            const currentPage = window.location.pathname;
+
+            if (!dropdownBtn || !dropdownContainer) return;
+
+            // Set active link based on current page
+            pageLinks.forEach(link => {
+                const href = link.getAttribute('href');
+                if (currentPage.includes(href)) {
+                    link.classList.add('active');
+                } else {
+                    link.classList.remove('active');
+                }
+            });
+
+            // Toggle dropdown
+            dropdownBtn.addEventListener('click', () => {
+                dropdownContainer.classList.toggle('open');
+                dropdownBtn.setAttribute('aria-expanded', dropdownContainer.classList.contains('open'));
+            });
+
+            // Close dropdown when a link is clicked
+            pageLinks.forEach(link => {
+                link.addEventListener('click', () => {
+                    dropdownContainer.classList.remove('open');
+                    dropdownBtn.setAttribute('aria-expanded', 'false');
+                });
+            });
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!dropdownContainer.contains(e.target) && !dropdownBtn.contains(e.target)) {
+                    dropdownContainer.classList.remove('open');
+                    dropdownBtn.setAttribute('aria-expanded', 'false');
+                }
+            });
+        }
+
         // Initialize user display on page load
         window.addEventListener('DOMContentLoaded', () => {
             const user = AuthManager.getUser();
@@ -1176,6 +1323,7 @@
                 updateNavProfile(user);
                 refreshNavPoints(user);
                 initializeUserMobileMenu();
+                initializeNavDropdown();
 
                 // Auto-attach to active machine session so live counters are visible immediately.
                 attachExistingMachineSession();
@@ -1683,36 +1831,6 @@
 
             const navRow = toggle.closest('.flex.items-center.justify-between') || toggle.closest('.nav-container');
             const leftSection = navRow ? navRow.firstElementChild : null;
-            const rightSection = toggle.parentElement;
-            const userDataStr = sessionStorage.getItem('bintech_user');
-            let mobileDisplayName = 'User';
-            if (userDataStr) {
-                try {
-                    const userData = JSON.parse(userDataStr);
-                    mobileDisplayName = userData?.full_name || userData?.name || userData?.email || 'User';
-                } catch (error) {
-                    mobileDisplayName = 'User';
-                }
-            }
-
-            let topLabel = navRow ? navRow.querySelector('.bintech-mobile-top-label') : null;
-            if (!topLabel && rightSection) {
-                topLabel = document.createElement('span');
-                topLabel.className = 'bintech-mobile-top-label';
-                topLabel.textContent = mobileDisplayName;
-                topLabel.style.display = 'none';
-                topLabel.style.color = '#ffffff';
-                topLabel.style.fontWeight = '700';
-                topLabel.style.fontSize = '0.95rem';
-                topLabel.style.letterSpacing = '0.04em';
-                topLabel.style.marginRight = '0.5rem';
-                rightSection.insertBefore(topLabel, toggle);
-            }
-
-            if (!panel.querySelector('.bintech-mobile-panel-brand')) {
-                panel.insertAdjacentHTML('afterbegin', '<div class="bintech-mobile-panel-brand" style="display:flex;align-items:center;gap:8px;padding-bottom:10px;margin-bottom:10px;border-bottom:1px solid rgba(255,255,255,.15)"><img src="/PICS/BINTECHLOGO.png" alt="BinTECH Logo" style="height:24px;object-fit:contain"><span style="color:#fff;font-weight:700;letter-spacing:.04em">BINTECH</span></div>');
-            }
-
             const closeMenu = () => {
                 panel.dataset.open = 'false';
                 panel.style.display = 'none';
@@ -1721,11 +1839,9 @@
 
             const applyMobileHeaderPolish = () => {
                 if (window.innerWidth < 768) {
-                    if (leftSection) leftSection.style.display = 'none';
-                    if (topLabel) topLabel.style.display = 'inline-flex';
+                    if (leftSection) leftSection.style.display = '';
                 } else {
                     if (leftSection) leftSection.style.display = '';
-                    if (topLabel) topLabel.style.display = 'none';
                     closeMenu();
                 }
             };

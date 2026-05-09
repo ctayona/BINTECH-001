@@ -65,6 +65,92 @@
     .nav-link.active::after {
       width: 100%;
     }
+
+    /* Dropdown Styles */
+    .nav-dropdown {
+      position: relative;
+    }
+
+    .nav-dropdown-toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: rgba(255, 255, 255, 0.7);
+      font-weight: 500;
+      font-size: 0.875rem;
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 1px solid transparent;
+      background: transparent;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .nav-dropdown-toggle:hover {
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .nav-dropdown-toggle svg {
+      width: 16px;
+      height: 16px;
+      transition: transform 0.3s ease;
+    }
+
+    .nav-dropdown-toggle.open svg {
+      transform: rotate(180deg);
+    }
+
+    .nav-dropdown-menu {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      margin-top: 8px;
+      min-width: 220px;
+      background: #0F3B2E;
+      border: 1px solid rgba(212, 225, 87, 0.2);
+      border-radius: 12px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-8px);
+      transition: all 0.3s ease;
+      z-index: 100;
+      overflow: hidden;
+    }
+
+    .nav-dropdown.open .nav-dropdown-menu {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+
+    .nav-dropdown-menu a {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      color: rgba(255, 255, 255, 0.8);
+      text-decoration: none;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      border-left: 3px solid transparent;
+    }
+
+    .nav-dropdown-menu a:hover {
+      background: rgba(212, 225, 87, 0.15);
+      color: #D4E157;
+      border-left-color: #D4E157;
+      padding-left: 19px;
+    }
+
+    .nav-dropdown-menu a.active {
+      background: rgba(212, 225, 87, 0.2);
+      color: #D4E157;
+      border-left-color: #D4E157;
+    }
     
     @keyframes pulse-glow {
       0%, 100% { box-shadow: 0 0 0 0 rgba(212, 225, 87, 0.4); }
@@ -190,11 +276,11 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
      <div class="flex items-center justify-between h-16"><!-- Left - User Welcome -->
       <div class="flex items-center space-x-3">
-            <a href="/profile" class="hover:opacity-80 transition-opacity" style="display:flex;align-items:center;gap:8px">
+            <a href="/profile" class="hover:opacity-80 transition-opacity hidden md:flex" style="align-items:center;gap:8px">
             <span style="color:#ffffff;font-weight:700;letter-spacing:0.04em">BINTECH</span>
             <img src="/PICS/BINTECHLOGO.png" alt="BinTECH Logo" style="height:48px;object-fit:contain;margin-top:-8px;">
             </a>
-      <a href="/profile" class="hover:opacity-80 transition-opacity">
+      <a href="/profile" class="hover:opacity-80 transition-opacity flex-shrink-0">
        <img id="nav-profile-picture" src="" alt="Profile" class="h-10 w-10 rounded-full object-cover border-2 border-[#D4E157]/50 hidden">
        <div id="nav-profile-initials" class="h-10 w-10 rounded-full bg-[#D4E157]/20 flex items-center justify-center text-[#D4E157] font-bold text-xs border-2 border-[#D4E157]/50">--</div>
       </a>
@@ -204,14 +290,38 @@
          <span id="nav-user-name">MARIO SALLY</span>
         </a>
        </div>
-      </div><!-- Center - Navigation Links -->
-      <div class="hidden md:flex items-center space-x-6">
-        <a href="/dashboard" class="nav-link text-white/70 hover:text-white font-medium text-sm transition">Dashboard</a>
-        <a href="/profile" class="nav-link text-white/70 hover:text-white font-medium text-sm transition">Profile</a>
-        <a href="/rewards" class="nav-link text-white/70 hover:text-white font-medium text-sm transition">Rewards</a>
-        <a href="/history" class="nav-link text-white/70 hover:text-white font-medium text-sm transition">History</a>
-        <a href="/how-it-works" class="nav-link text-white/70 hover:text-white font-medium text-sm transition">How It Works</a>
-        <a href="/qr-scanner" class="nav-link text-white/70 hover:text-white font-medium text-sm transition">Transfer Points</a>
+      </div><!-- Center - Navigation Dropdown -->
+      <div class="nav-dropdown hidden md:block">
+        <button class="nav-dropdown-toggle" id="nav-dropdown-btn" aria-label="Pages" aria-expanded="false">
+          <span>Pages</span>
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" /></svg>
+        </button>
+        <div class="nav-dropdown-menu">
+          <a href="/dashboard" class="nav-page-link" data-page="dashboard">
+            <span>📊</span>
+            <span>Dashboard</span>
+          </a>
+          <a href="/profile" class="nav-page-link" data-page="profile">
+            <span>👤</span>
+            <span>Profile</span>
+          </a>
+          <a href="/rewards" class="nav-page-link" data-page="rewards">
+            <span>🎁</span>
+            <span>Rewards</span>
+          </a>
+          <a href="/history" class="nav-page-link" data-page="history">
+            <span>📜</span>
+            <span>History</span>
+          </a>
+          <a href="/how-it-works" class="nav-page-link" data-page="how-it-works">
+            <span>ℹ️</span>
+            <span>How It Works</span>
+          </a>
+          <a href="/qr-scanner" class="nav-page-link" data-page="qr-scanner">
+            <span>📱</span>
+            <span>Transfer Points</span>
+          </a>
+        </div>
       </div><!-- Right - Points & Notifications -->
       <div class="flex items-center space-x-3">
        <button id="mobile-nav-toggle" type="button" class="mobile-nav-toggle md:hidden p-2 text-white/80 hover:text-[#D4E157] border border-white/30 rounded-full" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="mobile-nav-panel">
@@ -226,11 +336,8 @@
       </div>
      </div>
     </div>
+    <!-- Mobile Menu Panel: Navigation -->
     <div id="mobile-nav-panel" class="mobile-nav-panel md:hidden border-t border-white/15 bg-[#143D2E]/95 px-4 py-4" data-open="false" style="display:none;">
-      <div class="flex items-center gap-2 mb-4 pb-3 border-b border-white/15">
-        <img src="/PICS/BINTECHLOGO.png" alt="BinTECH" style="height:32px;object-fit:contain;">
-        <span id="mobile-nav-user-name" class="text-white font-semibold text-sm">User</span>
-      </div>
       <div class="space-y-3">
         <a href="/dashboard" class="block text-white/90 hover:text-[#D4E157] text-sm font-medium transition">Dashboard</a>
         <a href="/profile" class="block text-white/90 hover:text-[#D4E157] text-sm font-medium transition">Profile</a>
@@ -611,6 +718,8 @@
           const navPoints = document.getElementById('nav-points');
           const navProfilePicture = document.getElementById('nav-profile-picture');
           const navProfileInitials = document.getElementById('nav-profile-initials');
+          const mobileNavProfilePicture = document.getElementById('mobile-nav-profile-picture');
+          const mobileNavProfileInitials = document.getElementById('mobile-nav-profile-initials');
           const fullName = user.full_name || user.email || 'User';
           const parts = String(fullName).trim().split(' ').filter(Boolean);
           const initials = ((parts[0]?.charAt(0) || fullName.charAt(0) || 'U') + (parts[1]?.charAt(0) || 'S')).toUpperCase();
@@ -619,6 +728,7 @@
             el.textContent = (user.full_name || user.email || '').toUpperCase();
           });
 
+          // Update desktop nav
           if (navProfileInitials) {
             navProfileInitials.textContent = initials;
             navProfileInitials.classList.remove('hidden');
@@ -632,6 +742,22 @@
             } else {
               navProfilePicture.classList.add('hidden');
               navProfilePicture.removeAttribute('src');
+            }
+          }
+
+          // Update mobile nav
+          if (mobileNavProfileInitials) {
+            mobileNavProfileInitials.textContent = initials;
+            mobileNavProfileInitials.classList.add('hidden');
+          }
+
+          if (mobileNavProfilePicture) {
+            if (user.profile_picture) {
+              mobileNavProfilePicture.src = user.profile_picture;
+              mobileNavProfilePicture.classList.remove('hidden');
+            } else {
+              mobileNavProfilePicture.classList.add('hidden');
+              mobileNavProfilePicture.removeAttribute('src');
             }
           }
 
@@ -654,36 +780,6 @@
 
       const navRow = toggle.closest('.flex.items-center.justify-between') || toggle.closest('.nav-container');
       const leftSection = navRow ? navRow.firstElementChild : null;
-      const rightSection = toggle.parentElement;
-      const userDataStr = sessionStorage.getItem('bintech_user');
-      let mobileDisplayName = 'User';
-      if (userDataStr) {
-        try {
-          const userData = JSON.parse(userDataStr);
-          mobileDisplayName = userData?.full_name || userData?.name || userData?.email || 'User';
-        } catch (error) {
-          mobileDisplayName = 'User';
-        }
-      }
-
-      let topLabel = navRow ? navRow.querySelector('.bintech-mobile-top-label') : null;
-      if (!topLabel && rightSection) {
-        topLabel = document.createElement('span');
-        topLabel.className = 'bintech-mobile-top-label';
-        topLabel.textContent = mobileDisplayName;
-        topLabel.style.display = 'none';
-        topLabel.style.color = '#ffffff';
-        topLabel.style.fontWeight = '700';
-        topLabel.style.fontSize = '0.95rem';
-        topLabel.style.letterSpacing = '0.04em';
-        topLabel.style.marginRight = '0.5rem';
-        rightSection.insertBefore(topLabel, toggle);
-      }
-
-      if (!panel.querySelector('.bintech-mobile-panel-brand')) {
-        panel.insertAdjacentHTML('afterbegin', '<div class="bintech-mobile-panel-brand" style="display:flex;align-items:center;gap:8px;padding-bottom:10px;margin-bottom:10px;border-bottom:1px solid rgba(255,255,255,.15)"><img src="/PICS/BINTECHLOGO.png" alt="BinTECH Logo" style="height:24px;object-fit:contain"><span style="color:#fff;font-weight:700;letter-spacing:.04em">BINTECH</span></div>');
-      }
-
       const syncPoints = () => {
         const pointsText = navPoints ? navPoints.textContent : '0 Points';
         if (mobilePoints) mobilePoints.textContent = pointsText;
@@ -697,11 +793,9 @@
 
       const applyMobileHeaderPolish = () => {
         if (window.innerWidth < 768) {
-          if (leftSection) leftSection.style.display = 'none';
-          if (topLabel) topLabel.style.display = 'inline-flex';
+          if (leftSection) leftSection.style.display = '';
         } else {
           if (leftSection) leftSection.style.display = '';
-          if (topLabel) topLabel.style.display = 'none';
           closeMenu();
         }
       };
@@ -876,12 +970,55 @@
       stopScanner();
     });
 
+    // Navigation Dropdown Handler
+    function initializeNavDropdown() {
+      const dropdownBtn = document.getElementById('nav-dropdown-btn');
+      const dropdownContainer = document.querySelector('.nav-dropdown');
+      const pageLinks = document.querySelectorAll('.nav-page-link');
+      const currentPage = window.location.pathname;
+
+      if (!dropdownBtn || !dropdownContainer) return;
+
+      // Set active link based on current page
+      pageLinks.forEach(link => {
+        const href = link.getAttribute('href');
+        if (currentPage.includes(href)) {
+          link.classList.add('active');
+        } else {
+          link.classList.remove('active');
+        }
+      });
+
+      // Toggle dropdown
+      dropdownBtn.addEventListener('click', () => {
+        dropdownContainer.classList.toggle('open');
+        dropdownBtn.setAttribute('aria-expanded', dropdownContainer.classList.contains('open'));
+      });
+
+      // Close dropdown when a link is clicked
+      pageLinks.forEach(link => {
+        link.addEventListener('click', () => {
+          dropdownContainer.classList.remove('open');
+          dropdownBtn.setAttribute('aria-expanded', 'false');
+        });
+      });
+
+      // Close dropdown when clicking outside
+      document.addEventListener('click', (e) => {
+        if (!dropdownContainer.contains(e.target) && !dropdownBtn.contains(e.target)) {
+          dropdownContainer.classList.remove('open');
+          dropdownBtn.setAttribute('aria-expanded', 'false');
+        }
+      });
+    }
+
     // Initialize page load with protection check (only after DOM ready)
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', function() {
         protectRoute();
         updateUserInfo();
         initializeUserMobileMenu();
+        initializeNavDropdown();
       });
     } else {
       // Slight delay to ensure everything is ready
@@ -889,6 +1026,7 @@
         protectRoute();
         updateUserInfo();
         initializeUserMobileMenu();
+        initializeNavDropdown();
       }, 300);
     }
   </script>
