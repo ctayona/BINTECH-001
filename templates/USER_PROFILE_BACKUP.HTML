@@ -1,0 +1,1482 @@
+<!doctype html>
+<html lang="en" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BinTECH - My Profile</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="/js/timestampUtils.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="/css/user-footer.css" rel="stylesheet">
+  <style>
+    :root {
+      --primary-dark: #0F3B2E;
+      --secondary-gradient-start: #143D2E;
+      --secondary-gradient-end: #1F4F3B;
+      --accent-yellow: #D4E157;
+      --card-green: #5DAE60;
+      --page-bg: #E8ECEB;
+    }
+    
+    * {
+      box-sizing: border-box;
+    }
+    
+    html, body {
+      height: 100%;
+    }
+    
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-color: var(--page-bg);
+      margin: 0;
+      padding: 0;
+    }
+    
+    .font-playfair {
+      font-family: 'Playfair Display', serif;
+    }
+    
+    .gradient-dark {
+      background: linear-gradient(135deg, var(--secondary-gradient-start), var(--secondary-gradient-end));
+    }
+    
+    .card-shadow {
+      box-shadow: 0 4px 20px rgba(15, 59, 46, 0.12);
+    }
+    
+    .nav-link {
+      position: relative;
+      transition: color 0.3s ease;
+    }
+    
+    .nav-link::after {
+      content: '';
+      position: absolute;
+      bottom: -4px;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: var(--accent-yellow);
+      transition: width 0.3s ease;
+    }
+    
+    .nav-link:hover::after,
+    .nav-link.active::after {
+      width: 100%;
+    }
+    
+    .form-input {
+      border: 1.5px solid #E0E0E0;
+      transition: all 0.3s ease;
+      font-family: 'Poppins', sans-serif;
+    }
+    
+    .form-input:focus {
+      border-color: var(--accent-yellow);
+      box-shadow: 0 0 0 3px rgba(212, 225, 87, 0.15);
+      outline: none;
+    }
+    
+    .form-input:disabled {
+      background-color: #f5f5f5;
+      color: #999;
+      cursor: not-allowed;
+    }
+    
+    .save-btn {
+      background: linear-gradient(135deg, var(--card-green), #4CAF50);
+      transition: all 0.3s ease;
+      font-weight: 600;
+    }
+    
+    .save-btn:hover:not(:disabled) {
+      background: linear-gradient(135deg, #4CAF50, var(--card-green));
+      transform: scale(1.02);
+    }
+    
+    .save-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    
+    .cancel-btn {
+      border: 1.5px solid var(--primary-dark);
+      color: var(--primary-dark);
+      transition: all 0.3s ease;
+      font-weight: 600;
+    }
+    
+    .cancel-btn:hover {
+      background-color: var(--page-bg);
+    }
+    
+    @keyframes pulse-glow {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(212, 225, 87, 0.4); }
+      50% { box-shadow: 0 0 20px 4px rgba(212, 225, 87, 0.6); }
+    }
+    
+    .points-badge {
+      animation: pulse-glow 2s ease-in-out infinite;
+    }
+
+    .mobile-nav-panel {
+      display: none;
+    }
+
+    @media (max-width: 767px) {
+      .mobile-nav-toggle {
+        display: inline-flex;
+      }
+
+      .points-badge {
+        display: none;
+      }
+
+      .mobile-nav-panel[data-open="true"] {
+        display: block;
+      }
+    }
+    
+    .stat-box {
+      background: linear-gradient(135deg, rgba(93, 174, 96, 0.1), rgba(212, 225, 87, 0.05));
+      border: 1px solid rgba(93, 174, 96, 0.2);
+    }
+    
+    .profile-avatar {
+      width: 120px;
+      height: 120px;
+      background: linear-gradient(135deg, var(--card-green), var(--accent-yellow));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 20px;
+      font-size: 50px;
+      margin: 0 auto 20px;
+    }
+    
+    .edit-mode-indicator {
+      display: inline-block;
+      background: rgba(212, 225, 87, 0.2);
+      color: var(--card-green);
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      border: 1px solid rgba(212, 225, 87, 0.5);
+    }
+    
+    .toast-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 9999;
+      pointer-events: none;
+    }
+
+    .toast {
+      padding: 16px 24px;
+      border-radius: 12px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 12px;
+      animation: slideUp 0.4s ease-out;
+      pointer-events: auto;
+    }
+
+    .toast.success {
+      background-color: #10b981;
+      color: white;
+    }
+
+    .toast.error {
+      background-color: #ef4444;
+      color: white;
+    }
+
+    .toast.info {
+      background-color: #3b82f6;
+      color: white;
+    }
+    
+    @keyframes slideUp {
+      from {
+        transform: translateY(100px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+    
+    @keyframes fadeOut {
+      to {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+    }
+  </style>
+ </head>
+ <body class="h-full">
+  <div id="app-wrapper" class="w-full min-h-screen flex flex-col">
+    <!-- Navigation Bar -->
+    <nav class="gradient-dark sticky top-0 z-50">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-16">
+          <!-- Left - User Welcome -->
+          <div class="flex items-center space-x-3">
+            <button onclick="window.location.href='/profile'" class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center overflow-hidden border-2 border-[#D4E157]/30 hover:border-[#D4E157]/60 hover:bg-white/20 transition-all cursor-pointer" title="My Profile">
+              <svg class="w-6 h-6 text-[#D4E157]" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" /></svg>
+            </button>
+            <div class="hidden sm:block">
+              <p class="text-[#D4E157]/70 text-xs uppercase tracking-wider">My Profile</p>
+              <p id="nav-user-name" class="text-white font-semibold text-sm">User Name</p>
+            </div>
+          </div>
+          
+          <!-- Center - Navigation Links -->
+          <div class="hidden md:flex items-center space-x-8">
+            <a href="/dashboard" class="nav-link text-white/80 hover:text-white text-sm font-medium">Dashboard</a>
+            <a href="/rewards" class="nav-link text-white/80 hover:text-white text-sm font-medium">Rewards</a>
+            <a href="/history" class="nav-link text-white/80 hover:text-white text-sm font-medium">History</a>
+            <a href="/how-it-works" class="nav-link text-white/80 hover:text-white text-sm font-medium">How It Works</a>
+            <a href="/qr-scanner" class="nav-link text-white/80 hover:text-white text-sm font-medium flex items-center gap-1"><span>💳</span> Transfer Points</a>
+          </div>
+          
+          <!-- Right - Points & Logout -->
+          <div class="flex items-center space-x-3">
+            <button id="mobile-nav-toggle" type="button" class="mobile-nav-toggle md:hidden p-2 text-white/80 hover:text-[#D4E157] border border-white/30 rounded-full" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="mobile-nav-panel">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
+            </button>
+            <div class="hidden md:flex items-center space-x-4">
+              <div class="points-badge flex items-center space-x-2 bg-[#D4E157]/20 px-4 py-2 rounded-full border border-[#D4E157]/40">
+                <span class="text-lg">✨</span>
+                <span id="nav-points" class="text-[#D4E157] font-bold text-sm">0 Points</span>
+              </div>
+              <button onclick="handleLogout()" class="px-2 sm:px-4 py-2 text-white/70 hover:text-white text-xs sm:text-sm border border-white/30 rounded-full hover:bg-white/10 transition-all">
+                Logout
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="mobile-nav-panel" class="mobile-nav-panel md:hidden border-t border-white/15 bg-[#143D2E]/95 px-4 py-4 space-y-3" data-open="false" style="display:none;">
+        <a href="/dashboard" class="block text-white/90 text-sm font-medium">Dashboard</a>
+        <a href="/profile" class="block text-[#D4E157] text-sm font-medium">Profile</a>
+        <a href="/rewards" class="block text-white/90 text-sm font-medium">Rewards</a>
+        <a href="/history" class="block text-white/90 text-sm font-medium">History</a>
+        <a href="/how-it-works" class="block text-white/90 text-sm font-medium">How It Works</a>
+        <a href="/qr-scanner" class="block text-white/90 text-sm font-medium">Transfer Points</a>
+        <div class="pt-2 border-t border-white/15 flex items-center justify-between">
+          <span id="mobile-nav-points" class="text-[#D4E157] text-sm font-semibold">0 Points</span>
+          <button onclick="handleLogout()" class="px-3 py-1.5 text-white/80 text-xs border border-white/30 rounded-full hover:bg-white/10">Logout</button>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-grow max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <!-- Page Header -->
+      <div class="mb-8">
+        <h1 class="font-playfair text-4xl sm:text-5xl text-[#0F3B2E] mb-2">My Account</h1>
+        <p class="text-[#0F3B2E]/60">Manage and update your profile information</p>
+      </div>
+
+      <!-- Alert Messages -->
+      <div id="successAlert" class="hidden mb-6 p-4 bg-green-50 border-l-4 border-green-500 rounded-lg">
+        <div class="flex items-center">
+          <svg class="w-5 h-5 text-green-600 mr-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></path></svg>
+          <p id="successMessage" class="text-green-700 font-medium">Changes saved successfully!</p>
+        </div>
+      </div>
+      
+      <div id="errorAlert" class="hidden mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-lg">
+        <div class="flex items-center">
+          <svg class="w-5 h-5 text-red-600 mr-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" /></path></svg>
+          <p id="errorMessage" class="text-red-700 font-medium">An error occurred</p>
+        </div>
+      </div>
+
+      <!-- Profile Grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Left Column - Profile Card -->
+        <div class="lg:col-span-1">
+          <div class="bg-white rounded-2xl p-8 card-shadow">
+            <div class="text-center">
+              <!-- Editable Profile Avatar -->
+              <div class="relative group mb-6 inline-block">
+                <div class="profile-avatar">
+                  <img id="profilePictureImg" class="w-full h-full rounded-lg object-cover hidden" alt="Profile Picture">
+                  <span id="profileInitials" class="text-5xl font-bold">--</span>
+                </div>
+                <!-- Edit Overlay (shown in edit mode) -->
+                <label for="profilePictureFile" id="profileEditOverlay" class="hidden absolute inset-0 rounded-lg bg-black/40 flex items-center justify-center cursor-pointer hover:bg-black/50 transition-all">
+                  <div class="text-center">
+                    <svg class="w-8 h-8 text-white mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    </svg>
+                    <span class="text-white text-sm font-semibold">Change Photo</span>
+                  </div>
+                </label>
+                <input type="file" id="profilePictureFile" class="hidden" accept="image/*">
+              </div>
+              
+              <h2 id="profileFullName" class="text-2xl font-bold text-[#0F3B2E] mb-2">User Name</h2>
+              <p id="profileEmail" class="text-[#0F3B2E]/60 text-sm mb-6">email@umak.edu.ph</p>
+              
+              <!-- Role Badge -->
+              <div class="inline-block mb-6 px-4 py-2 bg-[#D4E157]/20 rounded-full border border-[#D4E157]/40">
+                <p class="text-xs text-[#0F3B2E]/60 uppercase tracking-wider">Account Type</p>
+                <p id="profileRole" class="text-sm font-semibold text-[#0F3B2E] mt-1">Student</p>
+              </div>
+              
+              <!-- Quick Stats -->
+              <div class="space-y-3 pt-6 border-t border-[#E8ECEB]">
+                <div class="stat-box rounded-lg p-3">
+                  <p class="text-xs text-[#0F3B2E]/60 uppercase tracking-wider">Total Points</p>
+                  <p id="profilePoints" class="text-2xl font-bold text-[#5DAE60] mt-1">0</p>
+                </div>
+                
+                <div class="stat-box rounded-lg p-3">
+                  <p class="text-xs text-[#0F3B2E]/60 uppercase tracking-wider">Member Since</p>
+                  <p id="profileMemberSince" class="text-sm font-semibold text-[#0F3B2E] mt-1">--</p>
+                </div>
+              </div>
+              
+              <!-- Google Profile Photo Sync Button -->
+              <div class="pt-6 border-t border-[#E8ECEB]">
+                <button 
+                  type="button"
+                  onclick="syncGoogleProfilePhoto()"
+                  id="syncGooglePhotoBtn"
+                  class="w-full px-4 py-2 text-sm font-semibold text-white bg-blue-500 hover:bg-blue-600 rounded-lg transition-all"
+                  title="Sync your Google profile photo if available"
+                >
+                  📷 Sync Google Photo
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column - Edit Form -->
+        <div class="lg:col-span-2">
+          <div class="bg-white rounded-2xl p-8 card-shadow">
+            <div class="flex items-center justify-between mb-6">
+              <h3 class="font-playfair text-2xl text-[#0F3B2E]">Personal Information</h3>
+              <button id="editToggleBtn" onclick="toggleEditMode()" class="text-sm px-4 py-2 text-white bg-[#5DAE60] hover:bg-[#4CAF50] rounded-full font-semibold transition-all">
+                Edit Profile
+              </button>
+            </div>
+
+            <form id="profileForm" class="space-y-5" onsubmit="handleSaveProfile(event)">
+              <!-- First Name & Middle Name Row -->
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div>
+                  <label class="block text-sm font-semibold text-[#0F3B2E] mb-2">First Name *</label>
+                  <input 
+                    type="text" 
+                    id="firstName" 
+                    class="form-input w-full px-4 py-3 rounded-lg" 
+                    placeholder="First Name"
+                    disabled
+                    required
+                  >
+                </div>
+                <div>
+                  <label class="block text-sm font-semibold text-[#0F3B2E] mb-2">Middle Name</label>
+                  <input 
+                    type="text" 
+                    id="middleName" 
+                    class="form-input w-full px-4 py-3 rounded-lg" 
+                    placeholder="Middle Name (Optional)"
+                    disabled
+                  >
+                </div>
+              </div>
+
+              <!-- Last Name -->
+              <div>
+                <label class="block text-sm font-semibold text-[#0F3B2E] mb-2">Last Name *</label>
+                <input 
+                  type="text" 
+                  id="lastName" 
+                  class="form-input w-full px-4 py-3 rounded-lg" 
+                  placeholder="Last Name"
+                  disabled
+                  required
+                >
+              </div>
+
+              <!-- Email (Read-only) -->
+              <div>
+                <label class="block text-sm font-semibold text-[#0F3B2E] mb-2">Email Address</label>
+                <input 
+                  type="email" 
+                  id="email" 
+                  class="form-input w-full px-4 py-3 rounded-lg bg-[#f5f5f5]" 
+                  disabled
+                >
+                <p class="text-xs text-[#0F3B2E]/60 mt-2">Email cannot be changed</p>
+              </div>
+
+              <!-- Campus ID (Read-only if applicable) -->
+              <div id="campusIdContainer" class="hidden">
+                <label class="block text-sm font-semibold text-[#0F3B2E] mb-2">Campus ID</label>
+                <input 
+                  type="text" 
+                  id="campusId" 
+                  class="form-input w-full px-4 py-3 rounded-lg bg-[#f5f5f5]" 
+                  disabled
+                >
+                <p class="text-xs text-[#0F3B2E]/60 mt-2">Campus ID cannot be changed</p>
+              </div>
+
+              <!-- Role (Read-only) -->
+              <div>
+                <label class="block text-sm font-semibold text-[#0F3B2E] mb-2">Account Type</label>
+                <input 
+                  type="text" 
+                  id="role" 
+                  class="form-input w-full px-4 py-3 rounded-lg bg-[#f5f5f5]" 
+                  disabled
+                >
+                <p class="text-xs text-[#0F3B2E]/60 mt-2">Account type cannot be changed</p>
+              </div>
+
+              <!-- Student-specific fields -->
+              <div id="studentFields" class="hidden space-y-5">
+                <!-- Student ID (Read-only) -->
+                <div>
+                  <label class="block text-sm font-semibold text-[#0F3B2E] mb-2">Student ID</label>
+                  <input type="text" id="studentId" class="form-input w-full px-4 py-3 rounded-lg bg-[#f5f5f5]" placeholder="Student ID" disabled>
+                  <p class="text-xs text-[#0F3B2E]/60 mt-2">Student ID cannot be changed</p>
+                </div>
+                <!-- Program (Editable) -->
+                <div>
+                  <label class="block text-sm font-semibold text-[#0F3B2E] mb-2">Program</label>
+                  <input type="text" id="program" class="form-input w-full px-4 py-3 rounded-lg" placeholder="Program" disabled>
+                </div>
+                <!-- Year Level (Editable) -->
+                <div>
+                  <label class="block text-sm font-semibold text-[#0F3B2E] mb-2">Year Level</label>
+                  <input type="text" id="yearLevel" class="form-input w-full px-4 py-3 rounded-lg" placeholder="Year Level" disabled>
+                </div>
+                <!-- COR (Image Upload) -->
+                <div>
+                  <label class="block text-sm font-semibold text-[#0F3B2E] mb-2">Class of Record (COR) - Upload Image</label>
+                  <div class="flex items-center gap-4">
+                    <input type="file" id="corFile" class="form-input flex-1 px-4 py-3 rounded-lg" accept="image/*" disabled>
+                    <div class="relative group">
+                      <img id="corPreview" class="w-20 h-20 rounded-lg object-cover bg-[#f5f5f5] hidden cursor-pointer hover:opacity-80 transition-opacity" alt="COR Preview" title="Click to view full image">
+                      <!-- Remove button overlay -->
+                      <button 
+                        type="button"
+                        id="corRemoveBtn"
+                        onclick="removeCORImage()"
+                        class="hidden absolute top-0 right-0 -mt-2 -mr-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold transition-all"
+                        title="Remove COR image"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  </div>
+                  <p class="text-xs text-[#0F3B2E]/60 mt-2">Supported formats: JPG, PNG, GIF (Max 5MB)</p>
+                </div>
+              </div>
+
+              <!-- Faculty-specific fields -->
+              <div id="facultyFields" class="hidden space-y-5">
+                <!-- Faculty ID (Read-only) -->
+                <div>
+                  <label class="block text-sm font-semibold text-[#0F3B2E] mb-2">Faculty ID</label>
+                  <input type="text" id="facultyId" class="form-input w-full px-4 py-3 rounded-lg bg-[#f5f5f5]" placeholder="Faculty ID" disabled>
+                  <p class="text-xs text-[#0F3B2E]/60 mt-2">Faculty ID cannot be changed</p>
+                </div>
+                <!-- Department (Editable) -->
+                <div>
+                  <label class="block text-sm font-semibold text-[#0F3B2E] mb-2">Department</label>
+                  <input type="text" id="department" class="form-input w-full px-4 py-3 rounded-lg" placeholder="Department" disabled>
+                </div>
+                <!-- Position (Editable) -->
+                <div>
+                  <label class="block text-sm font-semibold text-[#0F3B2E] mb-2">Position</label>
+                  <input type="text" id="position" class="form-input w-full px-4 py-3 rounded-lg" placeholder="Position" disabled>
+                </div>
+              </div>
+
+              <!-- Staff/Other-specific fields -->
+              <div id="staffFields" class="hidden space-y-5">
+                <!-- Account ID (Read-only) -->
+                <div>
+                  <label class="block text-sm font-semibold text-[#0F3B2E] mb-2">Account ID</label>
+                  <input type="text" id="accountId" class="form-input w-full px-4 py-3 rounded-lg bg-[#f5f5f5]" placeholder="Account ID" disabled>
+                  <p class="text-xs text-[#0F3B2E]/60 mt-2">Account ID cannot be changed</p>
+                </div>
+                <!-- Designation (Editable) -->
+                <div>
+                  <label class="block text-sm font-semibold text-[#0F3B2E] mb-2">Designation</label>
+                  <input type="text" id="designation" class="form-input w-full px-4 py-3 rounded-lg" placeholder="Designation" disabled>
+                </div>
+                <!-- Institution (Editable) -->
+                <div>
+                  <label class="block text-sm font-semibold text-[#0F3B2E] mb-2">Institution</label>
+                  <input type="text" id="institution" class="form-input w-full px-4 py-3 rounded-lg" placeholder="Institution" disabled>
+                </div>
+              </div>
+
+              <!-- Common optional fields -->
+              <div class="space-y-5">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div>
+                    <label class="block text-sm font-semibold text-[#0F3B2E] mb-2">Birthdate</label>
+                    <input type="date" id="birthdate" class="form-input w-full px-4 py-3 rounded-lg" disabled>
+                  </div>
+                  <div>
+                    <label class="block text-sm font-semibold text-[#0F3B2E] mb-2">Sex</label>
+                    <select id="sex" class="form-input w-full px-4 py-3 rounded-lg" disabled>
+                      <option value="">Select...</option>
+                      <option value="Male">Male</option>
+                      <option value="Female">Female</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Action Buttons -->
+              <div class="flex gap-3 pt-6 border-t border-[#E8ECEB]">
+                <button 
+                  type="submit" 
+                  id="submitBtn"
+                  class="save-btn text-white px-6 py-3 rounded-lg hidden flex-1"
+                >
+                  Save Changes
+                </button>
+                <button 
+                  type="button" 
+                  onclick="cancelEditMode()" 
+                  id="cancelBtn"
+                  class="cancel-btn w-full md:w-auto px-6 py-3 rounded-lg hidden"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bintech-user-footer flex-shrink-0">
+    <div class="bintech-user-footer__wrap">
+      <div class="bintech-user-footer__grid">
+        <section>
+          <div class="flex items-center gap-3">
+            <span class="bintech-brand-mark" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
+                <path d="M13 3L4 14h6l-1 7 11-13h-6l1-5z" stroke-linecap="round" stroke-linejoin="round"></path>
+              </svg>
+            </span>
+            <p class="bintech-brand-title">Bintech</p>
+          </div>
+          <p class="bintech-brand-copy">Bintech builds secure, intuitive financial technology for modern users, blending speed, trust, and smarter money workflows.</p>
+        </section>
+
+        <nav class="bintech-user-footer__nav" aria-label="Company links">
+          <h4>Company</h4>
+          <ul>
+            <li><a href="#">About</a></li>
+            <li><a href="#">Contact</a></li>
+          </ul>
+        </nav>
+
+        <nav class="bintech-user-footer__nav" aria-label="Products links">
+          <h4>Products</h4>
+          <ul>
+            <li><a href="#">Rewards</a></li>
+          </ul>
+        </nav>
+
+        <nav class="bintech-user-footer__nav" aria-label="Resources links">
+          <h4>Resources</h4>
+          <ul>
+            <li><a href="#">Help Center</a></li>
+            <li><a href="#">Developers</a></li>
+          </ul>
+        </nav>
+
+        <nav class="bintech-user-footer__nav" aria-label="Legal links">
+          <h4>Legal</h4>
+          <ul>
+            <li><a href="#">Terms</a></li>
+            <li><a href="#">Privacy</a></li>
+          </ul>
+        </nav>
+
+        <section class="bintech-user-footer__subscribe bintech-user-footer__glass">
+          <h4>Subscribe To Our Newsletter</h4>
+          <p>Get product releases, security updates, and fintech insights delivered monthly.</p>
+          <form class="bintech-newsletter-form" onsubmit="event.preventDefault();">
+            <input type="email" placeholder="you@domain.com" aria-label="Email address">
+            <button type="submit">Join</button>
+          </form>
+        </section>
+      </div>
+
+      <div class="bintech-footer-bottom">
+        <p>© 2026 Bintech. All rights reserved.</p>
+        <div class="bintech-social-list" aria-label="Social media">
+          <a href="#" aria-label="X">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.901 3H21l-4.588 5.244L21.808 21h-4.226l-3.31-4.889L9.996 21H7.896l4.907-5.609L2.192 3h4.332l2.993 4.422L13.099 3h5.802zm-1.48 16h1.171L7.946 4.89H6.69L17.42 19z"></path></svg>
+          </a>
+          <a href="#" aria-label="LinkedIn">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6.94 8.5A1.55 1.55 0 1 1 6.94 5.4 1.55 1.55 0 0 1 6.94 8.5zM5.62 9.75h2.64V18H5.62V9.75zm4.13 0h2.53v1.13h.03c.35-.67 1.22-1.37 2.5-1.37 2.67 0 3.16 1.76 3.16 4.05V18h-2.64v-3.93c0-.94-.02-2.14-1.3-2.14-1.3 0-1.5 1.02-1.5 2.07V18H9.75V9.75z"></path></svg>
+          </a>
+          <a href="#" aria-label="Instagram">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3.6" y="3.6" width="16.8" height="16.8" rx="4"></rect><circle cx="12" cy="12" r="3.8"></circle><circle cx="17.35" cy="6.65" r="0.9" fill="currentColor" stroke="none"></circle></svg>
+          </a>
+          <a href="#" aria-label="YouTube">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M22 12s0-3.1-.4-4.6c-.2-.8-.8-1.4-1.6-1.6C18.5 5.4 12 5.4 12 5.4s-6.5 0-8 .4c-.8.2-1.4.8-1.6 1.6C2 8.9 2 12 2 12s0 3.1.4 4.6c.2.8.8 1.4 1.6 1.6 1.5.4 8 .4 8 .4s6.5 0 8-.4c.8-.2 1.4-.8 1.6-1.6.4-1.5.4-4.6.4-4.6zM10 15.5V8.5l6 3.5-6 3.5z"></path></svg>
+          </a>
+        </div>
+      </div>
+    </div>
+   </footer>
+
+  </div>
+
+  <!-- PROFILE PAGE SCRIPT -->
+  <script>
+    // Initialize supabase client only once
+    let supabaseClient = null;
+    let currentUser = null;
+    let isEditMode = false;
+    let originalData = {};
+    let roleTable = null;
+
+    // ============================================
+    // INITIALIZE SUPABASE CLIENT
+    // ============================================
+    function initializeSupabase() {
+      if (supabaseClient) return supabaseClient; // Already initialized
+      
+      // Wait for Supabase SDK to be available
+      if (!window.supabase) {
+        console.error('Supabase SDK not loaded');
+        throw new Error('Supabase SDK not available');
+      }
+
+      const SUPABASE_URL = 'https://rkqyjrdmlsrqozjvzzby.supabase.co';
+      const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJrcXlqcmRtbHNycW96anZ6emJ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzAwMzcwOTksImV4cCI6MTg4NzgwMzA5OX0.kbkbAhxZ7i1FSDqo5cXhYSaHdKvJuZMl_mhPmPfRFu0';
+      
+      supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+      // Make client globally accessible for upload functions
+      window.supabaseClient = supabaseClient;
+      console.log('✓ Supabase client initialized and set globally');
+      return supabaseClient;
+    }
+
+    // ============================================
+    // TOAST NOTIFICATION SYSTEM
+    // ============================================
+    function showToast(message, type = 'info', duration = 3000) {
+      let container = document.querySelector('.toast-container');
+      if (!container) {
+        container = document.createElement('div');
+        container.className = 'toast-container';
+        document.body.appendChild(container);
+      }
+
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      
+      const icons = {
+        success: '✓',
+        error: '✕',
+        info: 'ℹ'
+      };
+      
+      toast.innerHTML = `<span style="font-weight: bold; font-size: 18px;">${icons[type] || ''}</span><span>${message}</span>`;
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        toast.style.animation = 'fadeOut 0.4s ease-in forwards';
+        setTimeout(() => toast.remove(), 400);
+      }, duration);
+    }
+
+    function showSuccess(message) {
+      showToast(message, 'success', 3000);
+    }
+
+    function showError(message) {
+      showToast(message, 'error', 4000);
+    }
+
+    function showInfo(message) {
+      showToast(message, 'info', 3000);
+    }
+
+    // ============================================
+    // PAGE INITIALIZATION
+    // ============================================
+    async function initializePage() {
+      try {
+        console.log('========== PROFILE PAGE INITIALIZATION ==========');
+        
+        // Initialize supabase client
+        initializeSupabase();
+        
+        const userDataStr = sessionStorage.getItem('user');
+        console.log('Session storage user data:', userDataStr);
+        
+        if (!userDataStr) {
+          console.warn('No user data in session storage, redirecting to landing...');
+          showError('Session expired. Please login again.');
+          setTimeout(() => window.location.href = '/', 2000);
+          return;
+        }
+
+        currentUser = JSON.parse(userDataStr);
+        console.log('Current user loaded:', currentUser);
+        console.log('User ID:', currentUser.id);
+
+        await loadProfileData();
+        await refreshProfilePointsFromAccount();
+        setupFormHandlers();
+        
+        console.log('========== PROFILE PAGE READY ==========');
+      } catch (error) {
+        console.error('Initialization error:', error);
+        showError('Failed to initialize profile: ' + error.message);
+      }
+    }
+
+    async function refreshProfilePointsFromAccount() {
+      try {
+        if (!currentUser) return;
+
+        const effectiveUserId = currentUser.id || currentUser.system_id;
+        const email = currentUser.email || '';
+
+        if (!effectiveUserId && !email) return;
+
+        const query = new URLSearchParams();
+        if (effectiveUserId) query.set('userId', effectiveUserId);
+        if (email) query.set('email', email);
+
+        const response = await fetch(`/api/dashboard/points?${query.toString()}`);
+        const data = await response.json();
+        if (!data.success) return;
+
+        const points = Number(data.user?.points || 0);
+        document.getElementById('profilePoints').textContent = points.toLocaleString();
+        document.getElementById('nav-points').textContent = `${points.toLocaleString()} Points`;
+      } catch (error) {
+        console.warn('Failed to refresh live profile points:', error);
+      }
+    }
+
+    // ============================================
+    // LOAD PROFILE DATA FROM DATABASE
+    // ============================================
+    async function loadProfileData() {
+      try {
+        console.log('\n--- Loading Profile Data ---');
+        console.log('Calling backend API: /auth/get-profile');
+
+        // Call backend API to get profile
+        const response = await fetch('/auth/get-profile', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            system_id: currentUser.id,
+            email: currentUser.email
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        if (!data.success) {
+          throw new Error(data.message || 'Failed to load profile');
+        }
+
+        const profile = data.profile;
+        console.log('✓ Profile data received:', profile);
+
+        // Store profile data
+        currentUser.role = profile.role;
+        currentUser.email = profile.email;
+        currentUser.campus_id = profile.campus_id;
+
+        // Populate common form fields
+        console.log('Populating form fields...');
+        document.getElementById('firstName').value = profile.first_name || '';
+        document.getElementById('middleName').value = profile.middle_name || '';
+        document.getElementById('lastName').value = profile.last_name || '';
+        document.getElementById('email').value = profile.email || '';
+        document.getElementById('birthdate').value = profile.birthdate || '';
+        document.getElementById('sex').value = profile.sex || '';
+        
+        const roleDisplay = {
+          'student': 'Student',
+          'faculty': 'Faculty',
+          'staff': 'Staff / Others'
+        }[profile.role] || profile.role;
+        document.getElementById('role').value = roleDisplay;
+        
+        // Show role-specific fields and populate them
+        document.getElementById('studentFields').classList.add('hidden');
+        document.getElementById('facultyFields').classList.add('hidden');
+        document.getElementById('staffFields').classList.add('hidden');
+
+        if (profile.role === 'student') {
+          document.getElementById('studentFields').classList.remove('hidden');
+          document.getElementById('studentId').value = profile.student_id || '';
+          document.getElementById('program').value = profile.program || '';
+          document.getElementById('yearLevel').value = profile.year_level || '';
+          // COR image URL will be loaded separately
+          if (profile.cor) {
+            document.getElementById('corPreview').src = profile.cor;
+            document.getElementById('corPreview').classList.remove('hidden');
+            // Show remove button when in edit mode
+            const corRemoveBtn = document.getElementById('corRemoveBtn');
+            if (corRemoveBtn && isEditMode) {
+              corRemoveBtn.classList.remove('hidden');
+            }
+          }
+        } else if (profile.role === 'faculty') {
+          document.getElementById('facultyFields').classList.remove('hidden');
+          document.getElementById('facultyId').value = profile.faculty_id || '';
+          document.getElementById('department').value = profile.department || '';
+          document.getElementById('position').value = profile.position || '';
+        } else if (profile.role === 'staff') {
+          document.getElementById('staffFields').classList.remove('hidden');
+          document.getElementById('accountId').value = profile.account_id || '';
+          document.getElementById('designation').value = profile.designation || '';
+          document.getElementById('institution').value = profile.institution || '';
+        }
+        
+        // Load profile picture from signed URL - display in avatar
+        if (profile.profile_picture) {
+          document.getElementById('profilePictureImg').src = profile.profile_picture;
+          document.getElementById('profilePictureImg').classList.remove('hidden');
+          document.getElementById('profileInitials').classList.add('hidden');
+        }
+        
+        if (profile.campus_id) {
+          document.getElementById('campusId').value = profile.campus_id;
+          document.getElementById('campusIdContainer').classList.remove('hidden');
+        }
+
+        // Store original data for cancel functionality AFTER populating fields
+        const allFieldIds = [
+          'firstName', 'middleName', 'lastName', 'birthdate', 'sex',
+          'program', 'yearLevel',
+          'department', 'position',
+          'designation', 'institution'
+        ];
+
+        originalData = {};
+        allFieldIds.forEach(id => {
+          const elem = document.getElementById(id);
+          if (elem) {
+            originalData[id] = elem.value || '';
+          }
+        });
+
+        // Update profile card display
+        const fullName = `${profile.first_name || ''} ${profile.last_name || ''}`.trim();
+        const initials = `${(profile.first_name?.charAt(0) || 'U').toUpperCase()}${(profile.last_name?.charAt(0) || 'U').toUpperCase()}`;
+        
+        console.log('Setting display values - Full Name:', fullName, 'Initials:', initials);
+        document.getElementById('profileFullName').textContent = fullName || 'User Profile';
+        document.getElementById('profileEmail').textContent = profile.email || 'email@umak.edu.ph';
+        document.getElementById('profileRole').textContent = roleDisplay;
+        document.getElementById('profileInitials').textContent = initials;
+        
+        const points = profile.points || 0;
+        document.getElementById('profilePoints').textContent = points.toLocaleString();
+        document.getElementById('nav-points').textContent = `${points.toLocaleString()} Points`;
+        document.getElementById('nav-user-name').textContent = profile.first_name || profile.email?.split('@')[0] || 'User';
+
+        // Member since date
+        const memberDate = new Date(profile.created_at);
+        document.getElementById('profileMemberSince').textContent = memberDate.toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric'
+        });
+
+        console.log('✓ Profile data loaded successfully');
+
+      } catch (error) {
+        console.error('Error loading profile data:', error);
+        console.error('Full error:', error);
+        showError('Failed to load profile: ' + error.message);
+      }
+    }
+
+    // ============================================
+    // FILE UPLOAD TO BACKEND (using FormData)
+    // ============================================
+    async function uploadFileToSupabase(file, bucketName) {
+      return new Promise(async (resolve, reject) => {
+        try {
+          if (!file) {
+            reject(new Error('No file selected'));
+            return;
+          }
+
+          // Validate file type
+          const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+          if (!allowedTypes.includes(file.type)) {
+            reject(new Error('File type not supported. Please use JPG, PNG, GIF, or WebP'));
+            return;
+          }
+
+          // Validate file size (5MB max)
+          const maxSize = 5 * 1024 * 1024; // 5MB
+          if (file.size > maxSize) {
+            reject(new Error(`File size exceeds 5MB limit (file is ${(file.size / 1024 / 1024).toFixed(2)}MB)`));
+            return;
+          }
+
+          console.log(`📤 Starting upload: ${file.name} (${(file.size / 1024).toFixed(2)}KB) to bucket: ${bucketName}`);
+          
+          // Create FormData (the proper way to upload files)
+          const formData = new FormData();
+          formData.append('file', file); // The actual File object
+          formData.append('bucketName', bucketName);
+          formData.append('userId', currentUser.id);
+          
+          console.log(`📤 Sending to backend: /auth/upload (multipart/form-data)`);
+          
+          // Send to backend upload endpoint
+          const uploadResponse = await fetch('/auth/upload', {
+            method: 'POST',
+            body: formData  // FormData automatically handles multipart encoding
+            // DO NOT set Content-Type header - browser will set it with boundary
+          });
+
+          if (!uploadResponse.ok) {
+            const errorData = await uploadResponse.json();
+            throw new Error(`HTTP ${uploadResponse.status}: ${errorData.message || 'Upload failed'}`);
+          }
+
+          const uploadResult = await uploadResponse.json();
+
+          if (!uploadResult.success) {
+            throw new Error(uploadResult.message || 'Upload failed');
+          }
+
+          console.log(`✓ File uploaded successfully:`, uploadResult.file);
+          console.log(`✓ URL obtained: ${uploadResult.file.url}`);
+
+          resolve(uploadResult.file.url);
+        } catch (error) {
+          console.error('Upload error:', error);
+          reject(error);
+        }
+      });
+    }
+
+    // ============================================
+    // SYNC GOOGLE PROFILE PHOTO
+    // ============================================
+    async function syncGoogleProfilePhoto() {
+      try {
+        showInfo('Syncing Google profile photo...');
+        
+        // Fetch current user data to get google_id
+        console.log('Fetching user data to get Google profile...');
+        const response = await fetch('/auth/get-profile', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            system_id: currentUser.id,
+            email: currentUser.email
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch user data');
+        }
+
+        const data = await response.json();
+        if (!data.success) {
+          throw new Error(data.message || 'Failed to fetch profile');
+        }
+
+        const profile = data.profile;
+        console.log('Profile data:', profile);
+
+        // Check if user has a Google profile picture
+        if (!profile.profile_picture) {
+          showError('No Google profile photo available. Please ensure you signed up with Google.');
+          return;
+        }
+
+        // Update the profile picture field with Google photo URL
+        const updateResponse = await fetch('/auth/update-profile', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            system_id: currentUser.id,
+            firstname: profile.first_name,
+            lastName: profile.last_name,
+            middleName: profile.middle_name,
+            profile_picture: profile.profile_picture
+          })
+        });
+
+        if (!updateResponse.ok) {
+          throw new Error('Failed to update profile');
+        }
+
+        const updateData = await updateResponse.json();
+        if (!updateData.success) {
+          throw new Error(updateData.message || 'Failed to update profile');
+        }
+
+        // Refresh the profile picture display
+        document.getElementById('profilePictureImg').src = profile.profile_picture;
+        document.getElementById('profilePictureImg').classList.remove('hidden');
+        document.getElementById('profileInitials').classList.add('hidden');
+        
+        showSuccess('✓ Google profile photo synced successfully!');
+        console.log('✓ Google profile photo synced');
+      } catch (error) {
+        console.error('Error syncing Google profile photo:', error);
+        showError('Failed to sync Google profile photo: ' + error.message);
+      }
+    }
+
+    // ============================================
+    // EDIT MODE TOGGLE
+    // ============================================
+    function toggleEditMode() {
+      isEditMode = !isEditMode;
+      const submitBtn = document.getElementById('submitBtn');
+      const cancelBtn = document.getElementById('cancelBtn');
+      const editToggleBtn = document.getElementById('editToggleBtn');
+
+      // All EDITABLE field IDs (NOT including ID fields like studentId, facultyId, accountId, etc.)
+      const editableFields = [
+        'firstName', 'middleName', 'lastName', 'birthdate', 'sex',
+        'program', 'yearLevel', 'corFile',
+        'department', 'position',
+        'designation', 'institution'
+      ];
+
+      if (isEditMode) {
+        // Enable edit mode
+        editableFields.forEach(id => {
+          const elem = document.getElementById(id);
+          if (elem) elem.disabled = false;
+        });
+        submitBtn.classList.remove('hidden');
+        submitBtn.removeAttribute('disabled');
+        cancelBtn.classList.remove('hidden');
+        editToggleBtn.textContent = 'Cancel Edit';
+        editToggleBtn.className = 'text-sm px-4 py-2 text-white bg-red-500 hover:bg-red-600 rounded-full font-semibold transition-all';
+        // Show avatar edit overlay
+        document.getElementById('profileEditOverlay').classList.remove('hidden');
+        // Show COR remove button if image exists
+        const corPreview = document.getElementById('corPreview');
+        const corRemoveBtn = document.getElementById('corRemoveBtn');
+        if (corPreview && !corPreview.classList.contains('hidden') && corRemoveBtn) {
+          corRemoveBtn.classList.remove('hidden');
+        }
+        showInfo('Edit mode enabled - click avatar to change photo or update fields below');
+      } else {
+        // Disable edit mode
+        editableFields.forEach(id => {
+          const elem = document.getElementById(id);
+          if (elem) elem.disabled = true;
+        });
+        submitBtn.classList.add('hidden');
+        cancelBtn.classList.add('hidden');
+        editToggleBtn.textContent = 'Edit Profile';
+        editToggleBtn.className = 'text-sm px-4 py-2 text-white bg-[#5DAE60] hover:bg-[#4CAF50] rounded-full font-semibold transition-all';
+        // Hide avatar edit overlay
+        document.getElementById('profileEditOverlay').classList.add('hidden');
+        // Hide COR remove button
+        const corRemoveBtn = document.getElementById('corRemoveBtn');
+        if (corRemoveBtn) {
+          corRemoveBtn.classList.add('hidden');
+        }
+      }
+    }
+
+    // ============================================
+    // SAVE PROFILE CHANGES (Steps 6-9)
+    // ============================================
+    // SAVE PROFILE CHANGES (Steps 6-9)
+    // ============================================
+    async function handleSaveProfile(event) {
+      event.preventDefault();
+
+      const submitBtn = document.getElementById('submitBtn');
+      submitBtn.disabled = true;
+      const originalText = submitBtn.textContent;
+      submitBtn.textContent = 'Saving...';
+
+      try {
+        const firstName = document.getElementById('firstName').value.trim();
+        const middleName = document.getElementById('middleName').value.trim();
+        const lastName = document.getElementById('lastName').value.trim();
+
+        if (!firstName || !lastName) {
+          throw new Error('First name and last name are required');
+        }
+
+        console.log('Calling backend API: /auth/update-profile with file uploads');
+
+        // Build update object with all available fields
+        const updateData = {
+          system_id: currentUser.id,
+          firstname: firstName,
+          middleName: middleName || '',
+          lastName: lastName,
+          email: currentUser.email,
+          birthdate: document.getElementById('birthdate').value || null,
+          sex: document.getElementById('sex').value || null
+        };
+
+        // Handle file uploads BEFORE saving profile
+        const corFileInput = document.getElementById('corFile');
+        const profilePicFileInput = document.getElementById('profilePictureFile');
+        
+        // Upload COR file if selected (students only)
+        if (currentUser.role === 'student' && corFileInput && corFileInput.files.length > 0) {
+          console.log('📤 Uploading COR file...');
+          showInfo('Uploading COR image...');
+          const corUrl = await uploadFileToSupabase(corFileInput.files[0], 'cor-uploads');
+          updateData.cor = corUrl;
+          console.log('✓ COR uploaded, signed URL stored');
+        }
+        
+        // Upload Profile Picture if selected (all roles)
+        if (profilePicFileInput && profilePicFileInput.files.length > 0) {
+          console.log('📤 Uploading profile picture...');
+          showInfo('Uploading profile picture...');
+          // Use cor-uploads bucket for profile pictures too (since it works)
+          const profileUrl = await uploadFileToSupabase(profilePicFileInput.files[0], 'cor-uploads');
+          updateData.profile_picture = profileUrl;
+          console.log('✓ Profile picture uploaded, signed URL stored');
+        }
+
+        // Add role-specific editable fields (NOT ID fields)
+        if (currentUser.role === 'student') {
+          updateData.program = document.getElementById('program').value || '';
+          updateData.yearLevel = document.getElementById('yearLevel').value || '';
+        } else if (currentUser.role === 'faculty') {
+          updateData.department = document.getElementById('department').value || '';
+          updateData.position = document.getElementById('position').value || '';
+        } else if (currentUser.role === 'staff') {
+          updateData.designation = document.getElementById('designation').value || '';
+          updateData.institution = document.getElementById('institution').value || '';
+        }
+
+        // Call backend API to update profile
+        showInfo('Saving profile...');
+        const response = await fetch('/auth/update-profile', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(updateData)
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        if (!data.success) {
+          throw new Error(data.message || 'Failed to save profile');
+        }
+
+        console.log('✓ Profile saved successfully');
+
+        // Update session storage
+        currentUser.first_name = firstName;
+        currentUser.last_name = lastName;
+        sessionStorage.setItem('user', JSON.stringify(currentUser));
+
+        // Update display
+        const fullName = `${firstName} ${lastName}`.trim();
+        const initials = firstName.charAt(0) + lastName.charAt(0);
+        document.getElementById('profileFullName').textContent = fullName;
+        document.getElementById('profileInitials').textContent = initials.toUpperCase();
+        document.getElementById('nav-user-name').textContent = firstName;
+
+        // Show success and exit edit mode
+        showSuccess('Profile updated successfully! ✓');
+        
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+        toggleEditMode(); // Exit edit mode
+
+      } catch (error) {
+        console.error('Error saving profile:', error);
+        showError(error.message);
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+      }
+    }
+
+    // ============================================
+    // CANCEL EDIT MODE
+    // ============================================
+    function cancelEditMode() {
+      // Restore all original values (excluding file inputs)
+      const allFieldIds = [
+        'firstName', 'middleName', 'lastName', 'birthdate', 'sex',
+        'program', 'yearLevel',
+        'department', 'position',
+        'designation', 'institution'
+      ];
+      
+      allFieldIds.forEach(id => {
+        const elem = document.getElementById(id);
+        if (elem) {
+          elem.value = originalData[id] || '';
+        }
+      });
+
+      // Clear file inputs
+      document.getElementById('corFile').value = '';
+      document.getElementById('profilePictureFile').value = '';
+      document.getElementById('corPreview').classList.add('hidden');
+      
+      toggleEditMode(); // Exit edit mode
+      showInfo('Changes discarded');
+    }
+
+    // ============================================
+    // SETUP FORM HANDLERS
+    // ============================================
+    function setupFormHandlers() {
+      const profileForm = document.getElementById('profileForm');
+      if (profileForm) {
+        profileForm.addEventListener('submit', handleSaveProfile);
+      }
+      
+      // Handle profile picture file selection with preview
+      const profilePictureFile = document.getElementById('profilePictureFile');
+      if (profilePictureFile) {
+        profilePictureFile.addEventListener('change', function(e) {
+          const file = e.target.files[0];
+          if (file) {
+            try {
+              // Show preview of selected file
+              const reader = new FileReader();
+              reader.onload = function(event) {
+                const profileImg = document.getElementById('profilePictureImg');
+                const profileInitials = document.getElementById('profileInitials');
+                if (profileImg && profileInitials) {
+                  profileImg.src = event.target.result;
+                  profileImg.classList.remove('hidden');
+                  profileInitials.classList.add('hidden');
+                  showInfo(`Image selected: ${file.name} - Click Save to upload`);
+                }
+              };
+              reader.onerror = function() {
+                showError('Failed to read file');
+              };
+              reader.readAsDataURL(file);
+            } catch (error) {
+              console.error('Error handling file:', error);
+              showError('Error selecting file: ' + error.message);
+            }
+          }
+        });
+      }
+
+      // Handle COR file selection with preview
+      const corFile = document.getElementById('corFile');
+      if (corFile) {
+        corFile.addEventListener('change', function(e) {
+          const file = e.target.files[0];
+          if (file) {
+            try {
+              // Show preview of selected file
+              const reader = new FileReader();
+              reader.onload = function(event) {
+                const corPreview = document.getElementById('corPreview');
+                const corRemoveBtn = document.getElementById('corRemoveBtn');
+                if (corPreview) {
+                  corPreview.src = event.target.result;
+                  corPreview.classList.remove('hidden');
+                  if (corRemoveBtn) {
+                    corRemoveBtn.classList.remove('hidden');
+                  }
+                  showInfo(`COR image selected: ${file.name} - Click Save to upload`);
+                }
+              };
+              reader.onerror = function() {
+                showError('Failed to read COR file');
+              };
+              reader.readAsDataURL(file);
+            } catch (error) {
+              console.error('Error handling COR file:', error);
+              showError('Error selecting COR file: ' + error.message);
+            }
+          }
+        });
+      }
+    }
+
+    // ============================================
+    // REMOVE COR IMAGE
+    // ============================================
+    function removeCORImage() {
+      const corFile = document.getElementById('corFile');
+      const corPreview = document.getElementById('corPreview');
+      const corRemoveBtn = document.getElementById('corRemoveBtn');
+      
+      if (corFile) {
+        corFile.value = ''; // Clear file input
+      }
+      if (corPreview) {
+        corPreview.src = '';
+        corPreview.classList.add('hidden');
+      }
+      if (corRemoveBtn) {
+        corRemoveBtn.classList.add('hidden');
+      }
+      
+      showInfo('COR image removed');
+    }
+
+    // ============================================
+    // ROUTE PROTECTION
+    // ============================================
+    function protectRoute() {
+      const user = sessionStorage.getItem('bintech_user');
+      if (!user) {
+        // Don't redirect if we're in the middle of logout
+        if (!window.isLoggingOut) {
+          window.location.replace('/');
+        }
+      }
+    }
+    
+    // Flag to prevent protection interference during logout
+    window.isLoggingOut = false;
+    
+    // Only protect after full page load
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', protectRoute);
+    } else {
+      // Slight delay to ensure everything is ready
+      setTimeout(protectRoute, 300);
+    }
+    
+    // ============================================
+    // LOGOUT HANDLER
+    // ============================================
+    function handleLogout() {
+      if (confirm('Are you sure you want to logout?')) {
+        // Set logout flag immediately
+        window.isLoggingOut = true;
+        
+        // Close all modals
+        const modals = document.querySelectorAll('.modal-backdrop');
+        modals.forEach(modal => modal.classList.remove('active'));
+        
+        // Disable all interactive elements
+        document.querySelectorAll('button, input, a').forEach(el => {
+          el.disabled = true;
+          el.style.pointerEvents = 'none';
+          el.style.opacity = '0.5';
+        });
+        
+        // Clear session data completely
+        sessionStorage.clear();
+        localStorage.clear();
+        
+        // Redirect after cleanup
+        setTimeout(() => {
+          window.location.replace('/');
+        }, 200);
+      }
+    }
+
+    function initializeUserMobileMenu() {
+      const toggle = document.getElementById('mobile-nav-toggle');
+      const panel = document.getElementById('mobile-nav-panel');
+      const navPoints = document.getElementById('nav-points');
+      const mobilePoints = document.getElementById('mobile-nav-points');
+      if (!toggle || !panel) return;
+
+      const closeMenu = () => {
+        panel.dataset.open = 'false';
+        panel.style.display = 'none';
+        toggle.setAttribute('aria-expanded', 'false');
+      };
+
+      const openMenu = () => {
+        if (mobilePoints && navPoints) {
+          mobilePoints.textContent = navPoints.textContent;
+        }
+        panel.dataset.open = 'true';
+        panel.style.display = 'block';
+        toggle.setAttribute('aria-expanded', 'true');
+      };
+
+      toggle.addEventListener('click', () => {
+        if (panel.dataset.open === 'true') {
+          closeMenu();
+        } else {
+          openMenu();
+        }
+      });
+
+      panel.querySelectorAll('a').forEach((link) => {
+        link.addEventListener('click', closeMenu);
+      });
+
+      window.addEventListener('resize', () => {
+        if (window.innerWidth >= 768) {
+          closeMenu();
+        }
+      });
+
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+          closeMenu();
+        }
+      });
+    }
+
+    // ============================================
+    // INITIALIZE ON PAGE LOAD
+    // ============================================
+    document.addEventListener('DOMContentLoaded', initializePage);
+    document.addEventListener('DOMContentLoaded', initializeUserMobileMenu);
+  </script>
+ </body>
+</html>

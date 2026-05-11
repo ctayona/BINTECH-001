@@ -1,0 +1,428 @@
+================================================================================
+COMPLETE REFERENCE: KEY MODIFIED SECTIONS IN EACH FILE
+================================================================================
+
+This document shows the exact code sections that were modified in each file.
+Copy-paste these sections into your files if needed.
+
+================================================================================
+SECTION 1: app.js - Line 6 (IMPORT)
+================================================================================
+
+ADD THIS LINE:
+const cookieParser = require('cookie-parser');
+
+FULL CONTEXT (Lines 1-10):
+---
+// BinTECH: Intelligent Waste Segregation and Incentive Platform
+// Main Express Application Server
+
+const express = require('express');
+const path = require('path');
+const fs = require('fs');
+const bodyParser = require('body-parser');
+const cors = require('cors');
+const cookieParser = require('cookie-parser');  // ✅ NEW
+require('dotenv').config();
+---
+
+================================================================================
+SECTION 2: app.js - Line 54 (MIDDLEWARE SETUP)
+================================================================================
+
+FIND THIS:
+app.use(cors());
+
+CHANGE TO THIS:
+---
+app.use(cors());
+
+// Cookie Parser Middleware - Parse cookies from requests
+app.use(cookieParser());  // ✅ NEW
+
+// Body Parser Middleware - ONLY for JSON and URL-encoded
+---
+
+================================================================================
+SECTION 3: app.js - Lines 120-178 (COMPLETE MAINTENANCE MIDDLEWARE)
+================================================================================
+
+REPLACE THE ENTIRE MAINTENANCE MIDDLEWARE SECTION WITH THIS:
+
+---
+// ============================================
+// MAINTENANCE MODE MIDDLEWARE WITH ADMIN BYPASS
+// ============================================
+// This middleware redirects all traffic to maintenance page when enabled
+// EXCEPT for admin users who can still access the system
+app.use((req, res, next) => {
+  // Skip if maintenance mode is disabled
+  if (!MAINTENANCE_MODE) {
+    return next();
+  }
+  
+  // Allow access to maintenance page itself
+  if (req.path === '/maintenance') {
+    return next();
+  }
+  
+  // Allow access to landing page (login page) so users can login
+  if (req.path === '/' || req.path === '/login') {
+    return next();
+  }
+  
+  // Allow access to static files (CSS, JS, images, fonts)
+  if (req.path.startsWith('/css') || 
+      req.path.startsWith('/js') || 
+      req.path.startsWith('/images') ||
+      req.path.startsWith('/fonts')) {
+    return next();
+  }
+  
+  // Allow access to auth endpoints (needed for login/signup)
+  if (req.path.startsWith('/auth') || req.path.startsWith('/api/auth')) {
+    return next();
+  }
+  
+  // ============================================
+  // ADMIN BYPASS LOGIC
+  // ============================================
+  // Check if user is admin by reading session/cookie/header
+  
+  // Method 1: Check Authorization header (JWT token)
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    try {
+      const token = authHeader.substring(7);
+      const jwt = require('jsonwebtoken');
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+      
+      // If user role is admin, allow full access
+      if (decoded.role === 'admin' || decoded.role === 'head') {
+        console.log('🔓 Admin bypass: Allowing admin access during maintenance (JWT)');
+        return next();
+      }
+    } catch (err) {
+      // Invalid token, continue to maintenance check
+      console.log('⚠️ Invalid token during maintenance mode');
+    }
+  }
+  
+  // Method 2: Check session cookie (if using express-session)
+  if (req.session && req.session.user && (req.session.user.role === 'admin' || req.session.user.role === 'head')) {
+    console.log('🔓 Admin bypass: Allowing admin access during maintenance (Session)');
+    return next();
+  }
+  
+  // Method 3: Check custom header (for frontend-stored user data)
+  const userRole = req.headers['x-user-role'];
+  if (userRole === 'admin' || userRole === 'head') {
+    console.log('🔓 Admin bypass: Allowing admin access during maintenance (Header)');
+    return next();
+  }
+
+  // Method 4: Check user_role cookie (set by login endpoint)  ✅ PRIMARY METHOD
+  const cookieRole = req.cookies?.user_role;
+  if (cookieRole === 'admin' || cookieRole === 'head') {
+    console.log('🔓 Admin bypass: Allowing admin access during maintenance (Cookie)');
+    return next();
+  }
+  
+  // If not admin, redirect to maintenance page (or return 403 for API requests)
+  if (req.path.startsWith('/api/')) {
+    // For API requests, return 403 instead of redirect
+    console.log('🚧 Maintenance mode: Blocking API request from non-admin user');
+    return res.status(403).json({
+      success: false,
+      message: 'System is under maintenance. Only administrators can access the system.',
+      error: 'MAINTENANCE_MODE_ENABLED'
+    });
+  }
+  
+  // For page requests, redirect to maintenance page
+  console.log('🚧 Maintenance mode: Redirecting non-admin user to maintenance page');
+  return res.redirect('/maintenance');
+});
+---
+
+================================================================================
+SECTION 4: authController.js - Admin Login (Lines 750-780)
+================================================================================
+
+FIND THIS CODE SECTION IN THE ADMIN LOGIN HANDLER:
+---
+        const firstName = adminUser.First_Name || fullName.split(' ')[0] || 'Admin';
+        const lastName = adminUser.Last_Name || fullName.split(' ').slice(1).join(' ') || 'User';
+        const normalizedRole = String(adminUser.role || 'admin').trim().toLowerCase();
+
+        return res.json({
+          success: true,
+          message: 'Login successful',
+          isAdmin: true,
+          user: {
+---
+
+CHANGE IT TO THIS (ADD COOKIE BEFORE return):
+---
+        const firstName = adminUser.First_Name || fullName.split(' ')[0] || 'Admin';
+        const lastName = adminUser.Last_Name || fullName.split(' ').slice(1).join(' ') || 'User';
+        const normalizedRole = String(adminUser.role || 'admin').trim().toLowerCase();
+
+        // Set user_role cookie so maintenance middleware can recognize admin
+        res.cookie('user_role', normalizedRole, {
+          httpOnly: false,
+          maxAge: 86400 * 1000, // 24 hours
+          path: '/'
+        });
+
+        return res.json({
+          success: true,
+          message: 'Login successful',
+          isAdmin: true,
+          user: {
+            id: adminUser.id,
+            email: adminUser.email,
+            first_name: firstName,
+            middle_name: adminUser.Middle_Name || null,
+            last_name: lastName,
+            full_name: fullName,
+            role: normalizedRole,
+            account_type: 'admin_accounts',
+            phone: adminUser.phone || null,
+            auth_id: adminUser.auth_id || null,
+            google_id: adminUser.Google_ID || null
+          }
+---
+
+================================================================================
+SECTION 5: authController.js - User Login (Lines 880-900)
+================================================================================
+
+FIND THIS CODE SECTION IN THE USER LOGIN HANDLER:
+---
+    const normalizedRole = String(userAccount.role || 'staff').trim().toLowerCase();
+    const roleProfile = await getRoleProfileForUserAccount(userAccount);
+    const firstName = roleProfile?.first_name || userAccount.email?.split('@')[0] || 'User';
+    const middleName = roleProfile?.middle_name || null;
+    const lastName = roleProfile?.last_name || '';
+    const fullName = `${firstName} ${middleName ? middleName + ' ' : ''}${lastName}`.trim() || firstName;
+
+    return res.json({
+      success: true,
+      message: 'Login successful',
+      isAdmin: false,
+      user: {
+---
+
+CHANGE IT TO THIS (ADD COOKIE BEFORE return):
+---
+    const normalizedRole = String(userAccount.role || 'staff').trim().toLowerCase();
+    const roleProfile = await getRoleProfileForUserAccount(userAccount);
+    const firstName = roleProfile?.first_name || userAccount.email?.split('@')[0] || 'User';
+    const middleName = roleProfile?.middle_name || null;
+    const lastName = roleProfile?.last_name || '';
+    const fullName = `${firstName} ${middleName ? middleName + ' ' : ''}${lastName}`.trim() || firstName;
+
+    // Set user_role cookie so maintenance middleware can recognize admin/head
+    res.cookie('user_role', normalizedRole, {
+      httpOnly: false,
+      maxAge: 86400 * 1000, // 24 hours
+      path: '/'
+    });
+
+    return res.json({
+      success: true,
+      message: 'Login successful',
+      isAdmin: false,
+      user: {
+        id: userAccount.system_id,
+        email: userAccount.email,
+        campus_id: userAccount.campus_id || null,
+        first_name: firstName,
+        middle_name: middleName,
+        last_name: lastName,
+        full_name: fullName,
+        role: normalizedRole,
+        account_type: 'user_accounts',
+        google_id: userAccount.google_id || null,
+        profile_picture: roleProfile?.profile_picture || null,
+        points: roleProfile?.points || 0
+      }
+---
+
+================================================================================
+SECTION 6: authController.js - Logout (Lines 930-945)
+================================================================================
+
+FIND THIS IN LOGOUT FUNCTION:
+---
+    console.log(`✓ User ${userEmail} logged out successfully`);
+    
+    res.json({
+      success: true,
+      message: 'Logout successful',
+---
+
+CHANGE TO THIS (ADD CLEAR COOKIE):
+---
+    console.log(`✓ User ${userEmail} logged out successfully`);
+    
+    // Clear the user_role cookie
+    res.clearCookie('user_role', { path: '/' });
+    
+    res.json({
+      success: true,
+      message: 'Logout successful',
+---
+
+================================================================================
+SECTION 7: public/js/auth.js - Fetch Interceptor (AFTER AuthManager)
+================================================================================
+
+FIND THIS SECTION IN public/js/auth.js:
+---
+class AuthManager {
+  static setUser(user) {
+    localStorage.setItem('user', JSON.stringify(user));
+    localStorage.setItem('isAdmin', String(String(user?.role || '').toLowerCase() === 'admin' || String(user?.role || '').toLowerCase() === 'head'));
+    sessionStorage.setItem('user', JSON.stringify(user));
+    sessionStorage.setItem('bintech_user', JSON.stringify(user));
+  }
+
+  static getUser() {
+    const user = sessionStorage.getItem('user');
+    return user ? JSON.parse(user) : null;
+  }
+
+  static logout() {
+    localStorage.removeItem('user');
+    localStorage.removeItem('isAdmin');
+    localStorage.removeItem('bintech_user');
+    sessionStorage.removeItem('user');
+    sessionStorage.removeItem('isAdmin');
+    sessionStorage.removeItem('bintech_user');
+  }
+}
+---
+
+ADD THIS RIGHT AFTER THE CLOSING BRACE OF AuthManager:
+
+---
+// ============================================
+// Fetch Interceptor for Auth Headers
+// ============================================
+// Automatically add x-user-role header to all requests
+// This allows the admin bypass middleware to recognize admin users
+const originalFetch = window.fetch;
+window.fetch = function(...args) {
+  const [resource, config = {}] = args;
+  
+  // Get the user's role from storage
+  const user = AuthManager.getUser();
+  const userRole = user?.role || null;
+  
+  // Add x-user-role header if user is logged in
+  if (userRole) {
+    config.headers = config.headers || {};
+    config.headers['x-user-role'] = userRole;
+    console.log(`[fetch-interceptor] Added x-user-role: ${userRole} to ${resource}`);
+  }
+  
+  // Call original fetch with modified config
+  return originalFetch.call(this, resource, config);
+};
+---
+
+================================================================================
+SECTION 8: public/js/auth.js - Logout Handler (REPLACE ENTIRE FUNCTION)
+================================================================================
+
+FIND THIS FUNCTION:
+---
+// Global Logout Handler
+// ============================================
+function handleLogout() {
+  if (confirm('Are you sure you want to logout?')) {
+    AuthManager.logout();
+    window.location.href = '/';
+  }
+}
+---
+
+REPLACE WITH THIS:
+---
+// Global Logout Handler
+// ============================================
+async function handleLogout() {
+  if (confirm('Are you sure you want to logout?')) {
+    AuthManager.logout();
+    
+    // Clear cookie on the client side
+    document.cookie = 'user_role=; path=/; max-age=0';
+    
+    // Notify backend to clear server-side session
+    try {
+      await fetch('/auth/logout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+    } catch (err) {
+      console.warn('Backend logout failed, continuing:', err);
+    }
+    
+    window.location.href = '/';
+  }
+}
+---
+
+================================================================================
+INSTALLATION STEPS
+================================================================================
+
+1. Install dependency:
+   npm install cookie-parser
+
+2. Update app.js (3 changes):
+   - Add import on line 6
+   - Add middleware on line 54
+   - Replace maintenance middleware (lines 120-178)
+
+3. Update authController.js (3 places):
+   - Add cookie in admin login handler
+   - Add cookie in user login handler
+   - Add cookie clear in logout handler
+
+4. Update public/js/auth.js (2 changes):
+   - Add fetch interceptor after AuthManager class
+   - Replace handleLogout() function
+
+5. Restart server:
+   npm start
+
+================================================================================
+TESTING
+================================================================================
+
+Admin Test:
+1. Navigate to http://localhost:3000
+2. Log in with admin account (e.g., head@umak.edu.ph)
+3. Check browser DevTools → Application → Cookies
+4. Should see: user_role = admin (or head)
+5. Should have access to /admin/dashboard
+6. Should have access to all /api/admin/* endpoints
+
+User Test:
+1. Log out if logged in
+2. Log in with regular user account
+3. Should see: user_role = student (or faculty/staff)
+4. Should be redirected to /maintenance page
+5. Should NOT have access to admin endpoints
+
+Logout Test:
+1. Click logout button
+2. Check cookies - should be cleared
+3. Next page load should show maintenance page
+
+================================================================================
