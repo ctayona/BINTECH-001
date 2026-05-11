@@ -6,11 +6,19 @@ const path = require('path');
 const fs = require('fs');
 const bodyParser = require('body-parser');
 const cors = require('cors');
+const cookieParser = require('cookie-parser');
 require('dotenv').config();
 
 // Initialize Express App
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// ============================================
+// MAINTENANCE MODE TOGGLE
+// ============================================
+// Set to true to enable maintenance mode
+// Set to false to disable maintenance mode
+const MAINTENANCE_MODE = false; // ← Change this to true/false
 
 // ============================================
 // Helper: Inject Auth Scripts into Template
@@ -23,9 +31,10 @@ function serveTemplateWithAuth(templatePath) {
     const googleClientId = process.env.VITE_GOOGLE_CLIENT_ID || process.env.GOOGLE_CLIENT_ID || '';
     const googleScript = `<script>window.GOOGLE_CLIENT_ID = '${googleClientId}';</script>`;
     const authScript = `<script src="/js/auth.js"></script>`;
+    const maintenanceBypassScript = `<script src="/js/maintenance-bypass.js"></script>`;
     
     // Add scripts before closing body tag
-    html = html.replace('</body>', `${googleScript}\n${authScript}\n</body>`);
+    html = html.replace('</body>', `${googleScript}\n${maintenanceBypassScript}\n${authScript}\n</body>`);
     
     res.set('Content-Type', 'text/html; charset=utf-8');
     res.send(html);
@@ -38,6 +47,9 @@ function serveTemplateWithAuth(templatePath) {
 
 // CORS Middleware
 app.use(cors());
+
+// Cookie Parser Middleware - Parse cookies from requests
+app.use(cookieParser());
 
 // Body Parser Middleware - ONLY for JSON and URL-encoded
 // DO NOT apply to routes that handle multipart/form-data
@@ -72,6 +84,100 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.static(path.join(__dirname, 'templates')));
 
 // ============================================
+// MAINTENANCE MODE MIDDLEWARE WITH ADMIN BYPASS
+// ============================================
+// This middleware redirects all traffic to maintenance page when enabled
+// EXCEPT for admin users who can still access the system
+app.use((req, res, next) => {
+  // Skip if maintenance mode is disabled
+  if (!MAINTENANCE_MODE) {
+    return next();
+  }
+  
+  // Allow access to maintenance page itself
+  if (req.path === '/maintenance') {
+    return next();
+  }
+  
+  // Allow access to landing page (login page) so users can login
+  if (req.path === '/' || req.path === '/login') {
+    return next();
+  }
+  
+  // Allow access to static files (CSS, JS, images, fonts)
+  if (req.path.startsWith('/css') || 
+      req.path.startsWith('/js') || 
+      req.path.startsWith('/images') ||
+      req.path.startsWith('/fonts')) {
+    return next();
+  }
+  
+  // Allow access to auth endpoints (needed for login/signup)
+  if (req.path.startsWith('/auth') || req.path.startsWith('/api/auth')) {
+    return next();
+  }
+  
+  // ============================================
+  // ADMIN BYPASS LOGIC
+  // ============================================
+  // Check if user is admin by reading session/cookie/header
+  
+  // Method 1: Check Authorization header (JWT token)
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    try {
+      const token = authHeader.substring(7);
+      const jwt = require('jsonwebtoken');
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+      
+      // If user role is admin, allow full access
+      if (decoded.role === 'admin' || decoded.role === 'head') {
+        console.log('🔓 Admin bypass: Allowing admin access during maintenance (JWT)');
+        return next();
+      }
+    } catch (err) {
+      // Invalid token, continue to maintenance check
+      console.log('⚠️ Invalid token during maintenance mode');
+    }
+  }
+  
+  // Method 2: Check session cookie (if using express-session)
+  if (req.session && req.session.user && (req.session.user.role === 'admin' || req.session.user.role === 'head')) {
+    console.log('🔓 Admin bypass: Allowing admin access during maintenance (Session)');
+    return next();
+  }
+  
+  // Method 3: Check custom header (for frontend-stored user data)
+  const userRole = req.headers['x-user-role'];
+  if (userRole === 'admin' || userRole === 'head') {
+    console.log('🔓 Admin bypass: Allowing admin access during maintenance (Header)');
+    return next();
+  }
+
+  // Method 4: Check user_role cookie (set by login endpoint)
+  const cookieRole = req.cookies?.user_role;
+  if (cookieRole === 'admin' || cookieRole === 'head') {
+    console.log('🔓 Admin bypass: Allowing admin access during maintenance (Cookie)');
+    return next();
+  }
+  
+  // If not admin, redirect to maintenance page (or return 403 for API requests)
+  if (req.path.startsWith('/api/')) {
+    // For API requests, return 403 instead of redirect
+    console.log('🚧 Maintenance mode: Blocking API request from non-admin user');
+    return res.status(403).json({
+      success: false,
+      message: 'System is under maintenance. Only administrators can access the system.',
+      error: 'MAINTENANCE_MODE_ENABLED'
+    });
+  }
+  
+  // For page requests, redirect to maintenance page
+  console.log('🚧 Maintenance mode: Redirecting non-admin user to maintenance page');
+  return res.redirect('/maintenance');
+});
+
+// ============================================
 // Route Imports (Backend API Routes)
 // ============================================
 
@@ -82,6 +188,7 @@ const adminRoutes = require('./routes/admin');
 const qrRoutes = require('./routes/qr');
 const wasteSorterRoutes = require('./routes/waste-sorter');
 const binsRoutes = require('./routes/bins');
+const shoutboxRoutes = require('./routes/shoutbox');
 
 // ============================================
 // Route Registration
@@ -97,6 +204,11 @@ app.get('/rewards', serveTemplateWithAuth('REWARDS.HTML'));
 // Login Page
 app.get('/login', (req, res) => {
   res.redirect('/');
+});
+
+// Maintenance Page
+app.get('/maintenance', (req, res) => {
+  res.sendFile(path.join(__dirname, 'templates', 'MAINTENANCE.HTML'));
 });
 
 // User Dashboard - with auth injection
@@ -280,11 +392,13 @@ app.post('/api/admin/upload-reward-image', upload.single('file'), async (req, re
 app.use('/auth', authRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/dashboard', userDashboardRoutes);
+app.use('/api/user', userDashboardRoutes); // User stats and points endpoints
 app.use('/api/rewards', rewardsRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/qr', qrRoutes);
 app.use('/api/waste-sorter', wasteSorterRoutes);
 app.use('/api', binsRoutes);
+app.use('/api/shoutbox', shoutboxRoutes);
 
 // ============================================
 // 404 Error Handler

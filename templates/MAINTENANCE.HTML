@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BinTECH - System Under Maintenance</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary-dark: #0F3B2E;
+      --secondary-gradient-start: #143D2E;
+      --secondary-gradient-end: #1F4F3B;
+      --accent-yellow: #D4E157;
+      --card-green: #5DAE60;
+      --page-bg: #E8ECEB;
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, var(--secondary-gradient-start), var(--secondary-gradient-end));
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    /* Animated background circles */
+    body::before,
+    body::after {
+      content: '';
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(212, 225, 87, 0.1);
+      animation: float 20s ease-in-out infinite;
+    }
+    
+    body::before {
+      width: 400px;
+      height: 400px;
+      top: -200px;
+      right: -200px;
+      animation-delay: 0s;
+    }
+    
+    body::after {
+      width: 300px;
+      height: 300px;
+      bottom: -150px;
+      left: -150px;
+      animation-delay: 10s;
+    }
+    
+    @keyframes float {
+      0%, 100% {
+        transform: translateY(0) scale(1);
+      }
+      50% {
+        transform: translateY(-30px) scale(1.1);
+      }
+    }
+    
+    /* Fade in animation */
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    /* Spin animation for maintenance icon */
+    @keyframes spin {
+      from {
+        transform: rotate(0deg);
+      }
+      to {
+        transform: rotate(360deg);
+      }
+    }
+    
+    /* Pulse animation */
+    @keyframes pulse {
+      0%, 100% {
+        transform: scale(1);
+        opacity: 1;
+      }
+      50% {
+        transform: scale(1.05);
+        opacity: 0.8;
+      }
+    }
+    
+    .container {
+      max-width: 600px;
+      width: 100%;
+      animation: fadeIn 0.8s ease-out;
+      position: relative;
+      z-index: 1;
+    }
+    
+    /* Logo/Brand Section */
+    .brand {
+      text-align: center;
+      margin-bottom: 40px;
+      animation: fadeIn 0.8s ease-out 0.2s backwards;
+    }
+    
+    .brand-logo {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+    
+    .brand-icon {
+      width: 50px;
+      height: 50px;
+      background: var(--accent-yellow);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 20px rgba(212, 225, 87, 0.3);
+    }
+    
+    .brand-icon svg {
+      width: 30px;
+      height: 30px;
+      stroke: var(--primary-dark);
+      stroke-width: 2.5;
+    }
+    
+    .brand-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: var(--accent-yellow);
+      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    }
+    
+    /* Maintenance Card */
+    .maintenance-card {
+      background: white;
+      border-radius: 24px;
+      padding: 60px 40px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      text-align: center;
+      animation: fadeIn 0.8s ease-out 0.4s backwards;
+    }
+    
+    /* Maintenance Icon */
+    .maintenance-icon {
+      width: 120px;
+      height: 120px;
+      margin: 0 auto 30px;
+      position: relative;
+    }
+    
+    .icon-circle {
+      width: 120px;
+      height: 120px;
+      background: linear-gradient(135deg, var(--card-green), #4CAF50);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 10px 30px rgba(93, 174, 96, 0.3);
+      animation: pulse 2s ease-in-out infinite;
+    }
+    
+    .icon-circle svg {
+      width: 60px;
+      height: 60px;
+      stroke: white;
+      stroke-width: 2;
+      animation: spin 3s linear infinite;
+    }
+    
+    /* Loading dots */
+    .loading-dots {
+      position: absolute;
+      bottom: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 8px;
+    }
+    
+    .dot {
+      width: 8px;
+      height: 8px;
+      background: var(--card-green);
+      border-radius: 50%;
+      animation: dotPulse 1.4s ease-in-out infinite;
+    }
+    
+    .dot:nth-child(2) {
+      animation-delay: 0.2s;
+    }
+    
+    .dot:nth-child(3) {
+      animation-delay: 0.4s;
+    }
+    
+    @keyframes dotPulse {
+      0%, 80%, 100% {
+        transform: scale(0.8);
+        opacity: 0.5;
+      }
+      40% {
+        transform: scale(1.2);
+        opacity: 1;
+      }
+    }
+    
+    /* Text Content */
+    .maintenance-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: var(--primary-dark);
+      margin-bottom: 20px;
+      line-height: 1.2;
+    }
+    
+    .maintenance-message {
+      font-size: 1.1rem;
+      color: #666;
+      line-height: 1.8;
+      margin-bottom: 30px;
+    }
+    
+    .return-message {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: linear-gradient(135deg, var(--card-green), #4CAF50);
+      color: white;
+      padding: 16px 32px;
+      border-radius: 50px;
+      font-weight: 600;
+      font-size: 1rem;
+      box-shadow: 0 4px 20px rgba(93, 174, 96, 0.3);
+      margin-bottom: 20px;
+    }
+    
+    .return-message svg {
+      width: 20px;
+      height: 20px;
+      stroke: white;
+      stroke-width: 2.5;
+    }
+    
+    /* Footer */
+    .footer {
+      text-align: center;
+      margin-top: 40px;
+      animation: fadeIn 0.8s ease-out 0.6s backwards;
+    }
+    
+    .footer-text {
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 0.95rem;
+      font-weight: 500;
+    }
+    
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .brand-name {
+        font-size: 2rem;
+      }
+      
+      .maintenance-card {
+        padding: 40px 30px;
+      }
+      
+      .maintenance-title {
+        font-size: 2rem;
+      }
+      
+      .maintenance-message {
+        font-size: 1rem;
+      }
+      
+      .maintenance-icon {
+        width: 100px;
+        height: 100px;
+      }
+      
+      .icon-circle {
+        width: 100px;
+        height: 100px;
+      }
+      
+      .icon-circle svg {
+        width: 50px;
+        height: 50px;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      body {
+        padding: 15px;
+      }
+      
+      .brand-name {
+        font-size: 1.75rem;
+      }
+      
+      .brand-icon {
+        width: 40px;
+        height: 40px;
+      }
+      
+      .brand-icon svg {
+        width: 24px;
+        height: 24px;
+      }
+      
+      .maintenance-card {
+        padding: 30px 20px;
+        border-radius: 20px;
+      }
+      
+      .maintenance-title {
+        font-size: 1.75rem;
+      }
+      
+      .maintenance-message {
+        font-size: 0.95rem;
+      }
+      
+      .return-message {
+        padding: 14px 24px;
+        font-size: 0.9rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Brand/Logo Section -->
+    <div class="brand">
+      <div class="brand-logo">
+        <div class="brand-icon">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M13 3L4 14h6l-1 7 11-13h-6l1-5z" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <h1 class="brand-name">BinTECH</h1>
+      </div>
+    </div>
+    
+    <!-- Maintenance Card -->
+    <div class="maintenance-card">
+      <!-- Maintenance Icon with Loading Animation -->
+      <div class="maintenance-icon">
+        <div class="icon-circle">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+        </div>
+        <div class="loading-dots">
+          <div class="dot"></div>
+          <div class="dot"></div>
+          <div class="dot"></div>
+        </div>
+      </div>
+      
+      <!-- Title -->
+      <h2 class="maintenance-title">System Under Maintenance</h2>
+      
+      <!-- Message -->
+      <p class="maintenance-message">
+        We're currently performing scheduled maintenance and updates to improve your experience. 
+        Our team is working hard to bring you enhanced features and better performance.
+      </p>
+      
+      <!-- Return Message -->
+      <div class="return-message">
+        <svg viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M12 6v6l4 2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span>We'll be back shortly</span>
+      </div>
+    </div>
+    
+    <!-- Footer -->
+    <div class="footer">
+      <p class="footer-text">Thank you for your patience 🌱</p>
+    </div>
+  </div>
+</body>
+</html>

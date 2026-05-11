@@ -4,6 +4,31 @@
  */
 
 // ============================================
+// Fetch Interceptor for Auth Headers
+// ============================================
+// Automatically add x-user-role header to all requests
+// This allows the admin bypass middleware to recognize admin users
+const originalFetch = window.fetch;
+window.fetch = function(...args) {
+  const [resource, config = {}] = args;
+  
+  // Get the user's role from session storage
+  const userStr = sessionStorage.getItem('bintech_user');
+  const user = userStr ? JSON.parse(userStr) : null;
+  const userRole = user?.role || null;
+  
+  // Add x-user-role header if user is logged in
+  if (userRole) {
+    config.headers = config.headers || {};
+    config.headers['x-user-role'] = userRole;
+    console.log(`[fetch-interceptor] Added x-user-role: ${userRole} to ${resource}`);
+  }
+  
+  // Call original fetch with modified config
+  return originalFetch.call(this, resource, config);
+};
+
+// ============================================
 // Toast Notification System
 // ============================================
 function createToastContainer() {

@@ -7,7 +7,8 @@
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <script src="/js/timestampUtils.js"></script>
   <script src="/_sdk/element_sdk.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&amp;family=Poppins:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+  <script src="/js/shoutbox.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link href="/css/user-footer.css" rel="stylesheet">
   <style>
     :root {
@@ -19,27 +20,19 @@
       --page-bg: #E8ECEB;
     }
     
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    
     body {
       font-family: 'Poppins', sans-serif;
       background-color: var(--page-bg);
+      margin: 0;
+      padding: 0;
     }
     
-    .font-playfair {
-      font-family: 'Playfair Display', serif;
-    }
-    
-    .gradient-dark {
-      background: linear-gradient(135deg, var(--secondary-gradient-start), var(--secondary-gradient-end));
-    }
-    
-    .card-shadow {
-      box-shadow: 0 4px 20px rgba(15, 59, 46, 0.12);
-    }
-    
-    .reward-card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 8px 30px rgba(15, 59, 46, 0.2);
-    }
+    .font-playfair { font-family: 'Playfair Display', serif; }
+    .gradient-dark { background: linear-gradient(135deg, var(--secondary-gradient-start), var(--secondary-gradient-end)); }
+    .card-shadow { box-shadow: 0 4px 20px rgba(15, 59, 46, 0.12); }
     
     .nav-link {
       position: relative;
@@ -58,95 +51,7 @@
     }
     
     .nav-link:hover::after,
-    .nav-link.active::after {
-      width: 100%;
-    }
-
-    /* Dropdown Styles */
-    .nav-dropdown {
-      position: relative;
-    }
-
-    .nav-dropdown-toggle {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      color: rgba(255, 255, 255, 0.7);
-      font-weight: 500;
-      font-size: 0.875rem;
-      padding: 8px 12px;
-      border-radius: 8px;
-      border: 1px solid transparent;
-      background: transparent;
-      transition: all 0.3s ease;
-      cursor: pointer;
-    }
-
-    .nav-dropdown-toggle:hover {
-      color: #ffffff;
-      background: rgba(255, 255, 255, 0.1);
-      border-color: rgba(255, 255, 255, 0.2);
-    }
-
-    .nav-dropdown-toggle svg {
-      width: 16px;
-      height: 16px;
-      transition: transform 0.3s ease;
-    }
-
-    .nav-dropdown-toggle.open svg {
-      transform: rotate(180deg);
-    }
-
-    .nav-dropdown-menu {
-      position: absolute;
-      top: 100%;
-      left: 0;
-      margin-top: 8px;
-      min-width: 220px;
-      background: #0F3B2E;
-      border: 1px solid rgba(212, 225, 87, 0.2);
-      border-radius: 12px;
-      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-      opacity: 0;
-      visibility: hidden;
-      transform: translateY(-8px);
-      transition: all 0.3s ease;
-      z-index: 100;
-      overflow: hidden;
-    }
-
-    .nav-dropdown.open .nav-dropdown-menu {
-      opacity: 1;
-      visibility: visible;
-      transform: translateY(0);
-    }
-
-    .nav-dropdown-menu a {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 12px 16px;
-      color: rgba(255, 255, 255, 0.8);
-      text-decoration: none;
-      font-size: 0.875rem;
-      font-weight: 500;
-      transition: all 0.2s ease;
-      border-left: 3px solid transparent;
-    }
-
-    .nav-dropdown-menu a:hover {
-      background: rgba(212, 225, 87, 0.15);
-      color: #D4E157;
-      border-left-color: #D4E157;
-      padding-left: 19px;
-    }
-
-    .nav-dropdown-menu a.active {
-      background: rgba(212, 225, 87, 0.2);
-      color: #D4E157;
-      border-left-color: #D4E157;
-    }
+    .nav-link.active::after { width: 100%; }
     
     .progress-bar {
       background: linear-gradient(90deg, var(--card-green), var(--accent-yellow));
@@ -161,58 +66,26 @@
       box-shadow: 0 6px 24px rgba(15, 59, 46, 0.15);
     }
     
-    .claim-btn {
-      background: linear-gradient(135deg, var(--card-green), #4CAF50);
-      transition: all 0.3s ease;
-    }
-    
-    .claim-btn:hover {
-      background: linear-gradient(135deg, #4CAF50, var(--card-green));
-      transform: scale(1.02);
-    }
-    
     @keyframes pulse-glow {
       0%, 100% { box-shadow: 0 0 0 0 rgba(212, 225, 87, 0.4); }
       50% { box-shadow: 0 0 20px 4px rgba(212, 225, 87, 0.6); }
     }
     
-    .points-badge {
-      animation: pulse-glow 2s ease-in-out infinite;
-    }
-
-    .mobile-nav-panel {
-      display: none;
-    }
-
+    .points-badge { animation: pulse-glow 2s ease-in-out infinite; }
+    .mobile-nav-panel { display: none; }
+    
     @media (max-width: 767px) {
-      .mobile-nav-toggle {
-        display: inline-flex;
-      }
-
-      .points-badge {
-        display: none;
-      }
-
-      .mobile-nav-panel[data-open="true"] {
-        display: block;
-      }
+      .mobile-nav-toggle { display: inline-flex; }
+      .points-badge { display: none; }
+      .mobile-nav-panel[data-open="true"] { display: block; }
     }
     
-    @keyframes float {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-6px); }
-    }
-    
-    .float-animation {
-      animation: float 3s ease-in-out infinite;
-    }
-
     .activity-card {
       position: relative;
       overflow: hidden;
       border: 1px solid rgba(15, 59, 46, 0.08);
     }
-
+    
     .activity-card::after {
       content: '';
       position: absolute;
@@ -224,308 +97,609 @@
       pointer-events: none;
     }
     
-    /* Full-width points summary card styling - adjusted for single column */
-    .points-summary-full {
-      width: 100%;
+    /* Shoutbox Styles */
+    #shoutbox-messages {
+      scrollbar-width: thin;
+      scrollbar-color: #5DAE60 #E0E0E0;
     }
     
-    .points-summary-full .progress-section {
-      max-width: 500px;
-    }
+    #shoutbox-messages::-webkit-scrollbar { width: 6px; }
+    #shoutbox-messages::-webkit-scrollbar-track { background: #E0E0E0; border-radius: 3px; }
+    #shoutbox-messages::-webkit-scrollbar-thumb { background: #5DAE60; border-radius: 3px; }
+    #shoutbox-messages::-webkit-scrollbar-thumb:hover { background: #4CAF50; }
     
-    @media (max-width: 640px) {
-      .points-summary-full .stat-value {
-        font-size: 2.5rem;
-      }
+    .shoutbox-message { animation: slideInMessage 0.3s ease; }
+    
+    @keyframes slideInMessage {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
     }
   </style>
-  <style>body { box-sizing: border-box; }</style>
-  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
 </head>
 <body class="h-full">
-  <div id="app-wrapper" class="w-full min-h-screen flex flex-col"><!-- Navigation Bar -->
-   <nav class="gradient-dark sticky top-0 z-50">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-     <div class="flex items-center justify-between h-16"><!-- Left - User Welcome -->
-      <div class="flex items-center space-x-3">
-          <a href="/profile" class="hover:opacity-80 transition-opacity hidden md:flex" style="align-items:center;gap:8px">
-            <span style="color:#ffffff;font-weight:700;letter-spacing:0.04em">BINTECH</span>
-            <img src="/PICS/BINTECHLOGO.png" alt="BinTECH Logo" class="" style="height:48px;object-fit:contain;margin-top:-8px;">
-          </a>
-      <a href="/profile" class="hover:opacity-80 transition-opacity flex-shrink-0">
-        <img id="nav-profile-picture" src="" alt="Profile" class="h-10 w-10 rounded-full object-cover border-2 border-[#D4E157]/50 hidden">
-        <div id="nav-profile-initials" class="h-10 w-10 rounded-full bg-[#D4E157]/20 flex items-center justify-center text-[#D4E157] font-bold text-xs border-2 border-[#D4E157]/50">--</div>
-       </a>
-      <div class="nav-welcome show">
-        <p class="text-[#D4E157]/70 text-xs uppercase tracking-wider">Welcome Back</p>
-        <a href="/profile" class="text-white font-semibold text-sm hover:text-[#D4E157] transition-colors">
-          <span id="nav-user-name">MARIO SALLY</span>
-        </a>
-       </div>
-      </div><!-- Center - Navigation Dropdown -->
-      <div class="nav-dropdown hidden md:block">
-        <button class="nav-dropdown-toggle" id="nav-dropdown-btn" aria-label="Pages" aria-expanded="false">
-          <span>Pages</span>
-          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" /></svg>
-        </button>
-        <div class="nav-dropdown-menu">
-          <a href="/dashboard" class="nav-page-link" data-page="dashboard">
-            <span>📊</span>
-            <span>Dashboard</span>
-          </a>
-          <a href="/profile" class="nav-page-link" data-page="profile">
-            <span>👤</span>
-            <span>Profile</span>
-          </a>
-          <a href="/rewards" class="nav-page-link" data-page="rewards">
-            <span>🎁</span>
-            <span>Rewards</span>
-          </a>
-          <a href="/history" class="nav-page-link" data-page="history">
-            <span>📜</span>
-            <span>History</span>
-          </a>
-          <a href="/how-it-works" class="nav-page-link" data-page="how-it-works">
-            <span>ℹ️</span>
-            <span>How It Works</span>
-          </a>
-          <a href="/qr-scanner" class="nav-page-link" data-page="qr-scanner">
-            <span>📱</span>
-            <span>Transfer Points</span>
-          </a>
+  <div id="app-wrapper" class="w-full min-h-screen flex flex-col">
+
+    <!-- Navigation Bar -->
+    <nav class="gradient-dark sticky top-0 z-50">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-16">
+          <!-- Left - User Welcome -->
+          <div class="flex items-center space-x-3">
+            <button onclick="window.location.href='/profile'" class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center overflow-hidden border-2 border-[#D4E157]/30 hover:border-[#D4E157]/60 hover:bg-white/20 transition-all cursor-pointer" title="View Profile">
+              <svg class="w-6 h-6 text-[#D4E157]" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+              </svg>
+            </button>
+            <div class="hidden sm:block">
+              <p class="text-[#D4E157]/70 text-xs uppercase tracking-wider">Welcome Back</p>
+              <p id="nav-user-name" class="text-white font-semibold text-sm">Loading...</p>
+            </div>
+          </div>
+          
+          <!-- Center - Navigation Links -->
+          <div class="hidden md:flex items-center space-x-8">
+            <a href="/dashboard" class="nav-link active text-[#D4E157] text-sm font-medium">Dashboard</a>
+            <a href="/rewards" class="nav-link text-white/80 hover:text-white text-sm font-medium">Rewards</a>
+            <a href="/history" class="nav-link text-white/80 hover:text-white text-sm font-medium">History</a>
+            <a href="/how-it-works" class="nav-link text-white/80 hover:text-white text-sm font-medium">How It Works</a>
+            <a href="/qr-scanner" class="nav-link text-white/80 hover:text-white text-sm font-medium flex items-center gap-1">
+              <span>💳</span> Transfer Points
+            </a>
+          </div>
+          
+          <!-- Right - Points & Notifications -->
+          <div class="flex items-center space-x-3">
+            <button id="mobile-nav-toggle" type="button" class="mobile-nav-toggle md:hidden p-2 text-white/80 hover:text-[#D4E157] border border-white/30 rounded-full" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="mobile-nav-panel">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+              </svg>
+            </button>
+            <div class="hidden md:flex items-center space-x-4">
+              <div class="points-badge flex items-center space-x-2 bg-[#D4E157]/20 px-4 py-2 rounded-full border border-[#D4E157]/40">
+                <span class="text-lg">✨</span>
+                <span id="nav-points" class="text-[#D4E157] font-bold text-sm">0 Points</span>
+              </div>
+              <button onclick="handleLogout()" class="px-2 sm:px-4 py-2 text-white/70 hover:text-white text-xs sm:text-sm border border-white/30 rounded-full hover:bg-white/10 transition-all">
+                Logout
+              </button>
+            </div>
+          </div>
         </div>
-      </div><!-- Right - Points & Notifications -->
-      <div class="flex items-center space-x-3">
-      <button id="mobile-nav-toggle" type="button" class="mobile-nav-toggle md:hidden p-2 text-white/80 hover:text-[#D4E157] border border-white/30 rounded-full" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="mobile-nav-panel">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
-       </button>
-       <div class="hidden md:flex items-center space-x-4">
-        <div class="points-badge flex items-center space-x-2 bg-[#D4E157]/20 px-4 py-2 rounded-full border border-[#D4E157]/40"><span class="text-lg">✨</span> <span id="nav-points" class="text-[#D4E157] font-bold text-sm">521 Points</span>
-        </div>       <button onclick="handleLogout()" class="px-2 sm:px-4 py-2 text-white/70 hover:text-white text-xs sm:text-sm border border-white/30 rounded-full hover:bg-white/10 transition-all">
-         Logout
-        </button>
-       </div>
       </div>
-     </div>
-    </div>
-    <!-- Mobile Menu Panel: Navigation -->
-    <div id="mobile-nav-panel" class="mobile-nav-panel md:hidden border-t border-white/15 bg-[#143D2E]/95 px-4 py-4" data-open="false" style="display:none;">
-      <div class="space-y-3">
+      
+      <!-- Mobile Navigation Panel -->
+      <div id="mobile-nav-panel" class="mobile-nav-panel md:hidden border-t border-white/15 bg-[#143D2E]/95 px-4 py-4 space-y-3" data-open="false" style="display:none;">
         <a href="/dashboard" class="block text-[#D4E157] text-sm font-medium">Dashboard</a>
-        <a href="/profile" class="block text-white/90 hover:text-[#D4E157] text-sm font-medium transition">Profile</a>
-        <a href="/rewards" class="block text-white/90 hover:text-[#D4E157] text-sm font-medium transition">Rewards</a>
-        <a href="/history" class="block text-white/90 hover:text-[#D4E157] text-sm font-medium transition">History</a>
-        <a href="/how-it-works" class="block text-white/90 hover:text-[#D4E157] text-sm font-medium transition">How It Works</a>
-        <a href="/qr-scanner" class="block text-white/90 hover:text-[#D4E157] text-sm font-medium transition">Transfer Points</a>
-      </div>
-      <div class="pt-3 border-t border-white/15 flex items-center justify-between">
-        <span id="mobile-nav-points" class="text-[#D4E157] text-sm font-semibold">0 Points</span>
-        <button onclick="handleLogout()" class="px-3 py-1.5 text-white/80 text-xs border border-white/30 rounded-full hover:bg-white/10">Logout</button>
-      </div>
-    </div>
-   </nav><!-- Main Content -->
-   <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full"><!-- Page Header -->
-    <div class="mb-8">
-     <h1 class="font-playfair text-3xl sm:text-4xl text-[#0F3B2E] mb-2">Rewards Dashboard</h1>
-     <p class="text-[#0F3B2E]/60">Track your eco-journey and redeem amazing rewards</p>
-    </div>
-    
-    <!-- Section 1: Points Overview - FULL WIDTH CARD (layout adjusted - removed the old grid that caused empty space) -->
-    <div class="mb-8 w-full">
-     <!-- Points Summary Card - Now spans full width, properly fills the removed column space -->
-     <div class="bg-[#5DAE60] rounded-2xl p-6 card-shadow text-white relative overflow-hidden points-summary-full">
-      <div class="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
-      <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2"></div>
-      <div class="relative z-10">
-       <div class="flex items-center space-x-2 mb-4">
-        <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center"><span class="text-2xl">🌱</span>
-        </div>
-        <h2 class="text-lg font-semibold uppercase tracking-wider opacity-90">Your Points</h2>
-       </div>
-       <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-6">
-        <div>
-         <p id="total-points" class="text-6xl font-bold font-playfair stat-value">1,247</p>
-         <p id="rank-display" class="text-white/80 mt-1">Loading rank...</p>
-        </div>
-        <div class="progress-section w-full md:w-2/3">
-         <div class="bg-white/20 rounded-xl p-4">
-          <div class="flex justify-between items-center mb-2"><span class="text-sm font-medium">Progress to Gold Status</span> <span class="text-[#D4E157] font-bold">⭐</span>
-          </div>
-          <div class="w-full bg-white/30 rounded-full h-3 overflow-hidden">
-           <div class="progress-bar h-full rounded-full" style="width: 68%"></div>
-          </div>
-          <p class="text-sm mt-2 opacity-80">583 points to Gold Status</p>
-         </div>
-        </div>
-       </div>
-      </div>
-     </div>
-    </div>
-
-    <!-- Section 2: Activity Statistics -->
-    <div class="mt-10 mb-8">
-     <div class="flex items-end justify-between gap-4 mb-4">
-      <div>
-       <h2 class="font-playfair text-2xl text-[#0F3B2E] mb-1">Activity Statistics</h2>
-       <p class="text-sm text-[#0F3B2E]/60">Your sorting progress, updated from live account data</p>
-      </div>
-     </div>
-     <div class="grid grid-cols-2 lg:grid-cols-5 gap-4"><!-- Stat Card 1 -->
-      <div class="activity-card stat-card bg-white rounded-2xl p-5 card-shadow">
-       <div class="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center mb-3"><span class="text-2xl">💰</span>
-       </div>
-       <p id="stat-current-points" class="text-3xl font-bold text-[#0F3B2E]">0</p>
-       <p class="text-[#0F3B2E]/60 text-sm font-medium">Current Points</p>
-      </div><!-- Stat Card 2 -->
-      <div class="activity-card stat-card bg-white rounded-2xl p-5 card-shadow">
-       <div class="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center mb-3"><span class="text-2xl">🏆</span>
-       </div>
-       <p id="stat-total-earned-points" class="text-3xl font-bold text-[#0F3B2E]">0</p>
-       <p class="text-[#0F3B2E]/60 text-sm font-medium">Total Points Earned</p>
-      </div><!-- Stat Card 3 -->
-      <div class="activity-card stat-card bg-white rounded-2xl p-5 card-shadow">
-       <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mb-3"><span class="text-2xl">♻️</span>
-       </div>
-       <p id="stat-plastic" class="text-3xl font-bold text-[#0F3B2E]">0</p>
-       <p class="text-[#0F3B2E]/60 text-sm font-medium">Plastic Items</p>
-      </div><!-- Stat Card 4 -->
-      <div class="activity-card stat-card bg-white rounded-2xl p-5 card-shadow">
-       <div class="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center mb-3"><span class="text-2xl">📄</span>
-       </div>
-       <p id="stat-paper" class="text-3xl font-bold text-[#0F3B2E]">0</p>
-       <p class="text-[#0F3B2E]/60 text-sm font-medium">Paper Items</p>
-      </div><!-- Stat Card 5 -->
-      <div class="activity-card stat-card bg-white rounded-2xl p-5 card-shadow">
-       <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center mb-3"><span class="text-2xl">🔩</span>
-       </div>
-       <p id="stat-metal" class="text-3xl font-bold text-[#0F3B2E]">0</p>
-       <p class="text-[#0F3B2E]/60 text-sm font-medium">Metal Items</p>
-      </div><!-- Stat Card 6 -->
-      <div class="activity-card stat-card bg-white rounded-2xl p-5 card-shadow">
-       <div class="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center mb-3"><span class="text-2xl">🔥</span>
-       </div>
-       <p id="stat-total-sorted" class="text-3xl font-bold text-[#0F3B2E]">0</p>
-       <p class="text-[#0F3B2E]/60 text-sm font-medium">Total Sorted</p>
-      </div><!-- Stat Card 7 -->
-      <div class="activity-card stat-card bg-white rounded-2xl p-5 card-shadow">
-       <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center mb-3"><span class="text-2xl">⏱️</span>
-       </div>
-       <p id="stat-total-sessions" class="text-3xl font-bold text-[#0F3B2E]">0</p>
-       <p class="text-[#0F3B2E]/60 text-sm font-medium">Machine Sessions</p>
-      </div><!-- Stat Card 8 -->
-      <div class="activity-card stat-card bg-white rounded-2xl p-5 card-shadow">
-       <div class="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center mb-3"><span class="text-2xl">📤</span>
-       </div>
-       <p id="stat-points-transfer-spent" class="text-3xl font-bold text-[#0F3B2E]">0</p>
-       <p class="text-[#0F3B2E]/60 text-sm font-medium">Points Spent on Transfers</p>
-      </div><!-- Stat Card 9 -->
-      <div class="activity-card stat-card bg-white rounded-2xl p-5 card-shadow">
-       <div class="w-12 h-12 bg-rose-100 rounded-xl flex items-center justify-center mb-3"><span class="text-2xl">🎁</span>
-       </div>
-       <p id="stat-points-redeem-spent" class="text-3xl font-bold text-[#0F3B2E]">0</p>
-       <p class="text-[#0F3B2E]/60 text-sm font-medium">Points Spent on Redeems</p>
-      </div><!-- Stat Card 10 -->
-      <div class="activity-card stat-card bg-white rounded-2xl p-5 card-shadow">
-       <div class="w-12 h-12 bg-cyan-100 rounded-xl flex items-center justify-center mb-3"><span class="text-2xl">🧾</span>
-       </div>
-       <p id="stat-total-redeemed-rewards" class="text-3xl font-bold text-[#0F3B2E]">0</p>
-       <p class="text-[#0F3B2E]/60 text-sm font-medium">Total Rewards Redeemed</p>
-      </div>
-     </div>
-    </div><!-- Quick Actions -->
-    <div class="bg-gradient-to-r from-[#0F3B2E] to-[#1F4F3B] rounded-2xl p-6 card-shadow">
-     <div class="flex flex-col md:flex-row items-center justify-between">
-      <div class="text-white mb-4 md:mb-0">
-       <h3 class="font-playfair text-xl mb-1">Ready to earn more points?</h3>
-       <p class="text-white/70 text-sm">Scan your next waste item and contribute to a greener campus!</p>
-      </div><button type="button" onclick="window.location.href='/qr-scanner'" class="bg-[#D4E157] text-[#0F3B2E] px-6 py-3 rounded-xl font-semibold hover:bg-[#D4E157]/90 transition-colors flex items-center space-x-2"> <span>Start Scanning</span>
-       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
-       </svg></button>
-     </div>
-    </div>
-   </main><!-- Footer -->
-   <footer class="bintech-user-footer flex-shrink-0">
-    <div class="bintech-user-footer__wrap">
-      <div class="bintech-user-footer__grid">
-        <section>
-          <div class="flex items-center gap-3">
-            <span class="bintech-brand-mark" aria-hidden="true">
-              <img src="/PICS/BINTECHLOGO.png" alt="BinTECH Logo" style="height:28px;object-fit:contain" />
-            </span>
-            <p class="bintech-brand-title">Bintech</p>
-          </div>
-          <p class="bintech-brand-copy">Bintech builds secure, intuitive financial technology for modern users, blending speed, trust, and smarter money workflows.</p>
-        </section>
-
-        <nav class="bintech-user-footer__nav" aria-label="Quick actions">
-          <h4>Quick Actions</h4>
-          <ul>
-            <li><a href="/dashboard">Open Dashboard</a></li>
-            <li><a href="/qr-scanner">Transfer Points</a></li>
-            <li><a href="/history">View History</a></li>
-            <li><a href="/profile">Edit Profile</a></li>
-          </ul>
-        </nav>
-
-        <nav class="bintech-user-footer__nav" aria-label="Rewards links">
-          <h4>Rewards</h4>
-          <ul>
-            <li><a href="/rewards">Browse Rewards</a></li>
-            <li><a href="/rewards?tab=featured">Featured Items</a></li>
-          </ul>
-        </nav>
-
-        <nav class="bintech-user-footer__nav" aria-label="Support links">
-          <h4>Support</h4>
-          <ul>
-            <li><a href="/how-it-works">How It Works</a></li>
-            <li><a href="mailto:support@bintech.local">Email Support</a></li>
-          </ul>
-        </nav>
-
-        <nav class="bintech-user-footer__nav" aria-label="Account links">
-          <h4>Account</h4>
-          <ul>
-            <li><a href="/profile">Manage Profile</a></li>
-            <li><a href="#" onclick="handleLogout(); return false;">Logout</a></li>
-          </ul>
-        </nav>
-
-        <section class="bintech-user-footer__subscribe bintech-user-footer__glass">
-          <h4>System Snapshot</h4>
-          <p>Track EcoPoints, manage your account, and jump straight to scanning or history when you need it.</p>
-          <form class="bintech-newsletter-form" onsubmit="event.preventDefault();">
-            <button type="button" onclick="window.location.href='/qr-scanner'">Start Scan</button>
-            <button type="button" onclick="window.location.href='/history'">History</button>
-          </form>
-        </section>
-      </div>
-
-      <div class="bintech-footer-bottom">
-        <p>© 2026 Bintech. All rights reserved.</p>
-          <div style="display:flex;align-items:center;gap:8px">
-            <img src="/PICS/BINTECHLOGO.png" alt="BinTECH Logo" style="height:28px;object-fit:contain" />
-          </div>
-        <div class="bintech-social-list" aria-label="Social media">
-          <a href="#" aria-label="X">
-            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.901 3H21l-4.588 5.244L21.808 21h-4.226l-3.31-4.889L9.996 21H7.896l4.907-5.609L2.192 3h4.332l2.993 4.422L13.099 3h5.802zm-1.48 16h1.171L7.946 4.89H6.69L17.42 19z"></path></svg>
-          </a>
-          <a href="#" aria-label="LinkedIn">
-            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6.94 8.5A1.55 1.55 0 1 1 6.94 5.4 1.55 1.55 0 0 1 6.94 8.5zM5.62 9.75h2.64V18H5.62V9.75zm4.13 0h2.53v1.13h.03c.35-.67 1.22-1.37 2.5-1.37 2.67 0 3.16 1.76 3.16 4.05V18h-2.64v-3.93c0-.94-.02-2.14-1.3-2.14-1.3 0-1.5 1.02-1.5 2.07V18H9.75V9.75z"></path></svg>
-          </a>
-          <a href="#" aria-label="Instagram">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3.6" y="3.6" width="16.8" height="16.8" rx="4"></rect><circle cx="12" cy="12" r="3.8"></circle><circle cx="17.35" cy="6.65" r="0.9" fill="currentColor" stroke="none"></circle></svg>
-          </a>
-          <a href="#" aria-label="YouTube">
-            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M22 12s0-3.1-.4-4.6c-.2-.8-.8-1.4-1.6-1.6C18.5 5.4 12 5.4 12 5.4s-6.5 0-8 .4c-.8.2-1.4.8-1.6 1.6C2 8.9 2 12 2 12s0 3.1.4 4.6c.2.8.8 1.4 1.6 1.6 1.5.4 8 .4 8 .4s6.5 0 8-.4c.8-.2 1.4-.8 1.6-1.6.4-1.5.4-4.6.4-4.6zM10 15.5V8.5l6 3.5-6 3.5z"></path></svg>
-          </a>
+        <a href="/profile" class="block text-white/90 text-sm font-medium">Profile</a>
+        <a href="/rewards" class="block text-white/90 text-sm font-medium">Rewards</a>
+        <a href="/history" class="block text-white/90 text-sm font-medium">History</a>
+        <a href="/how-it-works" class="block text-white/90 text-sm font-medium">How It Works</a>
+        <a href="/qr-scanner" class="block text-white/90 text-sm font-medium">Transfer Points</a>
+        <div class="pt-2 border-t border-white/15 flex items-center justify-between">
+          <span id="mobile-nav-points" class="text-[#D4E157] text-sm font-semibold">0 Points</span>
+          <button onclick="handleLogout()" class="px-3 py-1.5 text-white/80 text-xs border border-white/30 rounded-full hover:bg-white/10">Logout</button>
         </div>
       </div>
-    </div>
-   </footer>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-grow w-full">
+      <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- Two Column Grid Layout: 70/30 Split -->
+        <div class="grid grid-cols-1 lg:grid-cols-10 gap-6 items-start">
+          
+          <!-- LEFT COLUMN: Dashboard Content (70% = 7 cols) -->
+          <div class="lg:col-span-7 space-y-8">
+            
+            <!-- Page Header -->
+            <div>
+              <h1 class="font-playfair text-3xl sm:text-4xl text-[#0F3B2E] mb-2">Rewards Dashboard</h1>
+              <p class="text-[#0F3B2E]/60">Track your eco-journey and redeem amazing rewards</p>
+            </div>
+            
+            <!-- Points Overview Card -->
+            <div class="w-full">
+              <div class="bg-[#5DAE60] rounded-2xl p-6 card-shadow text-white relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+                <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2"></div>
+                <div class="relative z-10">
+                  <div class="flex items-center space-x-2 mb-4">
+                    <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                      <span class="text-2xl">🌱</span>
+                    </div>
+                    <h2 class="text-lg font-semibold uppercase tracking-wider opacity-90">Your Points</h2>
+                  </div>
+                  <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-6">
+                    <div>
+                      <p id="total-points" class="text-6xl font-bold font-playfair">0</p>
+                      <p id="rank-display" class="text-white/80 mt-1">Loading rank...</p>
+                    </div>
+                    <div class="w-full md:w-2/3">
+                      <div class="bg-white/20 rounded-xl p-4">
+                        <div class="flex justify-between items-center mb-2">
+                          <span class="text-sm font-medium">Progress to Gold Status</span>
+                          <span class="text-[#D4E157] font-bold">⭐</span>
+                        </div>
+                        <div class="w-full bg-white/30 rounded-full h-3 overflow-hidden">
+                          <div id="progress-bar" class="progress-bar h-full rounded-full" style="width: 0%"></div>
+                        </div>
+                        <p id="progress-text" class="text-sm mt-2 opacity-80">Loading...</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Activity Statistics -->
+            <div>
+              <div class="flex items-end justify-between gap-4 mb-4">
+                <div>
+                  <h2 class="font-playfair text-2xl text-[#0F3B2E] mb-1">Activity Statistics</h2>
+                  <p class="text-sm text-[#0F3B2E]/60">Your sorting progress, updated from live account data</p>
+                </div>
+              </div>
+              
+              <div class="grid grid-cols-2 lg:grid-cols-5 gap-4">
+                <!-- Stat Card 1: Current Points -->
+                <div class="activity-card stat-card bg-white rounded-2xl p-5 card-shadow">
+                  <div class="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center mb-3">
+                    <span class="text-2xl">💰</span>
+                  </div>
+                  <p id="stat-current-points" class="text-3xl font-bold text-[#0F3B2E]">0</p>
+                  <p class="text-[#0F3B2E]/60 text-sm font-medium">Current Points</p>
+                </div>
+                
+                <!-- Stat Card 2: Total Earned -->
+                <div class="activity-card stat-card bg-white rounded-2xl p-5 card-shadow">
+                  <div class="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center mb-3">
+                    <span class="text-2xl">🏆</span>
+                  </div>
+                  <p id="stat-total-earned-points" class="text-3xl font-bold text-[#0F3B2E]">0</p>
+                  <p class="text-[#0F3B2E]/60 text-sm font-medium">Total Points Earned</p>
+                </div>
+                
+                <!-- Stat Card 3: Plastic Items -->
+                <div class="activity-card stat-card bg-white rounded-2xl p-5 card-shadow">
+                  <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mb-3">
+                    <span class="text-2xl">♻️</span>
+                  </div>
+                  <p id="stat-plastic" class="text-3xl font-bold text-[#0F3B2E]">0</p>
+                  <p class="text-[#0F3B2E]/60 text-sm font-medium">Plastic Items</p>
+                </div>
+                
+                <!-- Stat Card 4: Paper Items -->
+                <div class="activity-card stat-card bg-white rounded-2xl p-5 card-shadow">
+                  <div class="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center mb-3">
+                    <span class="text-2xl">📄</span>
+                  </div>
+                  <p id="stat-paper" class="text-3xl font-bold text-[#0F3B2E]">0</p>
+                  <p class="text-[#0F3B2E]/60 text-sm font-medium">Paper Items</p>
+                </div>
+                
+                <!-- Stat Card 5: Metal Items -->
+                <div class="activity-card stat-card bg-white rounded-2xl p-5 card-shadow">
+                  <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center mb-3">
+                    <span class="text-2xl">🔩</span>
+                  </div>
+                  <p id="stat-metal" class="text-3xl font-bold text-[#0F3B2E]">0</p>
+                  <p class="text-[#0F3B2E]/60 text-sm font-medium">Metal Items</p>
+                </div>
+                
+                <!-- Stat Card 6: Total Sorted -->
+                <div class="activity-card stat-card bg-white rounded-2xl p-5 card-shadow">
+                  <div class="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center mb-3">
+                    <span class="text-2xl">🔥</span>
+                  </div>
+                  <p id="stat-total-sorted" class="text-3xl font-bold text-[#0F3B2E]">0</p>
+                  <p class="text-[#0F3B2E]/60 text-sm font-medium">Total Sorted</p>
+                </div>
+                
+                <!-- Stat Card 7: Machine Sessions -->
+                <div class="activity-card stat-card bg-white rounded-2xl p-5 card-shadow">
+                  <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center mb-3">
+                    <span class="text-2xl">⏱️</span>
+                  </div>
+                  <p id="stat-total-sessions" class="text-3xl font-bold text-[#0F3B2E]">0</p>
+                  <p class="text-[#0F3B2E]/60 text-sm font-medium">Machine Sessions</p>
+                </div>
+                
+                <!-- Stat Card 8: Points Spent on Transfers -->
+                <div class="activity-card stat-card bg-white rounded-2xl p-5 card-shadow">
+                  <div class="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center mb-3">
+                    <span class="text-2xl">📤</span>
+                  </div>
+                  <p id="stat-points-transfer-spent" class="text-3xl font-bold text-[#0F3B2E]">0</p>
+                  <p class="text-[#0F3B2E]/60 text-sm font-medium">Points Spent on Transfers</p>
+                </div>
+                
+                <!-- Stat Card 9: Points Spent on Redeems -->
+                <div class="activity-card stat-card bg-white rounded-2xl p-5 card-shadow">
+                  <div class="w-12 h-12 bg-rose-100 rounded-xl flex items-center justify-center mb-3">
+                    <span class="text-2xl">🎁</span>
+                  </div>
+                  <p id="stat-points-redeem-spent" class="text-3xl font-bold text-[#0F3B2E]">0</p>
+                  <p class="text-[#0F3B2E]/60 text-sm font-medium">Points Spent on Redeems</p>
+                </div>
+                
+                <!-- Stat Card 10: Total Rewards Redeemed -->
+                <div class="activity-card stat-card bg-white rounded-2xl p-5 card-shadow">
+                  <div class="w-12 h-12 bg-cyan-100 rounded-xl flex items-center justify-center mb-3">
+                    <span class="text-2xl">🧾</span>
+                  </div>
+                  <p id="stat-total-redeemed-rewards" class="text-3xl font-bold text-[#0F3B2E]">0</p>
+                  <p class="text-[#0F3B2E]/60 text-sm font-medium">Total Rewards Redeemed</p>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Quick Actions -->
+            <div class="bg-gradient-to-r from-[#0F3B2E] to-[#1F4F3B] rounded-2xl p-6 card-shadow">
+              <div class="flex flex-col md:flex-row items-center justify-between">
+                <div class="text-white mb-4 md:mb-0">
+                  <h3 class="font-playfair text-xl mb-1">Ready to earn more points?</h3>
+                  <p class="text-white/70 text-sm">Scan your next waste item and contribute to a greener campus!</p>
+                </div>
+                <button type="button" onclick="window.location.href='/qr-scanner'" class="bg-[#D4E157] text-[#0F3B2E] px-6 py-3 rounded-xl font-semibold hover:bg-[#D4E157]/90 transition-colors flex items-center space-x-2">
+                  <span>Start Scanning</span>
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            
+          </div>
+          <!-- End Left Column -->
+
+          <!-- RIGHT COLUMN: Community Chat (30% = 3 cols) -->
+          <aside class="lg:col-span-3">
+            <div class="bg-white rounded-2xl card-shadow lg:sticky lg:top-20 overflow-hidden">
+              <!-- Shoutbox Header -->
+              <div class="gradient-dark p-4">
+                <div class="flex items-center gap-2 mb-1">
+                  <span class="text-2xl">💬</span>
+                  <h3 class="font-playfair text-xl text-white font-bold">Community Chat</h3>
+                </div>
+                <p class="text-white/70 text-xs">Share your thoughts with the community</p>
+              </div>
+
+              <!-- Messages Container -->
+              <div id="shoutbox-messages" class="h-[calc(100vh-450px)] min-h-[400px] max-h-[600px] overflow-y-auto p-4 space-y-2 bg-[#F5F5F5]">
+                <div class="text-center py-8 text-[#0F3B2E]/50">
+                  <p class="text-sm">Loading messages...</p>
+                </div>
+              </div>
+
+              <!-- Input Section -->
+              <div class="p-4 border-t border-[#E0E0E0] bg-white">
+                <!-- Error Message -->
+                <div id="shoutbox-error" class="hidden mb-3 bg-red-50 border border-red-200 rounded-lg p-2 text-red-700 text-xs"></div>
+
+                <!-- Textarea -->
+                <textarea 
+                  id="shoutbox-input" 
+                  placeholder="Type your message..." 
+                  class="w-full px-3 py-2 border border-[#E0E0E0] rounded-lg resize-none focus:outline-none focus:border-[#5DAE60] focus:ring-2 focus:ring-[#5DAE60]/20 text-sm"
+                  rows="2"
+                  maxlength="250"
+                ></textarea>
+
+                <!-- Character Count & Send Button -->
+                <div class="flex items-center justify-between mt-2">
+                  <span id="shoutbox-char-count" class="text-xs text-[#9CA3AF]">0/250</span>
+                  <button 
+                    id="shoutbox-send-btn" 
+                    class="bg-gradient-to-r from-[#5DAE60] to-[#4CAF50] text-white px-4 py-2 rounded-lg font-semibold text-sm hover:shadow-lg transition-all flex items-center gap-2"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+                    </svg>
+                    Send
+                  </button>
+                </div>
+
+                <!-- Info Text -->
+                <p class="text-xs text-[#0F3B2E]/50 mt-2">⏱ 5 second cooldown between messages</p>
+              </div>
+            </div>
+          </aside>
+          <!-- End Right Column -->
+          
+        </div>
+        <!-- End Grid -->
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bintech-user-footer flex-shrink-0">
+      <div class="bintech-user-footer__wrap">
+        <div class="bintech-user-footer__grid">
+          <section>
+            <div class="flex items-center gap-3">
+              <span class="bintech-brand-mark" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
+                  <path d="M13 3L4 14h6l-1 7 11-13h-6l1-5z" stroke-linecap="round" stroke-linejoin="round"></path>
+                </svg>
+              </span>
+              <p class="bintech-brand-title">Bintech</p>
+            </div>
+            <p class="bintech-brand-copy">Bintech builds secure, intuitive financial technology for modern users, blending speed, trust, and smarter money workflows.</p>
+          </section>
+
+          <nav class="bintech-user-footer__nav" aria-label="Company links">
+            <h4>Company</h4>
+            <ul>
+              <li><a href="#">About</a></li>
+              <li><a href="#">Contact</a></li>
+            </ul>
+          </nav>
+
+          <nav class="bintech-user-footer__nav" aria-label="Products links">
+            <h4>Products</h4>
+            <ul>
+              <li><a href="#">Rewards</a></li>
+            </ul>
+          </nav>
+
+          <nav class="bintech-user-footer__nav" aria-label="Resources links">
+            <h4>Resources</h4>
+            <ul>
+              <li><a href="#">Help Center</a></li>
+              <li><a href="#">Developers</a></li>
+            </ul>
+          </nav>
+
+          <nav class="bintech-user-footer__nav" aria-label="Legal links">
+            <h4>Legal</h4>
+            <ul>
+              <li><a href="#">Terms</a></li>
+              <li><a href="#">Privacy</a></li>
+            </ul>
+          </nav>
+
+          <section class="bintech-user-footer__subscribe bintech-user-footer__glass">
+            <h4>Subscribe To Our Newsletter</h4>
+            <p>Get product releases, security updates, and fintech insights delivered monthly.</p>
+            <form class="bintech-newsletter-form" onsubmit="event.preventDefault();">
+              <input type="email" placeholder="you@domain.com" aria-label="Email address">
+              <button type="submit">Join</button>
+            </form>
+          </section>
+        </div>
+
+        <div class="bintech-footer-bottom">
+          <p>© 2026 Bintech. All rights reserved.</p>
+          <div class="bintech-social-list" aria-label="Social media">
+            <a href="#" aria-label="X">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.901 3H21l-4.588 5.244L21.808 21h-4.226l-3.31-4.889L9.996 21H7.896l4.907-5.609L2.192 3h4.332l2.993 4.422L13.099 3h5.802zm-1.48 16h1.171L7.946 4.89H6.69L17.42 19z"></path></svg>
+            </a>
+            <a href="#" aria-label="LinkedIn">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6.94 8.5A1.55 1.55 0 1 1 6.94 5.4 1.55 1.55 0 0 1 6.94 8.5zM5.62 9.75h2.64V18H5.62V9.75zm4.13 0h2.53v1.13h.03c.35-.67 1.22-1.37 2.5-1.37 2.67 0 3.16 1.76 3.16 4.05V18h-2.64v-3.93c0-.94-.02-2.14-1.3-2.14-1.3 0-1.5 1.02-1.5 2.07V18H9.75V9.75z"></path></svg>
+            </a>
+            <a href="#" aria-label="Instagram">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3.6" y="3.6" width="16.8" height="16.8" rx="4"></rect><circle cx="12" cy="12" r="3.8"></circle><circle cx="17.35" cy="6.65" r="0.9" fill="currentColor" stroke="none"></circle></svg>
+            </a>
+            <a href="#" aria-label="YouTube">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M22 12s0-3.1-.4-4.6c-.2-.8-.8-1.4-1.6-1.6C18.5 5.4 12 5.4 12 5.4s-6.5 0-8 .4c-.8.2-1.4.8-1.6 1.6C2 8.9 2 12 2 12s0 3.1.4 4.6c.2.8.8 1.4 1.6 1.6 1.5.4 8 .4 8 .4s6.5 0 8-.4c.8-.2 1.4-.8 1.6-1.6.4-1.5.4-4.6.4-4.6zM10 15.5V8.5l6 3.5-6 3.5z"></path></svg>
+            </a>
+          </div>
+        </div>
+      </div>
+    </footer>
 
   </div>
+  <!-- End App Wrapper -->
+
   <script>
+    // ============================================
+    // GLOBAL STATE
+    // ============================================
+    let currentUser = null;
+
+    // ============================================
+    // AUTH CHECK & INITIALIZATION
+    // ============================================
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Check authentication
+      const userStr = sessionStorage.getItem('bintech_user');
+      if (!userStr) {
+        console.warn('No user logged in, redirecting to login');
+        window.location.href = '/';
+        return;
+      }
+
+      try {
+        currentUser = JSON.parse(userStr);
+        
+        // Handle both 'id' and 'system_id' field names
+        if (!currentUser.system_id && currentUser.id) {
+          currentUser.system_id = currentUser.id;
+        }
+        
+        // Check if admin - redirect to admin dashboard
+        if (currentUser.role === 'admin') {
+          console.log('Admin user detected, redirecting to admin dashboard');
+          window.location.href = '/admin/dashboard';
+          return;
+        }
+
+        // Update user name in nav
+        const navUserName = document.getElementById('nav-user-name');
+        if (navUserName && currentUser.email) {
+          const username = currentUser.email.split('@')[0];
+          navUserName.textContent = username.toUpperCase();
+        }
+
+        // Load all data
+        await Promise.all([
+          loadUserStats(),
+          loadUserPoints(),
+          initializeShoutbox()
+        ]);
+
+        // Setup mobile menu toggle
+        setupMobileMenu();
+
+      } catch (error) {
+        console.error('Error initializing dashboard:', error);
+        window.location.href = '/';
+      }
+    });
+
+    // ============================================
+    // MOBILE MENU TOGGLE
+    // ============================================
+    function setupMobileMenu() {
+      const mobileToggle = document.getElementById('mobile-nav-toggle');
+      const mobilePanel = document.getElementById('mobile-nav-panel');
+
+      if (mobileToggle && mobilePanel) {
+        mobileToggle.addEventListener('click', () => {
+          const isOpen = mobilePanel.getAttribute('data-open') === 'true';
+          mobilePanel.setAttribute('data-open', !isOpen);
+          mobilePanel.style.display = !isOpen ? 'block' : 'none';
+          mobileToggle.setAttribute('aria-expanded', !isOpen);
+        });
+      }
+    }
+
+    // ============================================
+    // LOAD USER STATS (10 STAT CARDS)
+    // ============================================
+    async function loadUserStats() {
+      if (!currentUser) return;
+      
+      const userId = currentUser.system_id || currentUser.id;
+      if (!userId) return;
+
+      try {
+        // Use activity-overview endpoint which has all the data we need
+        const response = await fetch(`/api/user/activity-overview?userId=${userId}&email=${encodeURIComponent(currentUser.email)}`);
+        const data = await response.json();
+
+        if (data.success && data.summary) {
+          const summary = data.summary;
+
+          // Update all 10 stat cards
+          updateStatCard('stat-current-points', summary.totalPoints || 0);
+          updateStatCard('stat-total-earned-points', summary.totalLifetimePoints || 0);
+          updateStatCard('stat-plastic', summary.plasticCount || 0);
+          updateStatCard('stat-paper', summary.paperCount || 0);
+          updateStatCard('stat-metal', summary.metalCount || 0);
+          updateStatCard('stat-total-sorted', summary.totalWaste || 0);
+          updateStatCard('stat-total-sessions', summary.totalSessions || 0);
+          updateStatCard('stat-points-transfer-spent', summary.pointsSpentOnTransfers || 0);
+          updateStatCard('stat-points-redeem-spent', summary.pointsSpentOnRedeems || 0);
+          updateStatCard('stat-total-redeemed-rewards', summary.totalRewardsRedeemed || 0);
+        }
+      } catch (error) {
+        console.error('Error loading user stats:', error);
+      }
+    }
+
+    function updateStatCard(elementId, value) {
+      const element = document.getElementById(elementId);
+      if (element) {
+        element.textContent = value.toLocaleString();
+      }
+    }
+
+    // ============================================
+    // LOAD USER POINTS & RANK
+    // ============================================
+    async function loadUserPoints() {
+      if (!currentUser) return;
+      
+      const userId = currentUser.system_id || currentUser.id;
+      if (!userId) return;
+
+      try {
+        const response = await fetch(`/api/user/points?userId=${userId}&email=${encodeURIComponent(currentUser.email)}`);
+        const data = await response.json();
+
+        if (data.success) {
+          const points = data.user?.points || 0;
+          const rank = data.rank;
+
+          // Update points display in nav (desktop and mobile)
+          updatePointsDisplay(points);
+
+          // Update main points card
+          const totalPointsEl = document.getElementById('total-points');
+          if (totalPointsEl) {
+            totalPointsEl.textContent = points.toLocaleString();
+          }
+
+          // Update rank display
+          const rankDisplay = document.getElementById('rank-display');
+          if (rankDisplay) {
+            if (rank && !rank.notRanked) {
+              rankDisplay.textContent = `Rank: ${rank.displayText}`;
+            } else {
+              rankDisplay.textContent = rank?.message || 'Not ranked yet';
+            }
+          }
+
+          // Update progress bar (example: Gold status at 2000 points)
+          const goldThreshold = 2000;
+          const progressPercent = Math.min((points / goldThreshold) * 100, 100);
+          const progressBar = document.getElementById('progress-bar');
+          const progressText = document.getElementById('progress-text');
+          
+          if (progressBar) {
+            progressBar.style.width = `${progressPercent}%`;
+          }
+          
+          if (progressText) {
+            const remaining = Math.max(goldThreshold - points, 0);
+            if (remaining > 0) {
+              progressText.textContent = `${remaining.toLocaleString()} points to Gold Status`;
+            } else {
+              progressText.textContent = 'Gold Status Achieved! 🎉';
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error loading user points:', error);
+      }
+    }
+
+    function updatePointsDisplay(points) {
+      // Desktop nav
+      const navPoints = document.getElementById('nav-points');
+      if (navPoints) {
+        navPoints.textContent = `${points.toLocaleString()} Points`;
+      }
+
+      // Mobile nav
+      const mobileNavPoints = document.getElementById('mobile-nav-points');
+      if (mobileNavPoints) {
+        mobileNavPoints.textContent = `${points.toLocaleString()} Points`;
+      }
+    }
+
+    // ============================================
+    // INITIALIZE SHOUTBOX
+    // ============================================
+    async function initializeShoutbox() {
+      // The shoutbox.js file handles the chat functionality
+      // It will auto-initialize when the page loads
+      console.log('Shoutbox initialized via shoutbox.js');
+    }
+
+    // ============================================
+    // LOGOUT HANDLER
+    // ============================================
+    function handleLogout() {
+      sessionStorage.removeItem('bintech_user');
+      window.location.href = '/';
+    }
+
+    // ============================================
+    // ELEMENT SDK CONFIGURATION
+    // ============================================
     const defaultConfig = {
       background_color: '#E8ECEB',
       card_surface_color: '#FFFFFF',
@@ -533,12 +707,7 @@
       primary_action_color: '#5DAE60',
       accent_color: '#D4E157',
       font_family: 'Poppins',
-      font_size: 16,
-      user_name: 'MARIO SALLY',
-      points_display: '1,247',
-      rank_text: '#42 of 1,823',
-      challenge_title: 'Earth Week Sprint',
-      challenge_timer: '2d 14h left'
+      font_size: 16
     };
     
     async function onConfigChange(config) {
@@ -554,7 +723,7 @@
       document.getElementById('app-wrapper').style.backgroundColor = bgColor;
       
       // Apply card colors
-      document.querySelectorAll('.stat-card, .reward-card').forEach(card => {
+      document.querySelectorAll('.stat-card').forEach(card => {
         card.style.backgroundColor = cardColor;
       });
       
@@ -565,38 +734,11 @@
         }
       });
       
-      // Apply primary action color to claim buttons
-      document.querySelectorAll('.claim-btn').forEach(btn => {
-        btn.style.background = `linear-gradient(135deg, ${primaryColor}, #4CAF50)`;
-      });
-      
       // Apply font family
       document.body.style.fontFamily = `${fontFamily}, sans-serif`;
       
       // Apply font size scaling
       document.body.style.fontSize = `${fontSize}px`;
-      
-      // Update editable text content
-      const userName = config.user_name || defaultConfig.user_name;
-      document.querySelectorAll('#nav-user-name, #mobile-nav-user-name').forEach((el) => {
-        el.textContent = userName;
-      });
-      
-      const totalPoints = config.points_display || defaultConfig.points_display;
-      const totalPointsEl = document.getElementById('total-points');
-      if (totalPointsEl) totalPointsEl.textContent = totalPoints;
-      
-      const rankText = config.rank_text || defaultConfig.rank_text;
-      const rankDisplay = document.getElementById('rank-display');
-      if (rankDisplay) rankDisplay.textContent = `Rank: ${rankText}`;
-      
-      const challengeTitle = config.challenge_title || defaultConfig.challenge_title;
-      const challengeName = document.getElementById('challenge-name');
-      if (challengeName) challengeName.textContent = challengeTitle;
-      
-      const challengeTimer = config.challenge_timer || defaultConfig.challenge_timer;
-      const timeRemaining = document.getElementById('time-remaining');
-      if (timeRemaining) timeRemaining.textContent = challengeTimer;
     }
     
     function mapToCapabilities(config) {
@@ -657,13 +799,7 @@
     }
     
     function mapToEditPanelValues(config) {
-      return new Map([
-        ['user_name', config.user_name || defaultConfig.user_name],
-        ['points_display', config.points_display || defaultConfig.points_display],
-        ['rank_text', config.rank_text || defaultConfig.rank_text],
-        ['challenge_title', config.challenge_title || defaultConfig.challenge_title],
-        ['challenge_timer', config.challenge_timer || defaultConfig.challenge_timer]
-      ]);
+      return new Map();
     }
     
     // Initialize SDK
@@ -675,438 +811,6 @@
         mapToEditPanelValues
       });
     }
-    
-    // Claim button interactions
-    document.querySelectorAll('.claim-btn').forEach(btn => {
-      btn.addEventListener('click', function() {
-        const card = this.closest('.reward-card');
-        if(!card) return;
-        const rewardName = card.querySelector('h3')?.textContent || 'reward';
-        const pointsCost = card.querySelector('span[class*="rounded-full"]')?.textContent || '0 pts';
-        
-        this.textContent = 'CLAIMED!';
-        this.style.background = 'linear-gradient(135deg, #0F3B2E, #1F4F3B)';
-        this.disabled = true;
-        
-        setTimeout(() => {
-          this.textContent = 'CLAIM NOW';
-          this.style.background = 'linear-gradient(135deg, #5DAE60, #4CAF50)';
-          this.disabled = false;
-        }, 2000);
-      });
-    });
-  
-  // Navigation Dropdown Handler
-  function initializeNavDropdown() {
-    const dropdownBtn = document.getElementById('nav-dropdown-btn');
-    const dropdownContainer = document.querySelector('.nav-dropdown');
-    const pageLinks = document.querySelectorAll('.nav-page-link');
-    const currentPage = window.location.pathname;
-
-    if (!dropdownBtn || !dropdownContainer) return;
-
-    // Set active link based on current page
-    pageLinks.forEach(link => {
-      const href = link.getAttribute('href');
-      if (currentPage.includes(href)) {
-        link.classList.add('active');
-      } else {
-        link.classList.remove('active');
-      }
-    });
-
-    // Toggle dropdown
-    dropdownBtn.addEventListener('click', () => {
-      dropdownContainer.classList.toggle('open');
-      dropdownBtn.setAttribute('aria-expanded', dropdownContainer.classList.contains('open'));
-    });
-
-    // Close dropdown when a link is clicked
-    pageLinks.forEach(link => {
-      link.addEventListener('click', () => {
-        dropdownContainer.classList.remove('open');
-        dropdownBtn.setAttribute('aria-expanded', 'false');
-      });
-    });
-
-    // Close dropdown when clicking outside
-    document.addEventListener('click', (e) => {
-      if (!dropdownContainer.contains(e.target) && !dropdownBtn.contains(e.target)) {
-        dropdownContainer.classList.remove('open');
-        dropdownBtn.setAttribute('aria-expanded', 'false');
-      }
-    });
-  }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initializeNavDropdown);
-  } else {
-    initializeNavDropdown();
-  }
   </script>
-<!--User Protection & Account Info Script-->
-<script>
-  function formatPointsDisplay(value) {
-    const numeric = Number(value || 0);
-    return Number.isFinite(numeric) ? numeric.toLocaleString() : '0';
-  }
-
-  async function loadDashboardStatsFromSql(user) {
-    try {
-      if (!user || !user.id) {
-        return;
-      }
-
-      const query = new URLSearchParams({
-        userId: String(user.id),
-        email: String(user.email || '')
-      });
-
-      const response = await fetch(`/api/dashboard/stats?${query.toString()}`);
-      if (!response.ok) {
-        return;
-      }
-
-      const payload = await response.json();
-      if (!payload?.success || !payload?.stats) {
-        return;
-      }
-
-      const categories = payload.stats.categories || {};
-      const plasticEl = document.getElementById('stat-plastic');
-      if (plasticEl) {
-        plasticEl.textContent = formatPointsDisplay(categories.Plastic || 0);
-      }
-
-      const paperEl = document.getElementById('stat-paper');
-      if (paperEl) {
-        paperEl.textContent = formatPointsDisplay(categories.Paper || 0);
-      }
-
-      const metalEl = document.getElementById('stat-metal');
-      if (metalEl) {
-        metalEl.textContent = formatPointsDisplay(categories.Metal || 0);
-      }
-
-      const totalSortedEl = document.getElementById('stat-total-sorted');
-      if (totalSortedEl) {
-        const totalSorted = Number(categories.Plastic || 0) + Number(categories.Paper || 0) + Number(categories.Metal || 0);
-        totalSortedEl.textContent = formatPointsDisplay(totalSorted);
-      }
-
-      const rankEl = document.getElementById('rank-display');
-      if (rankEl) {
-        // Check if user is not ranked yet
-        if (payload.stats.notRanked || payload.stats.leaderboardPosition === 0) {
-          rankEl.textContent = 'Not ranked yet';
-          rankEl.title = 'Start sorting waste to get ranked!';
-        } else if (payload.stats.leaderboardPosition) {
-          // User has a rank
-          const totalUsers = payload.stats.totalUsers || '?';
-          rankEl.textContent = `Rank: #${payload.stats.leaderboardPosition} of ${totalUsers}`;
-          rankEl.title = 'Your current ranking among all users';
-        }
-      }
-    } catch (error) {
-      console.warn('Failed to load dashboard stats:', error);
-    }
-  }
-
-  async function loadUserPointsFromAccountPoints(user) {
-    try {
-      const effectiveUserId = user?.id || user?.system_id || user?.campus_id;
-      if (!effectiveUserId && !user?.email) {
-        return;
-      }
-
-      const query = new URLSearchParams({
-        userId: String(effectiveUserId || ''),
-        email: String(user.email || '')
-      });
-
-      const response = await fetch(`/api/dashboard/points?${query.toString()}`);
-      if (!response.ok) {
-        return;
-      }
-
-      const payload = await response.json();
-      if (!payload?.success || !payload?.user) {
-        return;
-      }
-
-      const pointsValue = Number(payload.user.points || 0);
-
-      const navPointsEl = document.getElementById('nav-points');
-      if (navPointsEl) {
-        navPointsEl.textContent = `${formatPointsDisplay(pointsValue)} Points`;
-      }
-
-      const totalPointsEl = document.getElementById('total-points');
-      if (totalPointsEl) {
-        totalPointsEl.textContent = formatPointsDisplay(pointsValue);
-      }
-
-      // Update rank display
-      const rankEl = document.getElementById('rank-display');
-      if (rankEl && payload.rank) {
-        // Check if user is not ranked yet
-        if (payload.rank.notRanked) {
-          rankEl.textContent = payload.rank.message || 'Not ranked yet';
-          rankEl.title = 'Start sorting waste to get ranked!';
-        } else {
-          // User has a rank
-          rankEl.textContent = `Rank: #${payload.rank.rank} of ${payload.rank.totalUsers}`;
-          rankEl.title = `You are in the top ${payload.rank.percentile}% of users`;
-        }
-      }
-
-      const sessionUser = JSON.parse(sessionStorage.getItem('bintech_user') || 'null');
-      if (sessionUser) {
-        sessionUser.points = pointsValue;
-        if (payload.rank) {
-          sessionUser.rank = payload.rank.rank;
-          sessionUser.totalUsers = payload.rank.totalUsers;
-          sessionUser.percentile = payload.rank.percentile;
-        }
-        sessionStorage.setItem('bintech_user', JSON.stringify(sessionUser));
-      }
-    } catch (error) {
-      console.warn('Failed to load account points:', error);
-    }
-  }
-
-  async function loadAccountActivityOverview(user) {
-    try {
-      const effectiveUserId = user?.id || user?.system_id || user?.campus_id;
-      if (!effectiveUserId && !user?.email) {
-        return;
-      }
-
-      const query = new URLSearchParams({
-        userId: String(effectiveUserId || ''),
-        email: String(user.email || '')
-      });
-
-      const response = await fetch(`/api/dashboard/activity-overview?${query.toString()}`);
-      if (!response.ok) {
-        return;
-      }
-
-      const payload = await response.json();
-      if (!payload?.success || !payload?.summary) {
-        return;
-      }
-
-      const summary = payload.summary;
-      const setText = (id, value) => {
-        const el = document.getElementById(id);
-        if (el) {
-          el.textContent = formatPointsDisplay(value);
-        }
-      };
-
-      setText('stat-current-points', Number(summary.totalPoints || 0));
-      setText('stat-total-earned-points', Number(summary.totalLifetimePoints || 0));
-      setText('stat-plastic', Number(summary.plasticCount || 0));
-      setText('stat-paper', Number(summary.paperCount || 0));
-      setText('stat-metal', Number(summary.metalCount || 0));
-      setText('stat-total-sorted', Number(summary.totalWaste || 0));
-      setText('stat-total-sessions', Number(summary.totalSessions || 0));
-      setText('stat-points-transfer-spent', Number(summary.pointsSpentOnTransfers || 0));
-      setText('stat-points-redeem-spent', Number(summary.pointsSpentOnRedeems || 0));
-      setText('stat-total-redeemed-rewards', Number(summary.totalRewardsRedeemed || 0));
-
-      const currentPoints = Number(summary.totalPoints || 0);
-      const navPointsEl = document.getElementById('nav-points');
-      if (navPointsEl) {
-        navPointsEl.textContent = `${formatPointsDisplay(currentPoints)} Points`;
-      }
-
-      const totalPointsEl = document.getElementById('total-points');
-      if (totalPointsEl) {
-        totalPointsEl.textContent = formatPointsDisplay(currentPoints);
-      }
-    } catch (error) {
-      console.warn('Failed to load account activity overview:', error);
-    }
-  }
-
-  function protectUserPage() {
-    console.log('User page protection loading...');
-    
-    const user = JSON.parse(sessionStorage.getItem('bintech_user') || 'null');
-    console.log('User from session:', user);
-    
-    if (!user) {
-      console.log('No user found, redirecting to login...');
-      window.location.href = '/';
-      return;
-    }
-    
-    if (user.role === 'admin') {
-      console.log('Admin user detected, redirecting to admin dashboard...');
-      window.location.href = '/admin/dashboard';
-      return;
-    }
-    
-    console.log('Valid user, updating UI with:', user.full_name || user.email);
-
-    const updateNavbarProfile = (currentUser) => {
-      const navProfilePicture = document.getElementById('nav-profile-picture');
-      const navProfileInitials = document.getElementById('nav-profile-initials');
-      const mobileNavProfilePicture = document.getElementById('mobile-nav-profile-picture');
-      const mobileNavProfileInitials = document.getElementById('mobile-nav-profile-initials');
-      const mobileNavUserName = document.getElementById('mobile-nav-user-name');
-      const navUserName = document.getElementById('nav-user-name');
-      const fullName = currentUser.full_name || currentUser.email || 'User';
-      const parts = String(fullName).trim().split(' ').filter(Boolean);
-      const initials = ((parts[0]?.charAt(0) || fullName.charAt(0) || 'U') + (parts[1]?.charAt(0) || 'S')).toUpperCase();
-
-      // Update desktop nav
-      if (navProfileInitials) {
-        navProfileInitials.textContent = initials;
-        navProfileInitials.classList.remove('hidden');
-      }
-
-      if (navProfilePicture) {
-        if (currentUser.profile_picture) {
-          navProfilePicture.src = currentUser.profile_picture;
-          navProfilePicture.classList.remove('hidden');
-          navProfileInitials?.classList.add('hidden');
-        } else {
-          navProfilePicture.classList.add('hidden');
-          navProfilePicture.removeAttribute('src');
-        }
-      }
-
-      // Update mobile nav
-      if (mobileNavProfileInitials) {
-        mobileNavProfileInitials.textContent = initials;
-        mobileNavProfileInitials.classList.add('hidden');
-      }
-
-      if (mobileNavProfilePicture) {
-        if (currentUser.profile_picture) {
-          mobileNavProfilePicture.src = currentUser.profile_picture;
-          mobileNavProfilePicture.classList.remove('hidden');
-        } else {
-          mobileNavProfilePicture.classList.add('hidden');
-          mobileNavProfilePicture.removeAttribute('src');
-        }
-      }
-
-      // Update user names
-      if (navUserName) navUserName.textContent = fullName;
-      if (mobileNavUserName) mobileNavUserName.textContent = fullName;
-    };
-    
-    // Update nav-user-name specifically
-    document.querySelectorAll('#nav-user-name, #mobile-nav-user-name').forEach((el) => {
-      el.textContent = (user.full_name || user.email || 'User').toUpperCase();
-    });
-    updateNavbarProfile(user);
-    console.log('Updated nav-user-name');
-    
-    // Load dashboard data from backend
-    console.log('Loading dashboard data...');
-    loadUserPointsFromAccountPoints(user);
-    loadDashboardStatsFromSql(user);
-    loadAccountActivityOverview(user);
-  }
-  
-  function logoutUser() {
-    // Disable all interactive elements
-    document.querySelectorAll('button, input, a').forEach(el => {
-      el.disabled = true;
-      el.style.opacity = '0.5';
-    });
-    
-    // Clear session data completely
-    sessionStorage.clear();
-    localStorage.clear();
-    
-    // Redirect after cleanup
-    setTimeout(() => {
-      window.location.replace('/');
-    }, 200);
-  }
-
-  function initializeUserMobileMenu() {
-    const toggle = document.getElementById('mobile-nav-toggle');
-    const panel = document.getElementById('mobile-nav-panel');
-    const navPoints = document.getElementById('nav-points');
-    const mobilePoints = document.getElementById('mobile-nav-points');
-    if (!toggle || !panel) return;
-
-    const navRow = toggle.closest('.flex.items-center.justify-between') || toggle.closest('.nav-container');
-    const leftSection = navRow ? navRow.firstElementChild : null;
-    const rightSection = toggle.parentElement;
-    const userDataStr = sessionStorage.getItem('bintech_user');
-    let mobileDisplayName = 'User';
-    if (userDataStr) {
-      try {
-        const userData = JSON.parse(userDataStr);
-        mobileDisplayName = userData?.full_name || userData?.name || userData?.email || 'User';
-      } catch (error) {
-        mobileDisplayName = 'User';
-      }
-    }
-
-    const closeMenu = () => {
-      panel.dataset.open = 'false';
-      panel.style.display = 'none';
-      toggle.setAttribute('aria-expanded', 'false');
-    };
-
-    const applyMobileHeaderPolish = () => {
-      if (window.innerWidth < 768) {
-        if (leftSection) leftSection.style.display = '';
-      } else {
-        if (leftSection) leftSection.style.display = '';
-        closeMenu();
-      }
-    };
-
-    const openMenu = () => {
-      if (mobilePoints && navPoints) {
-        mobilePoints.textContent = navPoints.textContent;
-      }
-      panel.dataset.open = 'true';
-      panel.style.display = 'block';
-      toggle.setAttribute('aria-expanded', 'true');
-    };
-
-    toggle.addEventListener('click', () => {
-      if (panel.dataset.open === 'true') {
-        closeMenu();
-      } else {
-        openMenu();
-      }
-    });
-
-    panel.querySelectorAll('a').forEach((link) => {
-      link.addEventListener('click', closeMenu);
-    });
-
-    window.addEventListener('resize', applyMobileHeaderPolish);
-
-    document.addEventListener('keydown', (event) => {
-      if (event.key === 'Escape') {
-        closeMenu();
-      }
-    });
-    applyMobileHeaderPolish();
-  }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-      initializeUserMobileMenu();
-      protectUserPage();
-    });
-  } else {
-    initializeUserMobileMenu();
-    protectUserPage();
-  }
-</script>
 </body>
 </html>
