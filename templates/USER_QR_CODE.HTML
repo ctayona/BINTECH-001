@@ -1,0 +1,1218 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ðŸ’³ Transfer Points - BinTECH</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="/css/user-footer.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-dark: #0F3B2E;
+            --secondary-gradient-start: #143D2E;
+            --secondary-gradient-end: #1F4F3B;
+            --accent-yellow: #D4E157;
+            --card-green: #5DAE60;
+            --page-bg: #E8ECEB;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+        }
+
+        body {
+            font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background:
+                radial-gradient(circle at 10% -10%, rgba(93, 174, 96, 0.15), transparent 40%),
+                radial-gradient(circle at 90% 0%, rgba(212, 225, 87, 0.15), transparent 36%),
+                var(--page-bg);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .font-playfair {
+            font-family: 'Playfair Display', serif;
+        }
+
+        /* Navigation */
+        nav.gradient-dark {
+            background: linear-gradient(135deg, var(--secondary-gradient-start), var(--secondary-gradient-end));
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            box-shadow: 0 4px 12px rgba(15, 59, 46, 0.1);
+        }
+
+        .nav-container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 4rem;
+        }
+
+        .nav-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .profile-btn {
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 9999px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(212, 225, 87, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .profile-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(212, 225, 87, 0.6);
+        }
+
+        .profile-btn svg {
+            width: 1.5rem;
+            height: 1.5rem;
+            color: var(--accent-yellow);
+        }
+
+        .nav-welcome {
+            display: none;
+        }
+
+        .nav-welcome.show {
+            display: block;
+        }
+
+        .nav-welcome p:first-child {
+            color: rgba(212, 225, 87, 0.7);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .nav-welcome p:last-child {
+            color: white;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        .nav-center {
+            display: none;
+        }
+
+        .nav-center.show {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        .nav-link {
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+            position: relative;
+            transition: color 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            color: white;
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--accent-yellow);
+            transition: width 0.3s ease;
+        }
+
+        .nav-link:hover::after,
+        .nav-link.active::after {
+            width: 100%;
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .points-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(212, 225, 87, 0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            border: 1px solid rgba(212, 225, 87, 0.4);
+        }
+
+        .points-badge span:last-child {
+            color: var(--accent-yellow);
+            font-weight: 700;
+            font-size: 0.875rem;
+        }
+
+        .logout-btn {
+            padding: 0.5rem 1rem;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.875rem;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 9999px;
+            background: transparent;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            color: white;
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        /* Main Content */
+        #app-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        main {
+            flex: 1;
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+            width: 100%;
+        }
+
+        .page-header {
+            margin-bottom: 2rem;
+        }
+
+        .page-header h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2rem;
+            color: var(--primary-dark);
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+        }
+
+        .page-header p {
+            color: rgba(15, 59, 46, 0.6);
+            font-size: 0.95rem;
+        }
+
+        .scanner-card {
+            background: white;
+            border-radius: 1.5rem;
+            overflow: hidden;
+            margin-bottom: 2rem;
+            max-width: 980px;
+            margin-left: auto;
+            margin-right: auto;
+            box-shadow: 0 4px 20px rgba(15, 59, 46, 0.12);
+            border: 1px solid rgba(15, 59, 46, 0.08);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .scanner-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 28px rgba(15, 59, 46, 0.14);
+        }
+
+        .scanner-container {
+            position: relative;
+            aspect-ratio: 1;
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            min-height: 240px;
+        }
+
+        #qr-video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .qr-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 72%;
+            aspect-ratio: 1;
+            max-width: 240px;
+            border: 3px solid var(--accent-yellow);
+            border-radius: 12px;
+            box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5), inset 0 0 0 2px var(--accent-yellow);
+            pointer-events: none;
+        }
+
+        .scanner-controls {
+            padding: 1.4rem 1.5rem 1.6rem;
+            background: white;
+        }
+
+        .control-buttons {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 0.5rem;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--card-green), #4CAF50);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(93, 174, 96, 0.4);
+        }
+
+        .btn-secondary {
+            background: #e0e0e0;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #d0d0d0;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, var(--card-green), #4CAF50);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+            transform: translateY(-2px);
+        }
+
+        /* Session Info */
+        .session-info {
+            background: white;
+            border-radius: 1.5rem;
+            padding: 2rem;
+            box-shadow: 0 4px 20px rgba(15, 59, 46, 0.12);
+            margin-bottom: 2rem;
+            display: none;
+        }
+
+        .session-info.active {
+            display: block;
+        }
+
+        .session-info h2 {
+            color: var(--primary-dark);
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .info-item {
+            padding: 1.5rem;
+            background: rgba(15, 59, 46, 0.05);
+            border-radius: 0.5rem;
+            border-left: 4px solid var(--card-green);
+        }
+
+        .info-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+        }
+
+        .info-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.4rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-top: 0.5rem;
+        }
+
+        .badge-active {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .badge-transferred {
+            background: #dbeafe;
+            color: #0c2340;
+        }
+
+        .transfer-section {
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .transfer-section h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #333;
+        }
+
+        .transfer-amount {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1.5rem;
+            background: #f0fdf4;
+            border-radius: 0.75rem;
+            margin-bottom: 1.5rem;
+            border-left: 4px solid var(--card-green);
+        }
+
+        .transfer-amount-icon {
+            font-size: 2rem;
+        }
+
+        .transfer-amount-info {
+            flex: 1;
+        }
+
+        .transfer-amount-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .transfer-amount-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--card-green);
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .loading-overlay.active {
+            display: flex;
+        }
+
+        .loading-spinner {
+            text-align: center;
+        }
+
+        .loader {
+            display: inline-block;
+            width: 3rem;
+            height: 3rem;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.8s linear infinite;
+            margin-bottom: 1.25rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-spinner p {
+            color: white;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .status-message {
+            padding: 1rem;
+            background: #f0f9ff;
+            border-left: 4px solid #3b82f6;
+            border-radius: 0.5rem;
+            color: #0c2340;
+            font-size: 0.875rem;
+            margin-bottom: 1.25rem;
+            display: none;
+        }
+
+        .status-message.show {
+            display: block;
+        }
+
+        .status-message.error {
+            background: #fef2f2;
+            border-left-color: #ef4444;
+            color: #7f1d1d;
+        }
+
+        .status-message.success {
+            background: #f0fdf4;
+            border-left-color: var(--card-green);
+            color: #166534;
+        }
+
+        .mobile-nav-toggle {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .nav-container {
+                height: auto;
+                min-height: 4rem;
+                padding-top: 0.5rem;
+                padding-bottom: 0.5rem;
+            }
+
+            .mobile-nav-toggle {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 2.25rem;
+                height: 2.25rem;
+                border-radius: 9999px;
+                border: 1px solid rgba(255, 255, 255, 0.3);
+                background: transparent;
+                color: rgba(255, 255, 255, 0.8);
+                cursor: pointer;
+            }
+
+            .nav-right {
+                gap: 0.5rem;
+            }
+
+            .points-badge {
+                display: none;
+            }
+
+            .logout-btn {
+                display: none;
+            }
+
+            .page-header h1 {
+                font-size: 1.5rem;
+            }
+
+            .nav-center.show {
+                display: none;
+            }
+
+            .nav-welcome.show {
+                display: block;
+            }
+
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .control-buttons {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+
+            main {
+                padding: 1rem;
+            }
+
+            .scanner-container {
+                min-height: 220px;
+            }
+
+            .qr-overlay {
+                width: 70%;
+                max-width: 220px;
+            }
+
+            .scanner-controls {
+                padding: 1.1rem;
+            }
+
+            .mobile-nav-panel[data-open="true"] {
+                display: block;
+            }
+        }
+
+        @media (min-width: 768px) {
+            .mobile-nav-toggle {
+                display: none;
+            }
+
+            .mobile-nav-panel {
+                display: none !important;
+            }
+
+            .nav-center.show {
+                display: flex;
+            }
+
+            .nav-welcome.show {
+                display: block;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="app-wrapper">
+        <!-- Navigation -->
+        <nav class="gradient-dark">
+            <div class="nav-container">
+                <!-- Left -->
+                <div class="nav-left">
+                    <button class="profile-btn" onclick="window.location.href='/profile'" title="View Profile">
+                        <svg fill="currentColor" viewbox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                        </svg>
+                    </button>
+                    <div class="nav-welcome show">
+                        <p>Welcome Back</p>
+                        <p id="nav-user-name">User</p>
+                    </div>
+                </div>
+
+                <!-- Center -->
+                <div class="nav-center show">
+                    <a href="/dashboard" class="nav-link">Dashboard</a>
+                    <a href="/rewards" class="nav-link">Rewards</a>
+                    <a href="/history" class="nav-link">History</a>
+                    <a href="/how-it-works" class="nav-link">How It Works</a>
+                    <a href="/qr-scanner" class="nav-link active">Transfer Points</a>
+                </div>
+
+                <!-- Right -->
+                <div class="nav-right">
+                    <button id="mobile-nav-toggle" type="button" class="mobile-nav-toggle" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="mobile-nav-panel">
+                        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
+                    </button>
+                    <div class="points-badge">
+                        <span>✨</span>
+                        <span id="nav-points">0 Points</span>
+                    </div>
+                    <button class="logout-btn" onclick="handleLogout()">Logout</button>
+                </div>
+            </div>
+            <div id="mobile-nav-panel" class="mobile-nav-panel" data-open="false" style="display:none;padding:0.9rem 1rem 1rem;border-top:1px solid rgba(255,255,255,.15);background:rgba(20,61,46,.95)">
+                <a href="/dashboard" class="nav-link" style="display:block;margin-bottom:0.7rem;">Dashboard</a>
+                <a href="/rewards" class="nav-link" style="display:block;margin-bottom:0.7rem;">Rewards</a>
+                <a href="/history" class="nav-link" style="display:block;margin-bottom:0.7rem;">History</a>
+                <a href="/how-it-works" class="nav-link" style="display:block;margin-bottom:0.7rem;">How It Works</a>
+                <a href="/qr-scanner" class="nav-link active" style="display:block;margin-bottom:0.9rem;">Transfer Points</a>
+                <div style="padding-top:0.8rem;border-top:1px solid rgba(255,255,255,.15);display:flex;align-items:center;justify-content:space-between;gap:0.5rem;">
+                    <span id="mobile-nav-points" style="color:var(--accent-yellow);font-size:0.85rem;font-weight:700;">0 Points</span>
+                    <button class="logout-btn" onclick="handleLogout()" style="display:inline-block;padding:0.35rem 0.7rem;font-size:0.72rem;">Logout</button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main>
+            <!-- Page Header -->
+            <div class="page-header">
+                <h1>Point Transfer Hub</h1>
+                <p>Scan your machine QR code to start sorting and transfer earned points to your account</p>
+            </div>
+
+            <!-- Status Message -->
+            <div id="status-message" class="status-message"></div>
+
+            <!-- Scanner Card -->
+            <div class="scanner-card">
+                <div class="scanner-container">
+                    <video id="qr-video"></video>
+                    <div class="qr-overlay">
+                        <div class="scanner-corner top-left"></div>
+                        <div class="scanner-corner top-right"></div>
+                        <div class="scanner-corner bottom-left"></div>
+                        <div class="scanner-corner bottom-right"></div>
+                    </div>
+                </div>
+                <div class="scanner-controls">
+                    <div class="control-buttons">
+                        <button class="btn btn-primary" id="start-scanner" onclick="startScanner()">Start Scanner</button>
+                        <button class="btn btn-secondary" id="stop-scanner" onclick="stopScanner()" style="display: none;">Stop Scanner</button>
+                        <button class="btn btn-secondary" id="manual-entry" onclick="openManualEntry()">Manual Entry</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Session Info -->
+            <div class="session-info" id="session-info">
+                <h2>Active Session</h2>
+                
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-label">Session Status</div>
+                        <div class="info-value">
+                            <span id="session-status" style="font-size: 1rem;">ACTIVE</span>
+                            <div class="status-badge badge-active" id="status-badge">Active</div>
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Points Earned</div>
+                        <div class="info-value" id="points-earned">0</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Items Sorted</div>
+                        <div class="info-value" id="items-sorted">0</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Session Time</div>
+                        <div class="info-value" id="session-time">0:00</div>
+                    </div>
+                </div>
+
+                <div class="transfer-section">
+                    <h3>Transfer Sorted Points to Account</h3>
+                    
+                    <div class="transfer-amount">
+                        <div class="transfer-amount-icon">âœ¨</div>
+                        <div class="transfer-amount-info">
+                            <div class="transfer-amount-label">Available to Transfer</div>
+                            <div class="transfer-amount-value" id="transfer-amount">0 pts</div>
+                        </div>
+                    </div>
+
+                    <div class="control-buttons">
+                        <button class="btn btn-success" id="transfer-btn" onclick="transferPoints()">
+                            âœ“ Transfer Points Now
+                        </button>
+                        <button class="btn btn-secondary" id="cancel-btn" onclick="endSession()">End Session</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loading-overlay">
+        <div class="loading-spinner">
+            <div class="loader"></div>
+            <p id="loading-text">Processing...</p>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/js/auth.js"></script>
+    <script>
+        let currentSession = null;
+        let sessionCheckInterval = null;
+        let sessionStartTime = null;
+        let timerInterval = null;
+        const MACHINE_ID = 'BINTECH-SORTER-001';
+
+        function toNumber(value, fallback = 0) {
+            const n = Number(value);
+            return Number.isFinite(n) ? n : fallback;
+        }
+
+        // Initialize user display on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            const user = AuthManager.getUser();
+            if (user) {
+                document.getElementById('nav-user-name').textContent = user.full_name || user.email || 'User';
+                refreshNavPoints(user);
+                initializeUserMobileMenu();
+
+                // Auto-attach to active machine session so live counters are visible immediately.
+                attachExistingMachineSession();
+            } else {
+                window.location.href = '/';
+            }
+        });
+
+        async function refreshNavPoints(user) {
+            try {
+                const effectiveUserId = user?.id || user?.system_id;
+                const email = user?.email || '';
+
+                if (!effectiveUserId && !email) return;
+
+                const query = new URLSearchParams();
+                if (effectiveUserId) query.set('userId', effectiveUserId);
+                if (email) query.set('email', email);
+
+                const response = await fetch(`/api/dashboard/points?${query.toString()}`);
+                const data = await response.json();
+                if (!data.success) return;
+
+                const points = toNumber(data.user?.points, 0);
+                document.getElementById('nav-points').textContent = `${Math.floor(points)} Points`;
+            } catch (error) {
+                console.error('Failed to refresh nav points:', error);
+            }
+        }
+
+        async function attachExistingMachineSession() {
+            try {
+                const response = await fetch(`/api/waste-sorter/api/device/${encodeURIComponent(MACHINE_ID)}/session`);
+                if (!response.ok) return;
+
+                const data = await response.json();
+                if (!data.success || !data.session) return;
+
+                const mappedSession = {
+                    id: data.session.sessionId,
+                    user_id: data.session.userId,
+                    is_active: !!data.session.isActive,
+                    points_earned: toNumber(data.session.pointsEarned, 0),
+                    metal_count: toNumber(data.session.metalCount, 0),
+                    plastic_count: toNumber(data.session.plasticCount, 0),
+                    paper_count: toNumber(data.session.paperCount, 0)
+                };
+
+                currentSession = mappedSession;
+                sessionStartTime = new Date();
+                displaySession(mappedSession);
+                startSessionMonitoring(mappedSession.id);
+            } catch (error) {
+                console.error('Failed to attach existing machine session:', error);
+            }
+        }
+
+        // ============================================
+        // Toast/Status Message Functions
+        // ============================================
+        function showStatus(message, type = 'info') {
+            const messageEl = document.getElementById('status-message');
+            messageEl.textContent = message;
+            messageEl.className = 'status-message show ' + type;
+        }
+
+        function hideStatus() {
+            const messageEl = document.getElementById('status-message');
+            messageEl.className = 'status-message';
+        }
+
+        function showLoading(text = 'Processing...') {
+            document.getElementById('loading-text').textContent = text;
+            document.getElementById('loading-overlay').classList.add('active');
+        }
+
+        function hideLoading() {
+            document.getElementById('loading-overlay').classList.remove('active');
+        }
+
+        // ============================================
+        // QR Scanner Functions
+        // ============================================
+        function startScanner() {
+            const user = AuthManager.getUser();
+            if (!user) {
+                showStatus('Please log in first', 'error');
+                window.location.href = '/';
+                return;
+            }
+
+            navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+                .then(stream => {
+                    const video = document.getElementById('qr-video');
+                    video.srcObject = stream;
+                    video.onloadedmetadata = () => {
+                        video.play();
+                        document.getElementById('start-scanner').style.display = 'none';
+                        document.getElementById('stop-scanner').style.display = 'inline-block';
+                        
+                        const canvas = document.createElement('canvas');
+                        const context = canvas.getContext('2d');
+                        
+                        setInterval(() => {
+                            if (video.readyState === video.HAVE_ENOUGH_DATA) {
+                                canvas.width = video.videoWidth;
+                                canvas.height = video.videoHeight;
+                                context.drawImage(video, 0, 0);
+                                
+                                try {
+                                    const code = jsQR(context.getImageData(0, 0, canvas.width, canvas.height).data, canvas.width, canvas.height);
+                                    if (code) {
+                                        handleQRCodeScanned(code.data);
+                                    }
+                                } catch (e) {
+                                    // Silent error
+                                }
+                            }
+                        }, 100);
+                    };
+                })
+                .catch(err => {
+                    showStatus('Camera permission denied: ' + err.message, 'error');
+                });
+        }
+
+        function stopScanner() {
+            const video = document.getElementById('qr-video');
+            const stream = video.srcObject;
+            const tracks = stream.getTracks();
+            tracks.forEach(track => track.stop());
+            
+            document.getElementById('start-scanner').style.display = 'inline-block';
+            document.getElementById('stop-scanner').style.display = 'none';
+        }
+
+        async function handleQRCodeScanned(qrData) {
+            const user = AuthManager.getUser();
+            const effectiveUserId = user?.id || user?.system_id;
+            
+            stopScanner();
+            showLoading(`Initiating session with ${qrData}...`);
+
+            // DEBUG: Log what we're sending
+            console.log('=== QR SCAN DEBUG ===');
+            console.log('Full user object:', user);
+            console.log('user.id:', user.id);
+            console.log('user.id type:', typeof user.id);
+            console.log('user.system_id:', user.system_id);
+            console.log('user.email:', user.email);
+            console.log('user.account_type:', user.account_type);
+            console.log('QR Data:', qrData);
+            console.log('================');
+
+            try {
+                const response = await fetch('/api/waste-sorter/session/start', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        userId: effectiveUserId,
+                        hardwareDeviceId: qrData,
+                        qrCodeData: qrData
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    currentSession = data.session;
+                    sessionStartTime = new Date();
+                    displaySession(data.session);
+                    startSessionMonitoring(data.session.id);
+                    hideLoading();
+                    showStatus('Session started successfully!', 'success');
+                } else {
+                    hideLoading();
+                    showStatus(data.message || 'Failed to start session', 'error');
+                }
+            } catch (error) {
+                hideLoading();
+                showStatus('Error starting session: ' + error.message, 'error');
+                console.error('Session start error:', error);
+            }
+        }
+
+        function openManualEntry() {
+            const hardwareId = prompt('Enter ESP32 Hardware ID:');
+            if (hardwareId) {
+                const user = AuthManager.getUser();
+                if (!user) {
+                    showStatus('Please log in first', 'error');
+                    return;
+                }
+                
+                document.getElementById('start-scanner').style.display = 'inline-block';
+                document.getElementById('stop-scanner').style.display = 'none';
+                handleQRCodeScanned(hardwareId);
+            }
+        }
+
+        // ============================================
+        // Session Management
+        // ============================================
+        function displaySession(session) {
+            const pointsEarned = toNumber(session.points_earned, 0);
+            const metalCount = toNumber(session.metal_count, 0);
+            const plasticCount = toNumber(session.plastic_count, 0);
+            const paperCount = toNumber(session.paper_count, 0);
+            const isActive = !!session.is_active;
+
+            document.getElementById('session-info').classList.add('active');
+            document.getElementById('points-earned').textContent = pointsEarned.toFixed(2);
+            document.getElementById('items-sorted').textContent = metalCount + plasticCount + paperCount;
+            document.getElementById('transfer-amount').textContent = pointsEarned.toFixed(2) + ' pts';
+            document.getElementById('session-status').textContent = isActive ? 'ACTIVE' : 'COMPLETED';
+            
+            const statusBadge = document.getElementById('status-badge');
+            statusBadge.classList.remove('badge-active', 'badge-transferred');
+            
+            if (isActive) {
+                statusBadge.classList.add('badge-active');
+                statusBadge.textContent = 'ACTIVE';
+            } else {
+                statusBadge.classList.add('badge-transferred');
+                statusBadge.textContent = 'COMPLETED';
+            }
+
+            startSessionTimer();
+        }
+
+        function startSessionTimer() {
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                if (sessionStartTime) {
+                    const elapsed = Math.floor((new Date() - sessionStartTime) / 1000);
+                    const minutes = Math.floor(elapsed / 60);
+                    const seconds = elapsed % 60;
+                    document.getElementById('session-time').textContent = 
+                        `${minutes}:${String(seconds).padStart(2, '0')}`;
+                }
+            }, 1000);
+        }
+
+        function startSessionMonitoring(sessionId) {
+            if (sessionCheckInterval) clearInterval(sessionCheckInterval);
+
+            const pollSessionStatus = async () => {
+                try {
+                    const response = await fetch(`/api/waste-sorter/session/${sessionId}/status`);
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        currentSession = data.session;
+                        displaySession(data.session);
+
+                        if (!data.session.is_active) {
+                            clearInterval(sessionCheckInterval);
+                            sessionCheckInterval = null;
+                        }
+                    }
+                } catch (error) {
+                    console.error('Polling error:', error);
+                }
+            };
+
+            pollSessionStatus();
+            sessionCheckInterval = setInterval(pollSessionStatus, 5000);
+        }
+
+        async function transferPoints() {
+            if (!currentSession) {
+                showStatus('No active session', 'error');
+                return;
+            }
+
+            const user = AuthManager.getUser();
+            const effectiveUserId = user?.id || user?.system_id;
+            if (!effectiveUserId) {
+                showStatus('User account not found. Please log in again.', 'error');
+                return;
+            }
+            showLoading('Transferring points...');
+
+            try {
+                const response = await fetch('/api/waste-sorter/session/transfer', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: effectiveUserId,
+                        sessionId: currentSession.id
+                    })
+                });
+
+                const data = await response.json();
+                hideLoading();
+
+                if (data.success) {
+                    showStatus(`Successfully transferred ${data.data.pointsTransferred} points!`, 'success');
+                    currentSession = null;
+                    document.getElementById('session-info').classList.remove('active');
+
+                    if (sessionCheckInterval) {
+                        clearInterval(sessionCheckInterval);
+                        sessionCheckInterval = null;
+                    }
+                    if (timerInterval) {
+                        clearInterval(timerInterval);
+                        timerInterval = null;
+                    }
+                    
+                    // Update nav points
+                    const newPoints = data.data.newPoints;
+                    document.getElementById('nav-points').textContent = Math.floor(newPoints) + ' Points';
+                    const updatedUser = AuthManager.getUser();
+                    if (updatedUser) {
+                        refreshNavPoints(updatedUser);
+                    }
+                    
+                    // Reset form
+                    setTimeout(() => {
+                        document.getElementById('start-scanner').style.display = 'inline-block';
+                        hideStatus();
+                    }, 2000);
+                } else {
+                    showStatus(data.message || 'Failed to transfer points', 'error');
+                }
+            } catch (error) {
+                hideLoading();
+                showStatus('Error: ' + error.message, 'error');
+                console.error('Transfer error:', error);
+            }
+        }
+
+        async function endSession() {
+            if (!currentSession || !currentSession.id) {
+                showStatus('No active session', 'error');
+                return;
+            }
+
+            showLoading('Ending session...');
+            try {
+                const response = await fetch('/api/waste-sorter/session/end', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ sessionId: currentSession.id })
+                });
+
+                const data = await response.json();
+                hideLoading();
+
+                if (!data.success) {
+                    showStatus(data.message || 'Failed to end session', 'error');
+                    return;
+                }
+
+                currentSession = null;
+                document.getElementById('session-info').classList.remove('active');
+                hideStatus();
+
+                if (sessionCheckInterval) {
+                    clearInterval(sessionCheckInterval);
+                    sessionCheckInterval = null;
+                }
+                if (timerInterval) {
+                    clearInterval(timerInterval);
+                    timerInterval = null;
+                }
+
+                document.getElementById('start-scanner').style.display = 'inline-block';
+                showStatus('Session ended', 'info');
+            } catch (error) {
+                hideLoading();
+                showStatus('Error ending session: ' + error.message, 'error');
+                console.error('End session error:', error);
+            }
+        }
+
+        function handleLogout() {
+            AuthManager.logout();
+            window.location.href = '/';
+        }
+
+        function initializeUserMobileMenu() {
+            const toggle = document.getElementById('mobile-nav-toggle');
+            const panel = document.getElementById('mobile-nav-panel');
+            const navPoints = document.getElementById('nav-points');
+            const mobilePoints = document.getElementById('mobile-nav-points');
+            if (!toggle || !panel) return;
+
+            const closeMenu = () => {
+                panel.dataset.open = 'false';
+                panel.style.display = 'none';
+                toggle.setAttribute('aria-expanded', 'false');
+            };
+
+            const openMenu = () => {
+                if (mobilePoints && navPoints) {
+                    mobilePoints.textContent = navPoints.textContent;
+                }
+                panel.dataset.open = 'true';
+                panel.style.display = 'block';
+                toggle.setAttribute('aria-expanded', 'true');
+            };
+
+            toggle.addEventListener('click', () => {
+                if (panel.dataset.open === 'true') {
+                    closeMenu();
+                } else {
+                    openMenu();
+                }
+            });
+
+            panel.querySelectorAll('a').forEach((link) => {
+                link.addEventListener('click', closeMenu);
+            });
+
+            window.addEventListener('resize', () => {
+                if (window.innerWidth >= 768) {
+                    closeMenu();
+                }
+            });
+
+            document.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape') {
+                    closeMenu();
+                }
+            });
+        }
+    </script>
+</body>
+</html>

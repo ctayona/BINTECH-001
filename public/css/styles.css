@@ -1,0 +1,14 @@
+/* Tailwind CSS Configuration and Global Styles */
+
+/* Custom CSS for BinTECH
+   This file loads with Tailwind via CDN in layout.ejs
+   For additional custom styles, add them here
+*/
+
+@layer components {
+  /* Add custom component styles here if needed */
+}
+
+@layer utilities {
+  /* Add custom utility classes here if needed */
+}

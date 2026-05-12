@@ -1,0 +1,223 @@
+================================================================================
+COMPLETE MODIFIED FILES FOR MAINTENANCE MODE IMPLEMENTATION
+================================================================================
+
+These are the three files that were modified. Key changes are marked with ✅
+
+================================================================================
+FILE 1: app.js
+================================================================================
+
+CHANGES MADE:
+✅ Line 6: Added const cookieParser = require('cookie-parser');
+✅ Line 54: Added app.use(cookieParser());
+✅ Lines 120-178: Complete maintenance middleware with 4-method admin bypass
+
+KEY SECTIONS:
+
+1. IMPORT SECTION (Line 6):
+---
+const cookieParser = require('cookie-parser');
+---
+
+2. MIDDLEWARE SECTION (Line 54):
+---
+app.use(cors());
+app.use(cookieParser());  // ✅ NEW LINE
+app.use((req, res, next) => {
+---
+
+3. MAINTENANCE MIDDLEWARE (Lines 120-178):
+The complete middleware with 4 bypass methods:
+- Method 1: JWT token check
+- Method 2: Session cookie
+- Method 3: x-user-role header
+- Method 4: ✅ user_role cookie (PRIMARY)
+
+================================================================================
+FILE 2: controllers/authController.js
+================================================================================
+
+CHANGES MADE:
+✅ Lines 750-757: Set user_role cookie in admin login
+✅ Lines 880-887: Set user_role cookie in user login  
+✅ Logout function: Clear user_role cookie
+
+KEY SECTIONS:
+
+1. ADMIN LOGIN - ADD COOKIE (After line 749):
+---
+const normalizedRole = String(adminUser.role || 'admin').trim().toLowerCase();
+
+// Set user_role cookie so maintenance middleware can recognize admin
+res.cookie('user_role', normalizedRole, {
+  httpOnly: false,
+  maxAge: 86400 * 1000, // 24 hours
+  path: '/'
+});
+
+return res.json({
+  success: true,
+  message: 'Login successful',
+  isAdmin: true,
+  user: {
+    id: adminUser.id,
+    email: adminUser.email,
+    first_name: firstName,
+    middle_name: adminUser.Middle_Name || null,
+    last_name: lastName,
+    full_name: fullName,
+    role: normalizedRole,
+    account_type: 'admin_accounts',
+    phone: adminUser.phone || null,
+    auth_id: adminUser.auth_id || null,
+    google_id: adminUser.Google_ID || null
+  }
+});
+---
+
+2. USER LOGIN - ADD COOKIE (After line 879):
+---
+const normalizedRole = String(userAccount.role || 'staff').trim().toLowerCase();
+const roleProfile = await getRoleProfileForUserAccount(userAccount);
+const firstName = roleProfile?.first_name || userAccount.email?.split('@')[0] || 'User';
+const middleName = roleProfile?.middle_name || null;
+const lastName = roleProfile?.last_name || '';
+const fullName = `${firstName} ${middleName ? middleName + ' ' : ''}${lastName}`.trim() || firstName;
+
+// Set user_role cookie so maintenance middleware can recognize admin/head
+res.cookie('user_role', normalizedRole, {
+  httpOnly: false,
+  maxAge: 86400 * 1000, // 24 hours
+  path: '/'
+});
+
+return res.json({
+  success: true,
+  message: 'Login successful',
+  isAdmin: false,
+  user: {
+    id: userAccount.system_id,
+    email: userAccount.email,
+    campus_id: userAccount.campus_id || null,
+    first_name: firstName,
+    middle_name: middleName,
+    last_name: lastName,
+    full_name: fullName,
+    role: normalizedRole,
+    account_type: 'user_accounts',
+    google_id: userAccount.google_id || null,
+    profile_picture: roleProfile?.profile_picture || null,
+    points: roleProfile?.points || 0
+  }
+});
+---
+
+3. LOGOUT - CLEAR COOKIE:
+---
+console.log(`✓ User ${userEmail} logged out successfully`);
+
+// Clear the user_role cookie
+res.clearCookie('user_role', { path: '/' });
+
+res.json({
+  success: true,
+  message: 'Logout successful',
+---
+
+================================================================================
+FILE 3: public/js/auth.js
+================================================================================
+
+CHANGES MADE:
+✅ Lines 119-137: Added fetch interceptor for x-user-role header
+✅ Lines 788-809: Updated handleLogout() to clear cookie and call backend
+
+KEY SECTIONS:
+
+1. FETCH INTERCEPTOR (Insert after AuthManager class, ~line 119):
+---
+// ============================================
+// Fetch Interceptor for Auth Headers
+// ============================================
+// Automatically add x-user-role header to all requests
+// This allows the admin bypass middleware to recognize admin users
+const originalFetch = window.fetch;
+window.fetch = function(...args) {
+  const [resource, config = {}] = args;
+  
+  // Get the user's role from storage
+  const user = AuthManager.getUser();
+  const userRole = user?.role || null;
+  
+  // Add x-user-role header if user is logged in
+  if (userRole) {
+    config.headers = config.headers || {};
+    config.headers['x-user-role'] = userRole;
+    console.log(`[fetch-interceptor] Added x-user-role: ${userRole} to ${resource}`);
+  }
+  
+  // Call original fetch with modified config
+  return originalFetch.call(this, resource, config);
+};
+---
+
+2. UPDATED LOGOUT HANDLER (Replace existing handleLogout):
+---
+// Global Logout Handler
+// ============================================
+async function handleLogout() {
+  if (confirm('Are you sure you want to logout?')) {
+    AuthManager.logout();
+    
+    // Clear cookie on the client side
+    document.cookie = 'user_role=; path=/; max-age=0';
+    
+    // Notify backend to clear server-side session
+    try {
+      await fetch('/auth/logout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+    } catch (err) {
+      console.warn('Backend logout failed, continuing:', err);
+    }
+    
+    window.location.href = '/';
+  }
+}
+---
+
+================================================================================
+SUMMARY OF CHANGES
+================================================================================
+
+FILE: app.js
+- Add 1 import
+- Add 1 middleware line
+- Replace entire maintenance middleware section
+
+FILE: controllers/authController.js
+- Add cookie setting in 2 places (admin login & user login)
+- Add cookie clearing in logout
+
+FILE: public/js/auth.js
+- Add fetch interceptor (new section)
+- Update handleLogout() function
+
+DEPENDENCIES:
+- npm install cookie-parser
+
+================================================================================
+MAINTENANCE MODE TOGGLE
+================================================================================
+
+In app.js, line 21:
+const MAINTENANCE_MODE = true;  // ← Change to true/false to enable/disable
+
+- true = Maintenance on (admins only)
+- false = System fully operational
+
+================================================================================
