@@ -355,7 +355,7 @@ void classifyAndSort() {
     delay(100);
     verificationNeeded = true;
     materialToVerify = "METAL";
-    pointsAwarded = 2.0;
+    pointsAwarded = 3.0;
     pointsAlreadyAwarded = false;
   }
   else if (plasticDetected && !metalDetected) {
@@ -364,14 +364,14 @@ void classifyAndSort() {
     delay(100);
     verificationNeeded = true;
     materialToVerify = "PLASTIC";
-    pointsAwarded = 1.0;
+    pointsAwarded = 2.0;
     pointsAlreadyAwarded = false;
   }
   else if (paperDetected && !metalDetected && !plasticDetected) {
     Serial.println("=> PAPER DETECTED! Motor only (no servo)...");
     verificationNeeded = true;
     materialToVerify = "PAPER";
-    pointsAwarded = 0.5;
+    pointsAwarded = 1.0;
     pointsAlreadyAwarded = false;
   }
   else {
@@ -541,15 +541,15 @@ void printStats() {
   Serial.println("\n========================================");
   Serial.println("         CURRENT SESSION STATS");
   Serial.println("========================================");
-  Serial.printf("Metal Items:   %d | Points: %.1f", metalCount, metalCount * 2.0);
+  Serial.printf("Metal Items:   %d | Points: %.1f", metalCount, metalCount * 3.0);
   if (metalBinFull) Serial.print(" | ⚠️  BIN FULL");
   Serial.println();
   
-  Serial.printf("Plastic Items: %d | Points: %.1f", plasticCount, plasticCount * 1.0);
+  Serial.printf("Plastic Items: %d | Points: %.1f", plasticCount, plasticCount * 2.0);
   if (plasticBinFull) Serial.print(" | ⚠️  BIN FULL");
   Serial.println();
   
-  Serial.printf("Paper Items:   %d | Points: %.1f", paperCount, paperCount * 0.5);
+  Serial.printf("Paper Items:   %d | Points: %.1f", paperCount, paperCount * 1.0);
   if (paperBinFull) Serial.print(" | ⚠️  BIN FULL");
   Serial.println();
   

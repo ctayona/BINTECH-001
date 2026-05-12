@@ -69,7 +69,7 @@ void showSessionLcd() {
   if (sessionLabel.length() == 0) {
     sessionLabel = "Active session";
   }
-  updateLcd("User: " + sessionLabel, "Ready to sort");
+  updateLcd("Welcome user:", sessionLabel);
 }
 
 void showSortingLcd(const String& material) {
@@ -476,7 +476,7 @@ void classifyAndSort() {
     delay(120);
     verificationNeeded = true;
     materialToVerify = "METAL";
-    pointsAwarded = 2.0;
+    pointsAwarded = 3.0;
     pointsAlreadyAwarded = false;
   }
   else if (plasticDetected && !metalDetected) {
@@ -486,7 +486,7 @@ void classifyAndSort() {
     delay(120);
     verificationNeeded = true;
     materialToVerify = "PLASTIC";
-    pointsAwarded = 1.0;
+    pointsAwarded = 2.0;
     pointsAlreadyAwarded = false;
   }
   else if (paperDetected && !metalDetected && !plasticDetected) {
@@ -494,7 +494,7 @@ void classifyAndSort() {
     showSortingLcd("Paper");
     verificationNeeded = true;
     materialToVerify = "PAPER";
-    pointsAwarded = 0.5;
+    pointsAwarded = 1.0;
     pointsAlreadyAwarded = false;
   }
   else {
@@ -699,15 +699,15 @@ void printStats() {
   Serial.println("\n========================================");
   Serial.println("         CURRENT SESSION STATS");
   Serial.println("========================================");
-  Serial.printf("Metal Items:   %d | Points: %.1f", metalCount, metalCount * 2.0);
+  Serial.printf("Metal Items:   %d | Points: %.1f", metalCount, metalCount * 3.0);
   if (metalBinFull) Serial.print(" | ⚠️  BIN FULL");
   Serial.println();
   
-  Serial.printf("Plastic Items: %d | Points: %.1f", plasticCount, plasticCount * 1.0);
+  Serial.printf("Plastic Items: %d | Points: %.1f", plasticCount, plasticCount * 2.0);
   if (plasticBinFull) Serial.print(" | ⚠️  BIN FULL");
   Serial.println();
   
-  Serial.printf("Paper Items:   %d | Points: %.1f", paperCount, paperCount * 0.5);
+  Serial.printf("Paper Items:   %d | Points: %.1f", paperCount, paperCount * 1.0);
   if (paperBinFull) Serial.print(" | ⚠️  BIN FULL");
   Serial.println();
   
@@ -1032,7 +1032,7 @@ void syncActiveSessionFromBackend() {
     if (!err && doc["success"] == true && doc["session"]) {
       JsonObject session = doc["session"];
       String backendSessionId = session["sessionId"] | "";
-      String backendUserName = session["userDisplayName"] | session["userEmail"] | session["userId"] | "";
+      String backendUserName = session["userDisplayName"] | session["userEmail"] | "";
 
       if (backendSessionId.length() > 0) {
         bool sessionChanged = (sessionID != backendSessionId);
@@ -1050,7 +1050,7 @@ void syncActiveSessionFromBackend() {
           Serial.printf("[SESSION] Synced active session from backend: %s\n", sessionID.c_str());
           // Print a friendly welcome with the provided display name (preserve existing logs)
           if (backendUserName.length() > 0) {
-            Serial.printf("[SESSION] Welcome %s\n", backendUserName.c_str());
+            Serial.printf("[SESSION] Welcome user: %s\n", backendUserName.c_str());
           }
         }
 
