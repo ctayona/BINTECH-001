@@ -219,20 +219,43 @@
     .shoutbox-toggle-btn {
       display: none;
       align-items: center;
-      gap: 8px;
-      padding: 6px 12px;
-      background: rgba(255, 255, 255, 0.15);
-      border: 1px solid rgba(255, 255, 255, 0.3);
+      justify-content: center;
+      gap: 0;
+      padding: 0;
+      width: 56px;
+      height: 56px;
+      background: linear-gradient(135deg, var(--card-green), var(--secondary-gradient-start));
+      border: 2px solid white;
       color: white;
-      border-radius: 6px;
+      border-radius: 50%;
       cursor: pointer;
-      font-size: 12px;
+      font-size: 0;
       font-weight: 500;
       transition: all 0.3s ease;
+      box-shadow: 0 4px 16px rgba(15, 59, 46, 0.3);
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 40;
+    }
+
+    .shoutbox-toggle-btn svg {
+      width: 24px;
+      height: 24px;
+    }
+
+    .shoutbox-toggle-btn span {
+      display: none;
     }
 
     .shoutbox-toggle-btn:hover {
-      background: rgba(255, 255, 255, 0.25);
+      background: linear-gradient(135deg, var(--secondary-gradient-start), var(--card-green));
+      transform: scale(1.1);
+      box-shadow: 0 6px 20px rgba(15, 59, 46, 0.4);
+    }
+
+    .shoutbox-toggle-btn:active {
+      transform: scale(0.95);
     }
 
     .shoutbox-container {
@@ -251,9 +274,10 @@
         left: 0;
         right: 0;
         bottom: 0;
-        z-index: 50;
+        z-index: 1000;
         background: rgba(0, 0, 0, 0.5);
         overflow: hidden;
+        backdrop-filter: blur(2px);
       }
 
       .shoutbox-container.open {
@@ -263,14 +287,14 @@
 
       .shoutbox-modal {
         width: 100%;
-        height: 70vh;
-        max-height: 600px;
+        height: 90vh;
         background: white;
         border-radius: 20px 20px 0 0;
         overflow: hidden;
         display: flex;
         flex-direction: column;
         animation: slideUp 0.3s ease;
+        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
       }
 
       @keyframes slideUp {
@@ -283,9 +307,12 @@
       }
 
       #shoutbox-messages {
-        height: auto !important;
-        max-height: calc(70vh - 200px) !important;
-        min-height: auto !important;
+        flex: 1;
+        overflow-y: auto;
+        overflow-x: hidden;
+        height: auto;
+        max-height: none;
+        min-height: auto;
       }
     }
   </style>
@@ -574,7 +601,7 @@
               <div class="shoutbox-modal bg-white rounded-2xl card-shadow lg:rounded-2xl overflow-hidden flex flex-col">
 
                 <!-- Messages Container -->
-                <div id="shoutbox-messages" class="h-[calc(100vh-450px)] lg:h-[calc(100vh-450px)] min-h-[400px] max-h-[600px] overflow-y-auto p-4 space-y-2 bg-[#F5F5F5] flex-1">
+                <div id="shoutbox-messages" class="overflow-y-auto p-4 space-y-2 bg-[#F5F5F5] flex-1">
                   <div class="text-center py-8 text-[#0F3B2E]/50">
                     <p class="text-sm">Loading messages...</p>
                   </div>
