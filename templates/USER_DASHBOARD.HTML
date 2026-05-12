@@ -132,20 +132,21 @@
       display: flex;
       align-items: center;
       gap: 8px;
-      background: transparent;
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      color: white;
-      padding: 8px 16px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 14px;
+      color: rgba(255, 255, 255, 0.7);
       font-weight: 500;
+      font-size: 0.875rem;
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 1px solid transparent;
+      background: transparent;
       transition: all 0.3s ease;
+      cursor: pointer;
     }
 
     .nav-dropdown-toggle:hover {
-      border-color: rgba(212, 225, 87, 0.5);
-      color: #D4E157;
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.2);
     }
 
     .nav-dropdown-toggle svg {
@@ -154,38 +155,32 @@
       transition: transform 0.3s ease;
     }
 
-    .nav-dropdown-toggle[aria-expanded="true"] svg {
+    .nav-dropdown-toggle.open svg {
       transform: rotate(180deg);
     }
 
     .nav-dropdown-menu {
-      display: none;
       position: absolute;
       top: 100%;
-      right: 0;
+      left: 0;
       margin-top: 8px;
-      background: rgba(20, 61, 46, 0.95);
-      border: 1px solid rgba(212, 225, 87, 0.3);
-      border-radius: 8px;
-      min-width: 180px;
-      z-index: 1000;
-      backdrop-filter: blur(10px);
-      animation: slideDown 0.2s ease;
+      min-width: 220px;
+      background: #0F3B2E;
+      border: 1px solid rgba(212, 225, 87, 0.2);
+      border-radius: 12px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-8px);
+      transition: all 0.3s ease;
+      z-index: 100;
+      overflow: hidden;
     }
 
-    @keyframes slideDown {
-      from {
-        opacity: 0;
-        transform: translateY(-10px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    .nav-dropdown-menu.show {
-      display: block;
+    .nav-dropdown.open .nav-dropdown-menu {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
     }
 
     .nav-page-link {
@@ -195,26 +190,23 @@
       padding: 12px 16px;
       color: rgba(255, 255, 255, 0.8);
       text-decoration: none;
-      font-size: 14px;
+      font-size: 0.875rem;
       font-weight: 500;
       transition: all 0.2s ease;
       border-left: 3px solid transparent;
     }
 
     .nav-page-link:hover {
-      background: rgba(212, 225, 87, 0.1);
-      color: #D4E157;
-      border-left-color: #D4E157;
-    }
-
-    .nav-page-link.active {
       background: rgba(212, 225, 87, 0.15);
       color: #D4E157;
       border-left-color: #D4E157;
+      padding-left: 19px;
     }
 
-    .nav-page-link span:first-child {
-      font-size: 16px;
+    .nav-page-link.active {
+      background: rgba(212, 225, 87, 0.2);
+      color: #D4E157;
+      border-left-color: #D4E157;
     }
 
     @media (max-width: 767px) {
@@ -550,58 +542,62 @@
           <section>
             <div class="flex items-center gap-3">
               <span class="bintech-brand-mark" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
-                  <path d="M13 3L4 14h6l-1 7 11-13h-6l1-5z" stroke-linecap="round" stroke-linejoin="round"></path>
-                </svg>
+                <img src="/PICS/BINTECHLOGO.png" alt="BinTECH Logo" style="height:28px;object-fit:contain" />
               </span>
               <p class="bintech-brand-title">Bintech</p>
             </div>
             <p class="bintech-brand-copy">Bintech builds secure, intuitive financial technology for modern users, blending speed, trust, and smarter money workflows.</p>
           </section>
 
-          <nav class="bintech-user-footer__nav" aria-label="Company links">
-            <h4>Company</h4>
+          <nav class="bintech-user-footer__nav" aria-label="Quick actions">
+            <h4>Quick Actions</h4>
             <ul>
-              <li><a href="#">About</a></li>
-              <li><a href="#">Contact</a></li>
+              <li><a href="/dashboard">Open Dashboard</a></li>
+              <li><a href="/qr-scanner">Transfer Points</a></li>
+              <li><a href="/history">View History</a></li>
+              <li><a href="/profile">Edit Profile</a></li>
             </ul>
           </nav>
 
-          <nav class="bintech-user-footer__nav" aria-label="Products links">
-            <h4>Products</h4>
+          <nav class="bintech-user-footer__nav" aria-label="Rewards links">
+            <h4>Rewards</h4>
             <ul>
-              <li><a href="#">Rewards</a></li>
+              <li><a href="/rewards">Browse Rewards</a></li>
+              <li><a href="/rewards?tab=featured">Featured Items</a></li>
             </ul>
           </nav>
 
-          <nav class="bintech-user-footer__nav" aria-label="Resources links">
-            <h4>Resources</h4>
+          <nav class="bintech-user-footer__nav" aria-label="Support links">
+            <h4>Support</h4>
             <ul>
-              <li><a href="#">Help Center</a></li>
-              <li><a href="#">Developers</a></li>
+              <li><a href="/how-it-works">How It Works</a></li>
+              <li><a href="mailto:support@bintech.local">Email Support</a></li>
             </ul>
           </nav>
 
-          <nav class="bintech-user-footer__nav" aria-label="Legal links">
-            <h4>Legal</h4>
+          <nav class="bintech-user-footer__nav" aria-label="Account links">
+            <h4>Account</h4>
             <ul>
-              <li><a href="#">Terms</a></li>
-              <li><a href="#">Privacy</a></li>
+              <li><a href="/profile">Manage Profile</a></li>
+              <li><a href="#" onclick="handleLogout(); return false;">Logout</a></li>
             </ul>
           </nav>
 
           <section class="bintech-user-footer__subscribe bintech-user-footer__glass">
-            <h4>Subscribe To Our Newsletter</h4>
-            <p>Get product releases, security updates, and fintech insights delivered monthly.</p>
+            <h4>System Snapshot</h4>
+            <p>Track EcoPoints, manage your account, and jump straight to scanning or history when you need it.</p>
             <form class="bintech-newsletter-form" onsubmit="event.preventDefault();">
-              <input type="email" placeholder="you@domain.com" aria-label="Email address">
-              <button type="submit">Join</button>
+              <button type="button" onclick="window.location.href='/qr-scanner'">Start Scan</button>
+              <button type="button" onclick="window.location.href='/history'">History</button>
             </form>
           </section>
         </div>
 
         <div class="bintech-footer-bottom">
           <p>© 2026 Bintech. All rights reserved.</p>
+          <div style="display:flex;align-items:center;gap:8px">
+            <img src="/PICS/BINTECHLOGO.png" alt="BinTECH Logo" style="height:28px;object-fit:contain" />
+          </div>
           <div class="bintech-social-list" aria-label="Social media">
             <a href="#" aria-label="X">
               <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.901 3H21l-4.588 5.244L21.808 21h-4.226l-3.31-4.889L9.996 21H7.896l4.907-5.609L2.192 3h4.332l2.993 4.422L13.099 3h5.802zm-1.48 16h1.171L7.946 4.89H6.69L17.42 19z"></path></svg>
@@ -744,46 +740,45 @@
     // ============================================
     function initializeNavDropdown() {
       const dropdownBtn = document.getElementById('nav-dropdown-btn');
-      const dropdownMenu = document.querySelector('.nav-dropdown-menu');
-      
-      if (!dropdownBtn || !dropdownMenu) return;
-      
-      const closeDropdown = () => {
-        dropdownMenu.classList.remove('show');
-        dropdownBtn.setAttribute('aria-expanded', 'false');
-      };
-      
-      const openDropdown = () => {
-        dropdownMenu.classList.add('show');
-        dropdownBtn.setAttribute('aria-expanded', 'true');
-      };
-      
-      const toggleDropdown = () => {
-        if (dropdownMenu.classList.contains('show')) {
-          closeDropdown();
+      const dropdownContainer = document.querySelector('.nav-dropdown');
+      const pageLinks = document.querySelectorAll('.nav-page-link');
+      const currentPage = window.location.pathname;
+
+      if (!dropdownBtn || !dropdownContainer) return;
+
+      // Set active link based on current page
+      pageLinks.forEach(link => {
+        const href = link.getAttribute('href');
+        if (currentPage.includes(href)) {
+          link.classList.add('active');
         } else {
-          openDropdown();
+          link.classList.remove('active');
         }
-      };
-      
-      // Toggle on button click
-      dropdownBtn.addEventListener('click', toggleDropdown);
-      
-      // Close on menu link click
-      dropdownMenu.querySelectorAll('a').forEach(link => {
-        link.addEventListener('click', closeDropdown);
       });
-      
-      // Close on outside click
+
+      // Toggle dropdown
+      dropdownBtn.addEventListener('click', () => {
+        dropdownContainer.classList.toggle('open');
+        dropdownBtn.classList.toggle('open');
+        dropdownBtn.setAttribute('aria-expanded', dropdownContainer.classList.contains('open'));
+      });
+
+      // Close dropdown when a link is clicked
+      pageLinks.forEach(link => {
+        link.addEventListener('click', () => {
+          dropdownContainer.classList.remove('open');
+          dropdownBtn.classList.remove('open');
+          dropdownBtn.setAttribute('aria-expanded', 'false');
+        });
+      });
+
+      // Close dropdown when clicking outside
       document.addEventListener('click', (e) => {
-        if (!e.target.closest('.nav-dropdown')) {
-          closeDropdown();
+        if (!dropdownContainer.contains(e.target) && !dropdownBtn.contains(e.target)) {
+          dropdownContainer.classList.remove('open');
+          dropdownBtn.classList.remove('open');
+          dropdownBtn.setAttribute('aria-expanded', 'false');
         }
-      });
-      
-      // Close on Escape key
-      document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') closeDropdown();
       });
     }
 
@@ -915,8 +910,166 @@
     // LOGOUT HANDLER
     // ============================================
     function handleLogout() {
-      sessionStorage.removeItem('bintech_user');
-      window.location.href = '/';
+      // Disable all interactive elements
+      document.querySelectorAll('button, input, a').forEach(el => {
+        el.disabled = true;
+        el.style.opacity = '0.5';
+      });
+      
+      // Clear session data completely
+      sessionStorage.clear();
+      localStorage.clear();
+      
+      // Redirect after cleanup
+      setTimeout(() => {
+        window.location.replace('/');
+      }, 200);
+    }
+
+    // ============================================
+    // DASHBOARD STATS LOADING FUNCTIONS
+    // ============================================
+    function formatPointsDisplay(value) {
+      const numeric = Number(value || 0);
+      return Number.isFinite(numeric) ? numeric.toLocaleString() : '0';
+    }
+
+    async function loadDashboardStatsFromSql(user) {
+      try {
+        if (!user || !user.id) return;
+
+        const query = new URLSearchParams({
+          userId: String(user.id),
+          email: String(user.email || '')
+        });
+
+        const response = await fetch(`/api/dashboard/stats?${query.toString()}`);
+        if (!response.ok) return;
+
+        const payload = await response.json();
+        if (!payload?.success || !payload?.stats) return;
+
+        const categories = payload.stats.categories || {};
+        const setText = (id, value) => {
+          const el = document.getElementById(id);
+          if (el) el.textContent = formatPointsDisplay(value);
+        };
+
+        setText('stat-plastic', categories.Plastic || 0);
+        setText('stat-paper', categories.Paper || 0);
+        setText('stat-metal', categories.Metal || 0);
+        
+        const totalSorted = Number(categories.Plastic || 0) + Number(categories.Paper || 0) + Number(categories.Metal || 0);
+        setText('stat-total-sorted', totalSorted);
+
+        const rankEl = document.getElementById('rank-display');
+        if (rankEl) {
+          if (payload.stats.notRanked || payload.stats.leaderboardPosition === 0) {
+            rankEl.textContent = 'Not ranked yet';
+            rankEl.title = 'Start sorting waste to get ranked!';
+          } else if (payload.stats.leaderboardPosition) {
+            const totalUsers = payload.stats.totalUsers || '?';
+            rankEl.textContent = `Rank: #${payload.stats.leaderboardPosition} of ${totalUsers}`;
+            rankEl.title = 'Your current ranking among all users';
+          }
+        }
+      } catch (error) {
+        console.warn('Failed to load dashboard stats:', error);
+      }
+    }
+
+    async function loadUserPointsFromAccountPoints(user) {
+      try {
+        const effectiveUserId = user?.id || user?.system_id || user?.campus_id;
+        if (!effectiveUserId && !user?.email) return;
+
+        const query = new URLSearchParams({
+          userId: String(effectiveUserId || ''),
+          email: String(user.email || '')
+        });
+
+        const response = await fetch(`/api/dashboard/points?${query.toString()}`);
+        if (!response.ok) return;
+
+        const payload = await response.json();
+        if (!payload?.success || !payload?.user) return;
+
+        const pointsValue = Number(payload.user.points || 0);
+
+        const navPointsEl = document.getElementById('nav-points');
+        if (navPointsEl) navPointsEl.textContent = `${formatPointsDisplay(pointsValue)} Points`;
+
+        const totalPointsEl = document.getElementById('total-points');
+        if (totalPointsEl) totalPointsEl.textContent = formatPointsDisplay(pointsValue);
+
+        const rankEl = document.getElementById('rank-display');
+        if (rankEl && payload.rank) {
+          if (payload.rank.notRanked) {
+            rankEl.textContent = payload.rank.message || 'Not ranked yet';
+            rankEl.title = 'Start sorting waste to get ranked!';
+          } else {
+            rankEl.textContent = `Rank: #${payload.rank.rank} of ${payload.rank.totalUsers}`;
+            rankEl.title = `You are in the top ${payload.rank.percentile}% of users`;
+          }
+        }
+
+        const sessionUser = JSON.parse(sessionStorage.getItem('bintech_user') || 'null');
+        if (sessionUser) {
+          sessionUser.points = pointsValue;
+          if (payload.rank) {
+            sessionUser.rank = payload.rank.rank;
+            sessionUser.totalUsers = payload.rank.totalUsers;
+            sessionUser.percentile = payload.rank.percentile;
+          }
+          sessionStorage.setItem('bintech_user', JSON.stringify(sessionUser));
+        }
+      } catch (error) {
+        console.warn('Failed to load account points:', error);
+      }
+    }
+
+    async function loadAccountActivityOverview(user) {
+      try {
+        const effectiveUserId = user?.id || user?.system_id || user?.campus_id;
+        if (!effectiveUserId && !user?.email) return;
+
+        const query = new URLSearchParams({
+          userId: String(effectiveUserId || ''),
+          email: String(user.email || '')
+        });
+
+        const response = await fetch(`/api/dashboard/activity-overview?${query.toString()}`);
+        if (!response.ok) return;
+
+        const payload = await response.json();
+        if (!payload?.success || !payload?.summary) return;
+
+        const summary = payload.summary;
+        const setText = (id, value) => {
+          const el = document.getElementById(id);
+          if (el) el.textContent = formatPointsDisplay(value);
+        };
+
+        setText('stat-current-points', Number(summary.totalPoints || 0));
+        setText('stat-total-earned-points', Number(summary.totalLifetimePoints || 0));
+        setText('stat-plastic', Number(summary.plasticCount || 0));
+        setText('stat-paper', Number(summary.paperCount || 0));
+        setText('stat-metal', Number(summary.metalCount || 0));
+        setText('stat-total-sorted', Number(summary.totalWaste || 0));
+        setText('stat-total-sessions', Number(summary.totalSessions || 0));
+        setText('stat-points-transfer-spent', Number(summary.pointsSpentOnTransfers || 0));
+        setText('stat-points-redeem-spent', Number(summary.pointsSpentOnRedeems || 0));
+        setText('stat-total-redeemed-rewards', Number(summary.totalRewardsRedeemed || 0));
+
+        const currentPoints = Number(summary.totalPoints || 0);
+        const navPointsEl = document.getElementById('nav-points');
+        if (navPointsEl) navPointsEl.textContent = `${formatPointsDisplay(currentPoints)} Points`;
+
+        const totalPointsEl = document.getElementById('total-points');
+        if (totalPointsEl) totalPointsEl.textContent = formatPointsDisplay(currentPoints);
+      } catch (error) {
+        console.warn('Failed to load account activity overview:', error);
+      }
     }
 
     // ============================================
