@@ -1452,10 +1452,12 @@
                     paper_count: toNumber(data.session.paperCount, 0)
                 };
 
+                // Do not auto-show the session UI on page load.
+                // Only remember that a session exists server-side. The UI overlay
+                // should appear only after a successful session creation (scan).
                 currentSession = mappedSession;
-                sessionStartTime = new Date();
-                displaySession(mappedSession);
-                startSessionMonitoring(mappedSession.id);
+                // Do not call displaySession() or startSessionMonitoring() here to avoid
+                // forcing the modal/panel to appear before the user initiates a session.
             } catch (error) {
                 console.error('Failed to attach existing machine session:', error);
             }
