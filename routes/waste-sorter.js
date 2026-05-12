@@ -47,6 +47,9 @@ router.post('/api/bin-capacity', wasteSorterController.updateBinCapacityTelemetr
 // Manually add points to a session (for testing without ESP32)
 router.post('/test/add-points', wasteSorterController.testAddPoints);
 
+// List all active sessions (for debugging)
+router.get('/debug/active-sessions', wasteSorterController.debugListActiveSessions);
+
 // Aggregate sorting totals for admin analytics
 router.get('/analytics/overview', wasteSorterController.getSortingOverview);
 

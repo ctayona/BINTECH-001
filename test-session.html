@@ -217,6 +217,14 @@
 
         <!-- Console -->
         <div class="section">
+            <h2>Debug - List All Active Sessions</h2>
+            <div id="debugStatus" class="status"></div>
+            <button onclick="listActiveSessions()">List Active Sessions in Database</button>
+            <div id="debugResponse" class="response" style="display:none;"></div>
+        </div>
+
+        <!-- Console -->
+        <div class="section">
             <h2>Browser Console</h2>
             <div style="background: #f5f5f5; border: 1px solid #ddd; border-radius: 0.5rem; padding: 1rem; font-family: monospace; font-size: 0.85rem; color: #666;">
                 Open DevTools (F12) and check the Console tab for detailed debugging logs.
@@ -370,6 +378,30 @@
                 console.log('[TEST] Auto-filled user ID:', user.system_id);
             }
         });
+
+        async function listActiveSessions() {
+            showMessage('debugStatus', '⏳ Fetching sessions...', 'info');
+
+            try {
+                const response = await fetch(`${API_BASE}/debug/active-sessions`);
+                const data = await response.json();
+                console.log('[DEBUG] Active sessions:', data);
+
+                if (data.success) {
+                    showMessage('debugStatus', 
+                        `✅ Found ${data.count} active session(s)`,
+                        'success');
+                    showResponse('debugResponse', data);
+                } else {
+                    showMessage('debugStatus', `❌ ${data.message || 'Failed to fetch sessions'}`, 'error');
+                    showResponse('debugResponse', data);
+                }
+            } catch (error) {
+                console.error('[DEBUG] Error:', error);
+                showMessage('debugStatus', `❌ Error: ${error.message}`, 'error');
+                showResponse('debugResponse', { error: error.message });
+            }
+        }
     </script>
 </body>
 </html>

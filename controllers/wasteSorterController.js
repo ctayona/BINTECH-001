@@ -358,16 +358,15 @@ exports.startSession = async (req, res) => {
     const { userId, hardwareDeviceId, qrCodeData } = req.body;
 
     // DEBUG: Log received data
-    console.log('\n========== START SESSION DEBUG ==========');
+    console.log('\n========== START SESSION ==========');
     console.log('Received userId:', userId);
-    console.log('Received userId type:', typeof userId);
-    console.log('Received userId length:', userId ? userId.length : 'null');
     console.log('Received hardwareDeviceId:', hardwareDeviceId);
-    console.log('Raw request body:', req.body);
-    console.log('=======================================\n');
+    console.log('Request body:', req.body);
+    console.log('===================================\n');
 
     // Validate input
     if (!userId || !hardwareDeviceId) {
+      console.error('❌ Missing userId or hardwareDeviceId');
       return res.status(400).json({
         success: false,
         message: 'userId and hardwareDeviceId are required'
@@ -381,13 +380,12 @@ exports.startSession = async (req, res) => {
       .eq('system_id', userId)
       .single();
 
-    console.log('User lookup query:');
-    console.log('  Search for system_id =', userId);
-    console.log('  Result:', userAccount);
-    console.log('  Error:', userAccountError);
+    console.log('✓ User lookup for system_id:', userId);
+    console.log('  Found:', userAccount ? 'YES' : 'NO', userAccount);
+    console.log('  Error:', userAccountError?.message || 'none');
 
     if (userAccountError || !userAccount) {
-      console.log('❌ USER NOT FOUND - Returning 404');
+      console.error('❌ USER NOT FOUND');
       return res.status(404).json({
         success: false,
         message: 'User not found'
@@ -427,8 +425,12 @@ exports.startSession = async (req, res) => {
     const sessionId = generateSessionToken();
     const sessionToken = generateSessionToken();
 
+    console.log('✓ Creating session:');
+    console.log('  sessionId:', sessionId);
+    console.log('  machine_id:', hardwareDeviceId);
+    console.log('  user_id:', userId);
+
     // Create new session in machine_sessions table
-    // Using actual schema columns: id, user_id, session_token, status, started_at, metal_count, plastic_count, paper_count, total_points, machine_id
     const { data: session, error: sessionError } = await supabase
       .from('machine_sessions')
       .insert([
@@ -450,13 +452,18 @@ exports.startSession = async (req, res) => {
       .single();
 
     if (sessionError) {
-      console.error('Session creation error:', sessionError);
+      console.error('❌ Session creation error:', sessionError);
       return res.status(500).json({
         success: false,
         message: 'Failed to create session',
         error: sessionError.message
       });
     }
+
+    console.log('✅ Session created successfully');
+    console.log('  Stored in DB with machine_id:', session.machine_id);
+    console.log('  Session ID:', session.id);
+    console.log('=====================================\n');
 
     res.json({
       success: true,
@@ -892,9 +899,19 @@ exports.updateSessionPoints = async (req, res) => {
   try {
     const { sessionId, machineId, pointsEarned, totalPoints, metalCount, plasticCount, paperCount, binCapacities } = req.body;
 
-    console.log('[ESP32 UPDATE] Payload:', req.body);
+    console.log('\n========== ESP32 UPDATE POINTS ==========');
+    console.log('Received Payload:');
+    console.log('  sessionId:', sessionId);
+    console.log('  machineId:', machineId);
+    console.log('  pointsEarned:', pointsEarned);
+    console.log('  totalPoints:', totalPoints);
+    console.log('  metalCount:', metalCount);
+    console.log('  plasticCount:', plasticCount);
+    console.log('  paperCount:', paperCount);
+    console.log('  Raw body:', req.body);
 
     if (!sessionId && !machineId) {
+      console.error('❌ REJECT: No sessionId or machineId provided');
       return res.status(400).json({
         success: false,
         message: 'sessionId or machineId is required'
@@ -908,6 +925,7 @@ exports.updateSessionPoints = async (req, res) => {
     let sessionError = null;
 
     if (sessionId) {
+      console.log('🔍 Searching by sessionId:', sessionId);
       const byId = await supabase
         .from('machine_sessions')
         .select('*')
@@ -916,9 +934,11 @@ exports.updateSessionPoints = async (req, res) => {
 
       session = byId.data;
       sessionError = byId.error;
+      console.log('  Result:', session ? 'FOUND' : 'NOT FOUND', sessionError?.message);
     }
 
     if ((!session || sessionError) && machineId) {
+      console.log('🔍 Searching by machineId:', machineId);
       const byMachine = await supabase
         .from('machine_sessions')
         .select('*')
@@ -930,10 +950,15 @@ exports.updateSessionPoints = async (req, res) => {
 
       session = byMachine.data;
       sessionError = byMachine.error;
+      console.log('  Result:', session ? 'FOUND' : 'NOT FOUND', sessionError?.message);
+      if (session) {
+        console.log('  Found session:', session.id, 'for machine:', session.machine_id);
+      }
     }
 
     if (sessionError || !session) {
-      console.warn('[ESP32 UPDATE] No active session found', { sessionId, machineId, sessionError });
+      console.error('❌ REJECT: No active session found');
+      console.warn('[ESP32 UPDATE] No active session found', { sessionId, machineId, sessionError: sessionError?.message });
       return res.status(404).json({
         success: false,
         message: 'Active session not found'
@@ -941,6 +966,7 @@ exports.updateSessionPoints = async (req, res) => {
     }
 
     if (session.status !== 'active') {
+      console.warn('⚠️  Session status is not active:', session.status);
       return res.json({
         success: true,
         message: 'Session already completed. Reset machine counters.',
@@ -953,9 +979,15 @@ exports.updateSessionPoints = async (req, res) => {
       });
     }
 
-    console.log('[ESP32 UPDATE] Matched session:', { id: session.id, machine_id: session.machine_id, status: session.status });
+    console.log('✓ Matched active session:', { id: session.id, machine_id: session.machine_id, current_points: session.total_points });
 
     // Update session with new points/items from ESP32
+    console.log('📝 Updating session with:');
+    console.log('  total_points:', incomingTotalPoints);
+    console.log('  metal_count:', metalCount);
+    console.log('  plastic_count:', plasticCount);
+    console.log('  paper_count:', paperCount);
+
     const { error: updateError } = await supabase
       .from('machine_sessions')
       .update({
@@ -968,13 +1000,15 @@ exports.updateSessionPoints = async (req, res) => {
       .eq('id', session.id);
 
     if (updateError) {
-      console.error('[ESP32 UPDATE] Supabase update failed:', updateError);
+      console.error('❌ Supabase update failed:', updateError);
       return res.status(500).json({
         success: false,
         message: 'Failed to update session',
         error: updateError.message
       });
     }
+
+    console.log('✅ Session updated successfully in database');
 
     const responsePayload = {
       success: true,
@@ -1011,7 +1045,9 @@ exports.updateSessionPoints = async (req, res) => {
       responsePayload.capacityUpdates = capacityUpdates;
     }
 
-    console.log('[ESP32 UPDATE] Success:', responsePayload);
+    console.log('✅ COMPLETE - Returning response:', responsePayload);
+    console.log('=========================================\n');
+    
     res.json(responsePayload);
   } catch (error) {
     console.error('Update session points error:', error);
@@ -1037,6 +1073,9 @@ exports.getDeviceSession = async (req, res) => {
       });
     }
 
+    console.log('\n========== ESP32 SYNC SESSION ==========');
+    console.log('ESP32 requesting active session for deviceId:', deviceId);
+
     // Find active session for this device
     const { data: session, error } = await supabase
       .from('machine_sessions')
@@ -1047,14 +1086,20 @@ exports.getDeviceSession = async (req, res) => {
       .limit(1)
       .single();
 
+    console.log('Query result:');
+    console.log('  Found:', session ? 'YES' : 'NO');
+    console.log('  Error:', error?.message || 'none');
+
     if (error || !session) {
+      console.warn('⚠️  No active session found for device:', deviceId);
+      console.log('========================================\n');
       return res.status(404).json({
         success: false,
         message: 'No active session found'
       });
     }
 
-    res.json({
+    const responsePayload = {
       success: true,
       session: {
         sessionId: session.id,
@@ -1065,7 +1110,14 @@ exports.getDeviceSession = async (req, res) => {
         plasticCount: session.plastic_count,
         paperCount: session.paper_count
       }
-    });
+    };
+
+    console.log('✅ Returning session to ESP32:');
+    console.log('  sessionId:', responsePayload.session.sessionId);
+    console.log('  pointsEarned:', responsePayload.session.pointsEarned);
+    console.log('========================================\n');
+
+    res.json(responsePayload);
   } catch (error) {
     console.error('Get device session error:', error);
     res.status(500).json({
@@ -1295,6 +1347,70 @@ exports.testAddPoints = async (req, res) => {
     });
   } catch (error) {
     console.error('Test add points error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+      error: error.message
+    });
+  }
+};
+
+// ============================================
+// DEBUG: LIST ALL ACTIVE SESSIONS
+// ============================================
+exports.debugListActiveSessions = async (req, res) => {
+  try {
+    console.log('\n========== DEBUG: LISTING ACTIVE SESSIONS ==========');
+
+    const { data: sessions, error } = await supabase
+      .from('machine_sessions')
+      .select('*')
+      .eq('status', 'active')
+      .order('started_at', { ascending: false });
+
+    if (error) {
+      console.error('Query error:', error);
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to list sessions',
+        error: error.message
+      });
+    }
+
+    console.log('Found', sessions?.length || 0, 'active sessions');
+    
+    const sessionList = (sessions || []).map(s => ({
+      id: s.id,
+      user_id: s.user_id,
+      machine_id: s.machine_id,
+      status: s.status,
+      total_points: s.total_points,
+      metal_count: s.metal_count,
+      plastic_count: s.plastic_count,
+      paper_count: s.paper_count,
+      started_at: s.started_at,
+      updated_at: s.updated_at
+    }));
+
+    sessionList.forEach((s, i) => {
+      console.log(`\n${i + 1}. Session: ${s.id}`);
+      console.log(`   User: ${s.user_id}`);
+      console.log(`   Machine: ${s.machine_id}`);
+      console.log(`   Points: ${s.total_points}`);
+      console.log(`   Items: Metal=${s.metal_count}, Plastic=${s.plastic_count}, Paper=${s.paper_count}`);
+      console.log(`   Created: ${s.started_at}`);
+      console.log(`   Updated: ${s.updated_at}`);
+    });
+
+    console.log('\n================================================\n');
+
+    res.json({
+      success: true,
+      count: sessions?.length || 0,
+      sessions: sessionList
+    });
+  } catch (error) {
+    console.error('Debug list sessions error:', error);
     res.status(500).json({
       success: false,
       message: 'Server error',
