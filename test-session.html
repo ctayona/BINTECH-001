@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Session Test - BinTECH</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .container {
+            background: white;
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            max-width: 600px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #0F3B2E;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .section {
+            margin-bottom: 2rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .section:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        h2 {
+            color: #0F3B2E;
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #333;
+            font-weight: 500;
+        }
+
+        input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            font-family: monospace;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #0F3B2E;
+            box-shadow: 0 0 0 3px rgba(15, 59, 46, 0.1);
+        }
+
+        button {
+            background: #0F3B2E;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            width: 100%;
+            font-size: 1rem;
+        }
+
+        button:hover {
+            background: #0a2920;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .status {
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            display: block;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            display: block;
+        }
+
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+            display: block;
+        }
+
+        .response {
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-top: 1rem;
+            font-family: monospace;
+            white-space: pre-wrap;
+            word-break: break-word;
+            font-size: 0.85rem;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .button-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .button-group button {
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Session Test Console</h1>
+
+        <!-- Create Session -->
+        <div class="section">
+            <h2>1. Create Session</h2>
+            <div id="createStatus" class="status"></div>
+            <div class="form-group">
+                <label>User ID (or System ID):</label>
+                <input type="text" id="userId" placeholder="e.g., user-123" value="">
+            </div>
+            <div class="form-group">
+                <label>Hardware Device ID:</label>
+                <input type="text" id="hardwareId" placeholder="e.g., BINTECH-SORTER-001" value="BINTECH-SORTER-001">
+            </div>
+            <button onclick="createSession()">Create Session</button>
+            <div id="createResponse" class="response" style="display:none;"></div>
+        </div>
+
+        <!-- Get Session Status -->
+        <div class="section">
+            <h2>2. Get Session Status</h2>
+            <div id="statusStatus" class="status"></div>
+            <div class="form-group">
+                <label>Session ID:</label>
+                <input type="text" id="sessionId" placeholder="e.g., session-abc123" value="">
+            </div>
+            <button onclick="getSessionStatus()">Get Status</button>
+            <div id="statusResponse" class="response" style="display:none;"></div>
+        </div>
+
+        <!-- Add Points Manually -->
+        <div class="section">
+            <h2>3. Add Points (Test)</h2>
+            <div id="pointsStatus" class="status"></div>
+            <div class="form-group">
+                <label>Session ID:</label>
+                <input type="text" id="pointsSessionId" placeholder="e.g., session-abc123" value="">
+            </div>
+            <div class="button-group">
+                <div class="form-group">
+                    <label>Points:</label>
+                    <input type="number" id="points" placeholder="e.g., 5.25" value="5.25">
+                </div>
+                <div class="form-group">
+                    <label>Metal Count:</label>
+                    <input type="number" id="metalCount" placeholder="e.g., 2" value="2">
+                </div>
+            </div>
+            <div class="button-group">
+                <div class="form-group">
+                    <label>Plastic Count:</label>
+                    <input type="number" id="plasticCount" placeholder="e.g., 1" value="1">
+                </div>
+                <div class="form-group">
+                    <label>Paper Count:</label>
+                    <input type="number" id="paperCount" placeholder="e.g., 1" value="1">
+                </div>
+            </div>
+            <button onclick="addPoints()">Add Points to Session</button>
+            <div id="pointsResponse" class="response" style="display:none;"></div>
+        </div>
+
+        <!-- Console -->
+        <div class="section">
+            <h2>Browser Console</h2>
+            <div style="background: #f5f5f5; border: 1px solid #ddd; border-radius: 0.5rem; padding: 1rem; font-family: monospace; font-size: 0.85rem; color: #666;">
+                Open DevTools (F12) and check the Console tab for detailed debugging logs.
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/auth.js"></script>
+    <script>
+        const API_BASE = '/api/waste-sorter';
+
+        function showMessage(elementId, message, type) {
+            const el = document.getElementById(elementId);
+            el.textContent = message;
+            el.className = `status ${type}`;
+        }
+
+        function showResponse(elementId, data) {
+            const el = document.getElementById(elementId);
+            el.textContent = JSON.stringify(data, null, 2);
+            el.style.display = 'block';
+        }
+
+        async function createSession() {
+            const userId = document.getElementById('userId').value || AuthManager.getUser()?.system_id;
+            const hardwareId = document.getElementById('hardwareId').value;
+
+            if (!userId) {
+                showMessage('createStatus', '❌ User ID required. Please log in or enter a User ID.', 'error');
+                return;
+            }
+
+            if (!hardwareId) {
+                showMessage('createStatus', '❌ Hardware ID required', 'error');
+                return;
+            }
+
+            showMessage('createStatus', '⏳ Creating session...', 'info');
+
+            try {
+                const response = await fetch(`${API_BASE}/session/start`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: userId,
+                        hardwareDeviceId: hardwareId
+                    })
+                });
+
+                const data = await response.json();
+                console.log('[TEST] Session create response:', data);
+
+                if (data.success && data.session) {
+                    document.getElementById('sessionId').value = data.session.id;
+                    document.getElementById('pointsSessionId').value = data.session.id;
+                    showMessage('createStatus', `✅ Session created! ID: ${data.session.id}`, 'success');
+                    showResponse('createResponse', data);
+                } else {
+                    showMessage('createStatus', `❌ ${data.message || 'Failed to create session'}`, 'error');
+                    showResponse('createResponse', data);
+                }
+            } catch (error) {
+                console.error('[TEST] Error:', error);
+                showMessage('createStatus', `❌ Error: ${error.message}`, 'error');
+                showResponse('createResponse', { error: error.message });
+            }
+        }
+
+        async function getSessionStatus() {
+            const sessionId = document.getElementById('sessionId').value;
+
+            if (!sessionId) {
+                showMessage('statusStatus', '❌ Session ID required', 'error');
+                return;
+            }
+
+            showMessage('statusStatus', '⏳ Fetching status...', 'info');
+
+            try {
+                const response = await fetch(`${API_BASE}/session/${sessionId}/status`);
+                const data = await response.json();
+                console.log('[TEST] Session status response:', data);
+
+                if (data.success && data.session) {
+                    showMessage('statusStatus', 
+                        `✅ Session Active: ${data.session.is_active} | Points: ${data.session.points_earned} | Items: ${data.session.metal_count + data.session.plastic_count + data.session.paper_count}`,
+                        'success');
+                    showResponse('statusResponse', data);
+                } else {
+                    showMessage('statusStatus', `❌ ${data.message || 'Failed to get status'}`, 'error');
+                    showResponse('statusResponse', data);
+                }
+            } catch (error) {
+                console.error('[TEST] Error:', error);
+                showMessage('statusStatus', `❌ Error: ${error.message}`, 'error');
+                showResponse('statusResponse', { error: error.message });
+            }
+        }
+
+        async function addPoints() {
+            const sessionId = document.getElementById('pointsSessionId').value;
+            const points = parseFloat(document.getElementById('points').value) || 0;
+            const metal = parseInt(document.getElementById('metalCount').value) || 0;
+            const plastic = parseInt(document.getElementById('plasticCount').value) || 0;
+            const paper = parseInt(document.getElementById('paperCount').value) || 0;
+
+            if (!sessionId) {
+                showMessage('pointsStatus', '❌ Session ID required', 'error');
+                return;
+            }
+
+            showMessage('pointsStatus', '⏳ Adding points...', 'info');
+
+            try {
+                const response = await fetch(`${API_BASE}/test/add-points`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        sessionId: sessionId,
+                        points: points,
+                        metalCount: metal,
+                        plasticCount: plastic,
+                        paperCount: paper
+                    })
+                });
+
+                const data = await response.json();
+                console.log('[TEST] Add points response:', data);
+
+                if (data.success) {
+                    showMessage('pointsStatus', 
+                        `✅ Points added! Total: ${data.session.points_earned}pts | Metal: ${data.session.metal_count} | Plastic: ${data.session.plastic_count} | Paper: ${data.session.paper_count}`,
+                        'success');
+                    showResponse('pointsResponse', data);
+                } else {
+                    showMessage('pointsStatus', `❌ ${data.message || 'Failed to add points'}`, 'error');
+                    showResponse('pointsResponse', data);
+                }
+            } catch (error) {
+                console.error('[TEST] Error:', error);
+                showMessage('pointsStatus', `❌ Error: ${error.message}`, 'error');
+                showResponse('pointsResponse', { error: error.message });
+            }
+        }
+
+        // Auto-fill user if logged in
+        window.addEventListener('load', () => {
+            const user = AuthManager.getUser();
+            if (user && user.system_id) {
+                document.getElementById('userId').value = user.system_id;
+                console.log('[TEST] Auto-filled user ID:', user.system_id);
+            }
+        });
+    </script>
+</body>
+</html>
