@@ -459,52 +459,58 @@
             transform: translateY(-2px);
         }
 
-        /* Session Info */
+        /* Session Info - Hidden by default */
         .session-info {
-            display: none;
+            display: none !important;
         }
 
-        /* Session always shows as modal overlay, never in page flow */
+        /* Session Modal - Full screen overlay when active */
         .session-info.active {
             position: fixed !important;
-            inset: 0;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            bottom: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
             display: flex !important;
-            align-items: center;
-            justify-content: center;
-            background: rgba(0,0,0,0.55);
-            -webkit-backdrop-filter: blur(4px);
-            backdrop-filter: blur(4px);
-            z-index: 12000;
-            padding: 1rem;
-            animation: fadeIn 0.3s ease-out;
+            align-items: center !important;
+            justify-content: center !important;
+            background: rgba(0, 0, 0, 0.6) !important;
+            z-index: 12000 !important;
+            padding: 1rem !important;
+            animation: fadeInModal 0.3s ease-out;
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+        @keyframes fadeInModal {
+            from { 
+                opacity: 0;
+            }
+            to { 
+                opacity: 1;
+            }
         }
 
-        /* Modal panel - consolidated definition */
+        /* Modal Panel Content */
         .session-panel {
             background: white;
             color: var(--primary-dark);
-            border-radius: 1.25rem;
-            padding: 1.5rem;
-            box-shadow: 0 25px 60px rgba(0,0,0,0.25);
-            max-width: 520px;
+            border-radius: 1.5rem;
+            padding: 2rem;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
             width: 100%;
-            max-height: calc(100vh - 3rem);
+            max-width: 520px;
+            max-height: 85vh;
             overflow-y: auto;
             overflow-x: hidden;
             -webkit-overflow-scrolling: touch;
-            transform: translateZ(0);
-            animation: slideUp 0.3s ease-out;
+            animation: slideUpModal 0.3s ease-out;
         }
 
-        @keyframes slideUp {
+        @keyframes slideUpModal {
             from {
                 opacity: 0;
-                transform: translateY(20px);
+                transform: translateY(30px);
             }
             to {
                 opacity: 1;
@@ -512,20 +518,20 @@
             }
         }
 
-        /* Smooth scrollbar styling for modal panel */
+        /* Scrollbar for modal */
         .session-panel::-webkit-scrollbar {
-            width: 6px;
+            width: 8px;
         }
         .session-panel::-webkit-scrollbar-track {
-            background: rgba(15,59,46,0.05);
-            border-radius: 3px;
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 4px;
         }
         .session-panel::-webkit-scrollbar-thumb {
-            background: rgba(15,59,46,0.2);
-            border-radius: 3px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 4px;
         }
         .session-panel::-webkit-scrollbar-thumb:hover {
-            background: rgba(15,59,46,0.3);
+            background: rgba(0, 0, 0, 0.3);
         }
 
         .session-info h2 {
@@ -1006,23 +1012,43 @@
         /* Mobile-specific modal adjustments */
         @media (max-width: 640px) {
             .session-info.active {
-                padding: 1rem;
+                padding: 0.5rem !important;
             }
 
             .session-panel {
                 border-radius: 1rem;
-                padding: 1.25rem;
-                max-height: calc(100vh - 2rem);
+                padding: 1.5rem;
+                max-width: 100%;
+                max-height: 90vh;
             }
 
             .info-grid {
                 grid-template-columns: repeat(2, 1fr) !important;
                 gap: 1rem !important;
+                margin-bottom: 1.5rem !important;
+            }
+
+            .info-item {
+                padding: 1rem !important;
+            }
+
+            .info-label {
+                font-size: 0.65rem !important;
+            }
+
+            .info-value {
+                font-size: 1.5rem !important;
             }
 
             .transfer-section {
                 margin-top: 1.5rem !important;
                 padding-top: 1.5rem !important;
+                border-top: 1px solid #e0e0e0 !important;
+            }
+
+            .transfer-amount {
+                padding: 1rem !important;
+                margin-bottom: 1rem !important;
             }
 
             .control-buttons {
@@ -1032,7 +1058,7 @@
 
             .btn {
                 width: 100% !important;
-                padding: 0.65rem 1rem !important;
+                padding: 0.75rem !important;
                 font-size: 0.875rem !important;
             }
         }
@@ -1251,51 +1277,48 @@
                 </div>
             </div>
 
-            <!-- Session Info -->
+            <!-- Session Info Modal -->
             <div class="session-info" id="session-info">
                 <div class="session-panel">
-                <h2>Active Session</h2>
-                
-                <div class="info-grid">
-                    <div class="info-item">
-                        <div class="info-label">Session Status</div>
-                        <div class="info-value">
-                            <span id="session-status" style="font-size: 1rem;">ACTIVE</span>
-                            <div class="status-badge badge-active" id="status-badge">Active</div>
-                        </div>
-                        </div>
-                        </div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-label">Points Earned</div>
-                        <div class="info-value" id="points-earned">0</div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-label">Items Sorted</div>
-                        <div class="info-value" id="items-sorted">0</div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-label">Session Time</div>
-                        <div class="info-value" id="session-time">0:00</div>
-                    </div>
-                </div>
-
-                <div class="transfer-section">
-                    <h3>Transfer Sorted Points to Account</h3>
+                    <h2 style="margin-bottom: 1.5rem; color: #0F3B2E; font-weight: 700; font-size: 1.5rem;">Active Session</h2>
                     
-                    <div class="transfer-amount">
-                        <div class="transfer-amount-icon">âœ¨</div>
-                        <div class="transfer-amount-info">
-                            <div class="transfer-amount-label">Available to Transfer</div>
-                            <div class="transfer-amount-value" id="session-transfer-amount">0 pts</div>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <div class="info-label">Session Status</div>
+                            <div class="info-value">
+                                <span id="session-status">ACTIVE</span>
+                                <div class="status-badge badge-active" id="status-badge">ACTIVE</div>
+                            </div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Points Earned</div>
+                            <div class="info-value" id="points-earned">0.00</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Items Sorted</div>
+                            <div class="info-value" id="items-sorted">0</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Session Time</div>
+                            <div class="info-value" id="session-time">0:00</div>
                         </div>
                     </div>
 
-                    <div class="control-buttons">
-                        <button class="btn btn-success" id="session-transfer-btn" onclick="transferPoints()">
-                            Transfer Points Now
-                        </button>
-                        <button class="btn btn-secondary" id="cancel-btn" onclick="endSession()">End Session</button>
+                    <div class="transfer-section">
+                        <h3 style="font-size: 1.1rem; font-weight: 600; margin-bottom: 1rem; color: #333;">Transfer Sorted Points to Account</h3>
+                        
+                        <div class="transfer-amount">
+                            <div class="transfer-amount-icon">✨</div>
+                            <div class="transfer-amount-info">
+                                <div class="transfer-amount-label">Available to Transfer</div>
+                                <div class="transfer-amount-value" id="session-transfer-amount">0.00 pts</div>
+                            </div>
+                        </div>
+
+                        <div class="control-buttons">
+                            <button class="btn btn-success" id="session-transfer-btn" onclick="transferPoints()">Transfer Points Now</button>
+                            <button class="btn btn-secondary" id="cancel-btn" onclick="endSession()">End Session</button>
+                        </div>
                     </div>
                 </div>
             </div>
