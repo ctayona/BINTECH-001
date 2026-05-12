@@ -233,8 +233,6 @@
       box-shadow: 0 4px 12px rgba(15, 59, 46, 0.3);
       pointer-events: auto;
       transition: all 0.3s ease;
-      visibility: visible;
-      opacity: 1;
     }
 
     .floating-chat-bubble:hover {
@@ -301,62 +299,23 @@
       pointer-events: auto;
     }
 
-    /* Mobile adjustments - Tablet and up (768px-1024px) */
-    @media (max-width: 1024px) and (min-width: 481px) {
+    /* Mobile adjustments - Tablet and up */
+    @media (max-width: 768px) {
       .floating-chat-panel {
         bottom: 80px;
         right: 16px;
         width: calc(100vw - 32px);
-        max-width: 400px;
-        height: 450px;
+        max-width: 420px;
+        height: 420px;
       }
 
       .floating-chat-bubble {
         bottom: 16px;
         right: 16px;
-        display: flex;
-        visibility: visible;
       }
     }
 
-    /* Mobile adjustments - Medium phones (481px-640px) */
-    @media (max-width: 640px) {
-      .floating-chat-panel {
-        bottom: 76px;
-        right: 14px;
-        width: calc(100vw - 28px);
-        max-width: none;
-        height: 420px;
-      }
-
-      .floating-chat-bubble {
-        bottom: 14px;
-        right: 14px;
-        width: 52px;
-        height: 52px;
-        display: flex;
-        visibility: visible;
-      }
-
-      .floating-chat-bubble svg {
-        width: 26px;
-        height: 26px;
-      }
-
-      .floating-chat-header {
-        padding: 14px;
-      }
-
-      .floating-chat-header h3 {
-        font-size: 0.95rem;
-      }
-
-      .floating-chat-header p {
-        font-size: 0.72rem;
-      }
-    }
-
-    /* Mobile adjustments - Small phones (≤480px) */
+    /* Mobile adjustments - Small phones */
     @media (max-width: 480px) {
       .floating-chat-panel {
         bottom: 72px;
@@ -364,8 +323,6 @@
         width: calc(100vw - 24px);
         max-width: none;
         height: 380px;
-        display: flex;
-        visibility: visible;
       }
 
       .floating-chat-bubble {
@@ -373,9 +330,6 @@
         right: 12px;
         width: 48px;
         height: 48px;
-        display: flex !important;
-        visibility: visible !important;
-        z-index: 50;
       }
 
       .floating-chat-bubble svg {
@@ -392,15 +346,6 @@
       }
 
       .floating-chat-header p {
-        font-size: 0.7rem;
-      }
-
-      .floating-char-count {
-        font-size: 0.7rem;
-      }
-
-      .floating-chat-input-footer button {
-        padding: 5px 12px;
         font-size: 0.7rem;
       }
     }
