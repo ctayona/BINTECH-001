@@ -86,16 +86,22 @@ void showSortedLcd(const String& material) {
 const char* ssids[] = {
   "GlobeAtHome_9B6AA_2.4",
   "Main4g",
+  "HONOR 200",
+  "",
+  "",
   ""
 };
 
 const char* passwords[] = {
   "RkF2b3ub",
   "iNTERNET.4gMain!",
+  "hrrtz123",
+  "",
+  "",
   ""
 };
 
-const int networkCount = 3;
+const int networkCount = 6;
 WebServer server(80);
 
 String sessionID = "";
@@ -134,13 +140,15 @@ enum DetectionState {
 
 DetectionState currentState = IDLE;
 unsigned long detectionStartTime = 0;
-const unsigned long IDENTIFICATION_WINDOW = 2000;
-const unsigned long MOTOR_DELAY = 1000;
+const unsigned long IDENTIFICATION_WINDOW = 2500;
+const unsigned long MOTOR_DELAY = 500;
 const unsigned long VERIFICATION_TIMEOUT = 10000;
+const unsigned long MOTOR_RUNTIME = 5000;
 unsigned long motorStartTime = 0;
+unsigned long motorActivateTime = 0;
 unsigned long verificationStartTime = 0;
-const unsigned long DETECTION_SAMPLE_INTERVAL = 60;
-const int DETECTION_CONFIRMATION_COUNT = 2;
+const unsigned long DETECTION_SAMPLE_INTERVAL = 40;
+const int DETECTION_CONFIRMATION_COUNT = 1;
 const int ULTRASONIC_SAMPLE_COUNT = 3;
 const unsigned long ULTRASONIC_SAMPLE_GAP = 20;
 
@@ -189,8 +197,8 @@ unsigned long paperOccupancyStartTime = 0;
 const unsigned long BIN_FULL_THRESHOLD = 10000;
 
 // --- DETECTION RANGES (in cm) ---
-const int VERIFICATION_RANGE = 30;
-const int OCCUPANCY_DETECTION_RANGE = 40;
+const int VERIFICATION_RANGE = 4;
+const int OCCUPANCY_DETECTION_RANGE = 4;
 
 // --- WiFi timing ---
 unsigned long lastWiFiCheck = 0;
@@ -230,6 +238,7 @@ void resetMachineSession(bool clearSessionId = true) {
   paperDetectionCount = 0;
   lastDetectionSampleTime = 0;
   motorStopped = false;
+  motorActivateTime = 0;
   showIdleLcd();
   Serial.println("[SESSION] Machine counters reset.");
 }
@@ -389,6 +398,7 @@ void loop() {
       // Wait for delay before starting motor
       if (millis() - motorStartTime >= MOTOR_DELAY) {
         startMotor();
+        motorActivateTime = millis();
         currentState = VERIFICATION_WINDOW;
         verificationStartTime = millis();
       }
@@ -398,21 +408,24 @@ void loop() {
       // Check ultrasonic sensors for verification (CONTINUOUS)
       checkUltrasonicVerification();
       
-      // Motor runs for 5 seconds, but verification continues after
-      if (millis() - motorStartTime >= (MOTOR_DELAY + 5000) && !motorStopped) {
+      // Motor MUST run for exactly 5 seconds from activation
+      unsigned long motorElapsedTime = millis() - motorActivateTime;
+      bool motorTimeExpired = motorElapsedTime >= MOTOR_RUNTIME;
+      
+      // Stop motor if: (5 seconds elapsed) OR (points awarded AND 2 seconds have passed for item transfer)
+      bool shouldStopMotor = motorTimeExpired || (pointsAlreadyAwarded && motorElapsedTime >= 2000);
+      
+      if (shouldStopMotor && !motorStopped) {
         stopMotor();
         motorStopped = true;
+        Serial.printf("[MOTOR] Stopped after %.1f seconds (TimeExpired: %d, PointsAwarded: %d)\n", 
+                      motorElapsedTime / 1000.0, motorTimeExpired, pointsAlreadyAwarded);
       }
       
-      // If points already awarded, end cycle immediately
-      if (pointsAlreadyAwarded) {
-        // Display stats first
+      // After motor has stopped AND points awarded, end the cycle
+      if (motorStopped && pointsAlreadyAwarded) {
+        delay(200);
         printStats();
-        // Then stop motor right after
-        if (!motorStopped) {
-          stopMotor();
-          motorStopped = true;
-        }
         // Reset for next cycle
         verificationNeeded = false;
         pointsAlreadyAwarded = false;
@@ -421,14 +434,9 @@ void loop() {
         delay(500);
       }
       // Check if verification timeout has been reached (10 seconds total from verification start)
-      else if (millis() - verificationStartTime >= VERIFICATION_TIMEOUT) {
+      else if (motorStopped && millis() - verificationStartTime >= VERIFICATION_TIMEOUT) {
         // Display stats first
         printStats();
-        // Then stop motor right after
-        if (!motorStopped) {
-          stopMotor();
-          motorStopped = true;
-        }
         
         // If verification failed (points not awarded)
         if (verificationNeeded && !pointsAlreadyAwarded) {
@@ -456,8 +464,10 @@ void loop() {
 
 void classifyAndSort() {
   Serial.println("[CLASSIFICATION RESULTS]");
-  Serial.printf("Inductive: %d | Capacitive: %d | IR: %d\n", metalDetected, plasticDetected, paperDetected);
-  Serial.printf("Counts -> Metal: %d | Plastic: %d | Paper: %d\n", metalDetectionCount, plasticDetectionCount, paperDetectionCount);
+  Serial.printf("Detection Counts -> Metal: %d | Plastic: %d | Paper: %d (Threshold: %d)\n", 
+                metalDetectionCount, plasticDetectionCount, paperDetectionCount, DETECTION_CONFIRMATION_COUNT);
+  Serial.printf("Confirmed Detection -> Metal: %d | Plastic: %d | Paper: %d\n", 
+                metalDetected, plasticDetected, paperDetected);
 
   if (metalDetected) {
     Serial.println("=> METAL DETECTED! Activating metal servo...");
