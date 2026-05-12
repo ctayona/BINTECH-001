@@ -78,41 +78,6 @@
       .mobile-nav-toggle { display: inline-flex; }
       .points-badge { display: none; }
       .mobile-nav-panel[data-open="true"] { display: block; }
-      
-      /* Mobile Community Chat Fixes */
-      aside {
-        grid-column: 1 / -1 !important;
-        width: 100%;
-      }
-      
-      #shoutbox-messages {
-        height: 300px !important;
-        min-height: 300px !important;
-        max-height: 400px !important;
-      }
-      
-      .shoutbox-message {
-        padding: 8px 12px;
-        word-break: break-word;
-        word-wrap: break-word;
-        overflow-wrap: break-word;
-      }
-      
-      #shoutbox-input {
-        font-size: 16px;
-        min-height: 50px;
-      }
-      
-      #shoutbox-send-btn {
-        min-width: 70px;
-        font-size: 0.875rem;
-        padding: 8px 12px;
-      }
-      
-      .bintech-user-footer__subscribe form button {
-        width: 100%;
-        margin-bottom: 8px;
-      }
     }
     
     .activity-card {
@@ -143,21 +108,7 @@
     #shoutbox-messages::-webkit-scrollbar-thumb { background: #5DAE60; border-radius: 3px; }
     #shoutbox-messages::-webkit-scrollbar-thumb:hover { background: #4CAF50; }
     
-    .shoutbox-message { 
-      animation: slideInMessage 0.3s ease;
-      display: flex;
-      flex-direction: column;
-      word-break: break-word;
-      word-wrap: break-word;
-      overflow-wrap: break-word;
-    }
-    
-    .shoutbox-message .message-author,
-    .shoutbox-message .message-text,
-    .shoutbox-message .message-time {
-      word-break: break-word;
-      overflow-wrap: break-word;
-    }
+    .shoutbox-message { animation: slideInMessage 0.3s ease; }
     
     @keyframes slideInMessage {
       from { opacity: 0; transform: translateY(10px); }
@@ -526,7 +477,7 @@
           <!-- End Left Column -->
 
           <!-- RIGHT COLUMN: Community Chat (30% = 3 cols) -->
-          <aside class="lg:col-span-3">
+          <aside class="lg:col-span-3 lg:pr-6">
             <div class="bg-white rounded-2xl card-shadow lg:sticky lg:top-20 overflow-hidden">
               <!-- Shoutbox Header -->
               <div class="gradient-dark p-4">
@@ -559,16 +510,16 @@
                 ></textarea>
 
                 <!-- Character Count & Send Button -->
-                <div class="flex items-center justify-between gap-2 mt-2">
-                  <span id="shoutbox-char-count" class="text-xs text-[#9CA3AF] whitespace-nowrap">0/250</span>
+                <div class="flex items-center justify-between mt-2">
+                  <span id="shoutbox-char-count" class="text-xs text-[#9CA3AF]">0/250</span>
                   <button 
                     id="shoutbox-send-btn" 
-                    class="bg-gradient-to-r from-[#5DAE60] to-[#4CAF50] text-white px-4 py-2 rounded-lg font-semibold text-sm hover:shadow-lg transition-all flex items-center gap-2 flex-shrink-0"
+                    class="bg-gradient-to-r from-[#5DAE60] to-[#4CAF50] text-white px-4 py-2 rounded-lg font-semibold text-sm hover:shadow-lg transition-all flex items-center gap-2"
                   >
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
                     </svg>
-                    <span class="hidden sm:inline">Send</span>
+                    Send
                   </button>
                 </div>
 
