@@ -495,6 +495,12 @@
             width: 100%;
             transform: translateZ(0);
         }
+        /* Make panel content scrollable when modal is taller than viewport */
+        .session-panel {
+            max-height: calc(100vh - 120px);
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
 
         .session-info h2 {
             color: var(--primary-dark);
@@ -984,6 +990,12 @@
             padding: 1rem 1.25rem;
             box-shadow: 0 30px 70px rgba(3,44,22,0.2);
             transform: translateZ(0);
+        }
+
+        /* Lock body scroll when modal overlay is open */
+        body.modal-open {
+            overflow: hidden;
+            height: 100%;
         }
 
         @media (min-width: 768px) {
@@ -1492,8 +1504,11 @@
                         document.getElementById('start-scanner').style.display = 'none';
                         document.getElementById('stop-scanner').style.display = 'inline-block';
                             // Show small floating session panel while scanner is active
+                            // Only show it when a session is already active (don't auto-create session)
                             const sessionEl = document.getElementById('session-info');
-                            if (sessionEl) sessionEl.classList.add('session-floating');
+                            if (sessionEl && sessionEl.classList.contains('active')) {
+                                sessionEl.classList.add('session-floating');
+                            }
                         
                         const canvas = document.createElement('canvas');
                         const context = canvas.getContext('2d');
@@ -1618,9 +1633,12 @@
                 if (isActive) {
                     sessionEl.classList.add('session-overlay');
                     sessionEl.classList.remove('session-floating');
+                    // lock background scrolling when modal overlay is shown
+                    try { document.body.classList.add('modal-open'); } catch (e) { /* ignore */ }
                 } else {
                     // Completed sessions remain visible but not full-screen
                     sessionEl.classList.remove('session-overlay', 'session-floating');
+                    try { document.body.classList.remove('modal-open'); } catch (e) { /* ignore */ }
                 }
             }
 
@@ -1716,6 +1734,7 @@
                     if (sessionEl) {
                         sessionEl.classList.remove('session-overlay', 'session-floating', 'active');
                     }
+                    try { document.body.classList.remove('modal-open'); } catch (e) { /* ignore */ }
 
                     if (sessionCheckInterval) {
                         clearInterval(sessionCheckInterval);
@@ -1773,6 +1792,7 @@
                 currentSession = null;
                 const sessionEl = document.getElementById('session-info');
                 if (sessionEl) sessionEl.classList.remove('session-overlay', 'session-floating', 'active');
+                try { document.body.classList.remove('modal-open'); } catch (e) { /* ignore */ }
                 hideStatus();
 
                 if (sessionCheckInterval) {
