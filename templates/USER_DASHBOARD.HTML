@@ -288,8 +288,6 @@
       </div>
     </div>
 
-  </nav>
-
     <!-- Mobile Menu Panel: Navigation -->
     <div id="mobile-nav-panel" class="mobile-nav-panel md:hidden border-t border-white/15 bg-[#143D2E]/95 px-4 py-4" data-open="false" style="display:none;">
       <div class="space-y-3">
@@ -305,6 +303,7 @@
         <button onclick="handleLogout()" class="px-3 py-1.5 text-white/80 text-xs border border-white/30 rounded-full hover:bg-white/10">Logout</button>
       </div>
     </div>
+  </nav>
 
     <!-- Main Content -->
     <main class="flex-grow w-full">
@@ -477,8 +476,8 @@
           </div>
           <!-- End Left Column -->
 
-          <!-- RIGHT COLUMN: Community Chat (30% = 3 cols, hidden on mobile) -->
-          <aside class="hidden md:block lg:col-span-3">
+          <!-- RIGHT COLUMN: Community Chat (30% = 3 cols) -->
+          <aside class="lg:col-span-3">
             <div class="bg-white rounded-2xl card-shadow lg:sticky lg:top-20 overflow-hidden">
               <!-- Shoutbox Header -->
               <div class="gradient-dark p-4">
@@ -490,8 +489,8 @@
               </div>
 
               <!-- Messages Container -->
-              <div id="shoutbox-messages" class="h-[calc(100vh-450px)] min-h-[400px] max-h-[600px] overflow-y-auto p-4 space-y-2 bg-[#F5F5F5]">
-                <div class="text-center py-8 text-[#0F3B2E]/50">
+              <div id="shoutbox-messages" class="h-[calc(100vh-450px)] min-h-[400px] max-h-[600px] overflow-y-auto p-5 space-y-4 bg-[#F5F5F5]">
+                <div class="text-center py-12 text-[#0F3B2E]/50">
                   <p class="text-sm">Loading messages...</p>
                 </div>
               </div>
@@ -535,73 +534,6 @@
         <!-- End Grid -->
       </div>
     </main>
-
-    <!-- Floating Chat Bubble (Mobile Only) -->
-    <button id="mobile-chat-bubble" class="fixed bottom-6 right-6 md:hidden w-14 h-14 bg-gradient-to-br from-[#5DAE60] to-[#4CAF50] text-white rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center z-40 hover:scale-110" aria-label="Open chat">
-      <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-        <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
-      </svg>
-    </button>
-
-    <!-- Mobile Chat Modal (Mobile Only) -->
-    <div id="mobile-chat-modal" class="hidden fixed inset-0 z-50 md:hidden flex flex-col bg-black/40" style="display: none;">
-      <div class="bg-white rounded-t-3xl mt-auto flex flex-col h-[90vh] max-h-[90vh] overflow-hidden">
-        <!-- Modal Header -->
-        <div class="gradient-dark p-4 flex items-center justify-between border-b border-white/20">
-          <div class="flex items-center gap-2">
-            <span class="text-2xl">💬</span>
-            <h3 class="font-playfair text-lg text-white font-bold">Community Chat</h3>
-          </div>
-          <button id="mobile-chat-close" class="text-white/80 hover:text-white transition-colors p-2">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-            </svg>
-          </button>
-        </div>
-
-        <!-- Modal Content (duplicated chat content) -->
-        <div class="flex-1 overflow-y-auto flex flex-col">
-          <!-- Messages Container -->
-          <div id="mobile-shoutbox-messages" class="flex-1 overflow-y-auto p-4 space-y-2 bg-[#F5F5F5]">
-            <div class="text-center py-8 text-[#0F3B2E]/50">
-              <p class="text-sm">Loading messages...</p>
-            </div>
-          </div>
-
-          <!-- Input Section -->
-          <div class="p-4 border-t border-[#E0E0E0] bg-white flex-shrink-0">
-            <!-- Error Message -->
-            <div id="mobile-shoutbox-error" class="hidden mb-3 bg-red-50 border border-red-200 rounded-lg p-2 text-red-700 text-xs"></div>
-
-            <!-- Textarea -->
-            <textarea 
-              id="mobile-shoutbox-input" 
-              placeholder="Type your message..." 
-              class="w-full px-3 py-2 border border-[#E0E0E0] rounded-lg resize-none focus:outline-none focus:border-[#5DAE60] focus:ring-2 focus:ring-[#5DAE60]/20 text-sm"
-              rows="2"
-              maxlength="250"
-            ></textarea>
-
-            <!-- Character Count & Send Button -->
-            <div class="flex items-center justify-between mt-2">
-              <span id="mobile-shoutbox-char-count" class="text-xs text-[#9CA3AF]">0/250</span>
-              <button 
-                id="mobile-shoutbox-send-btn" 
-                class="bg-gradient-to-r from-[#5DAE60] to-[#4CAF50] text-white px-4 py-2 rounded-lg font-semibold text-sm hover:shadow-lg transition-all flex items-center gap-2"
-              >
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
-                </svg>
-                Send
-              </button>
-            </div>
-
-            <!-- Info Text -->
-            <p class="text-xs text-[#0F3B2E]/50 mt-2">⏱ 5 second cooldown between messages</p>
-          </div>
-        </div>
-      </div>
-    </div>
 
     <!-- Footer -->
     <footer class="bintech-user-footer flex-shrink-0">
@@ -730,9 +662,8 @@
           initializeShoutbox()
         ]);
 
-        // Setup mobile menu toggle and chat bubble
+        // Setup mobile menu toggle
         setupMobileMenu();
-        initializeMobileChatBubble();
 
       } catch (error) {
         console.error('Error initializing dashboard:', error);
@@ -741,107 +672,8 @@
     });
 
     // ============================================
-    // MOBILE CHAT BUBBLE & MODAL
+    // MOBILE MENU TOGGLE & INITIALIZATION
     // ============================================
-    function syncChatToMobileModal() {
-      // Sync messages from main shoutbox to mobile modal
-      const mainMessages = document.getElementById('shoutbox-messages');
-      const mobileMessages = document.getElementById('mobile-shoutbox-messages');
-      
-      if (mainMessages && mobileMessages) {
-        mobileMessages.innerHTML = mainMessages.innerHTML;
-        // Auto-scroll to bottom
-        mobileMessages.scrollTop = mobileMessages.scrollHeight;
-      }
-    }
-    
-    function syncMobileInputs() {
-      // Sync input between mobile and main
-      const mainInput = document.getElementById('shoutbox-input');
-      const mobileInput = document.getElementById('mobile-shoutbox-input');
-      const mainCharCount = document.getElementById('shoutbox-char-count');
-      const mobileCharCount = document.getElementById('mobile-shoutbox-char-count');
-      const mainSendBtn = document.getElementById('shoutbox-send-btn');
-      const mobileSendBtn = document.getElementById('mobile-shoutbox-send-btn');
-      
-      if (!mainInput || !mobileInput) return;
-      
-      // When user types in mobile input, update main input and char count
-      mobileInput.addEventListener('input', (e) => {
-        mainInput.value = e.target.value;
-        if (mainCharCount && mobileCharCount) {
-          const count = e.target.value.length;
-          mainCharCount.textContent = count + '/250';
-          mobileCharCount.textContent = count + '/250';
-        }
-      });
-      
-      // When user clicks send on mobile, click main send button
-      if (mobileSendBtn && mainSendBtn) {
-        mobileSendBtn.addEventListener('click', () => {
-          mainSendBtn.click();
-          // After send, sync back
-          setTimeout(() => {
-            syncChatToMobileModal();
-            mobileInput.value = '';
-            mobileCharCount.textContent = '0/250';
-          }, 100);
-        });
-      }
-    }
-    
-    function initializeMobileChatBubble() {
-      const bubble = document.getElementById('mobile-chat-bubble');
-      const modal = document.getElementById('mobile-chat-modal');
-      const closeBtn = document.getElementById('mobile-chat-close');
-      
-      if (!bubble || !modal || !closeBtn) return;
-      
-      const openModal = () => {
-        modal.style.display = 'flex';
-        document.body.style.overflow = 'hidden';
-        // Sync chat data when opening
-        syncChatToMobileModal();
-      };
-      
-      const closeModal = () => {
-        modal.style.display = 'none';
-        document.body.style.overflow = 'auto';
-      };
-      
-      bubble.addEventListener('click', openModal);
-      closeBtn.addEventListener('click', closeModal);
-      modal.addEventListener('click', (e) => {
-        if (e.target === modal) closeModal();
-      });
-      document.addEventListener('keydown', (event) => {
-        if (event.key === 'Escape' && modal.style.display === 'flex') closeModal();
-      });
-      
-      // Initialize mobile input sync
-      syncMobileInputs();
-    }
-
-    function updateUserInfo() {
-      const userDataStr = sessionStorage.getItem('bintech_user');
-      if (!userDataStr) return;
-      
-      try {
-        const user = JSON.parse(userDataStr);
-        const navUserName = document.getElementById('nav-user-name');
-        if (navUserName) navUserName.textContent = (user.full_name || user.email || 'User').toUpperCase();
-        
-        if (user.points !== undefined) {
-          const formatted = user.points.toLocaleString();
-          const navPoints = document.getElementById('nav-points');
-          if (navPoints) navPoints.textContent = `${formatted} Points`;
-          
-          const mobilePoints = document.getElementById('mobile-nav-points');
-          if (mobilePoints) mobilePoints.textContent = `${formatted} Points`;
-        }
-      } catch (error) {}
-    }
-
     function initializeUserMobileMenu() {
       const toggle = document.getElementById('mobile-nav-toggle');
       const panel = document.getElementById('mobile-nav-panel');
@@ -876,6 +708,26 @@
       document.addEventListener('keydown', (event) => { if (event.key === 'Escape') closeMenu(); });
       
       syncPoints();
+    }
+
+    function updateUserInfo() {
+      const userDataStr = sessionStorage.getItem('bintech_user');
+      if (!userDataStr) return;
+      
+      try {
+        const user = JSON.parse(userDataStr);
+        const navUserName = document.getElementById('nav-user-name');
+        if (navUserName) navUserName.textContent = (user.full_name || user.email || 'User').toUpperCase();
+        
+        if (user.points !== undefined) {
+          const formatted = user.points.toLocaleString();
+          const navPoints = document.getElementById('nav-points');
+          if (navPoints) navPoints.textContent = `${formatted} Points`;
+          
+          const mobilePoints = document.getElementById('mobile-nav-points');
+          if (mobilePoints) mobilePoints.textContent = `${formatted} Points`;
+        }
+      } catch (error) {}
     }
 
     function setupMobileMenu() {
