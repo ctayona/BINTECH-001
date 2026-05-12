@@ -1620,46 +1620,58 @@
             showLoading(`Initiating session with ${qrData}...`);
 
             // DEBUG: Log what we're sending
-            console.log('=== QR SCAN DEBUG ===');
-            console.log('Full user object:', user);
-            console.log('user.id:', user.id);
-            console.log('user.id type:', typeof user.id);
-            console.log('user.system_id:', user.system_id);
-            console.log('user.email:', user.email);
-            console.log('user.account_type:', user.account_type);
-            console.log('QR Data:', qrData);
-            console.log('================');
+            console.log('=== SESSION START DEBUG ===');
+            console.log('User object:', user);
+            console.log('User ID:', effectiveUserId);
+            console.log('Hardware Device ID:', qrData);
+            console.log('===========================');
 
             try {
+                const requestBody = {
+                    userId: effectiveUserId,
+                    hardwareDeviceId: qrData,
+                    qrCodeData: qrData
+                };
+
+                console.log('[SESSION] Sending request:', requestBody);
+
                 const response = await fetch('/api/waste-sorter/session/start', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({
-                        userId: effectiveUserId,
-                        hardwareDeviceId: qrData,
-                        qrCodeData: qrData
-                    })
+                    body: JSON.stringify(requestBody)
                 });
 
                 const data = await response.json();
 
-                if (data.success) {
+                console.log('[SESSION] Backend response:', data);
+
+                if (data.success && data.session) {
                     currentSession = data.session;
                     sessionStartTime = new Date();
+                    
+                    console.log('[SESSION] Session created successfully:', {
+                        id: data.session.id,
+                        points: data.session.points_earned,
+                        metal: data.session.metal_count,
+                        plastic: data.session.plastic_count,
+                        paper: data.session.paper_count
+                    });
+                    
                     displaySession(data.session);
                     startSessionMonitoring(data.session.id);
                     hideLoading();
                     showStatus('Session started successfully!', 'success');
                 } else {
                     hideLoading();
+                    console.error('[SESSION] Failed to start:', data.message);
                     showStatus(data.message || 'Failed to start session', 'error');
                 }
             } catch (error) {
                 hideLoading();
+                console.error('[SESSION] Error:', error);
                 showStatus('Error starting session: ' + error.message, 'error');
-                console.error('Session start error:', error);
             }
         }
 
@@ -1682,36 +1694,58 @@
         // Session Management
         // ============================================
         function displaySession(session) {
+            console.log('[DISPLAY_SESSION] Called with session:', session);
+
             const pointsEarned = toNumber(session.points_earned, 0);
             const metalCount = toNumber(session.metal_count, 0);
             const plasticCount = toNumber(session.plastic_count, 0);
             const paperCount = toNumber(session.paper_count, 0);
             const isActive = !!session.is_active;
 
+            console.log('[DISPLAY_SESSION] Parsed values:', {
+                points: pointsEarned,
+                metal: metalCount,
+                plastic: plasticCount,
+                paper: paperCount,
+                active: isActive
+            });
+
             const sessionEl = document.getElementById('session-info');
             if (sessionEl) {
                 // Ensure panel visible and show as full-screen modal
                 sessionEl.classList.add('active');
+                console.log('[DISPLAY_SESSION] Modal shown');
                 // lock background scrolling when modal overlay is shown
                 try { document.body.classList.add('modal-open'); } catch (e) { /* ignore */ }
+            } else {
+                console.warn('[DISPLAY_SESSION] Modal element not found!');
             }
 
-            document.getElementById('points-earned').textContent = pointsEarned.toFixed(2);
-            document.getElementById('items-sorted').textContent = metalCount + plasticCount + paperCount;
-            document.getElementById('session-transfer-amount').textContent = pointsEarned.toFixed(2) + ' pts';
-            document.getElementById('session-status').textContent = isActive ? 'ACTIVE' : 'COMPLETED';
+            // Update display elements
+            const pointsEl = document.getElementById('points-earned');
+            const itemsEl = document.getElementById('items-sorted');
+            const transferEl = document.getElementById('session-transfer-amount');
+            const statusEl = document.getElementById('session-status');
+
+            if (pointsEl) pointsEl.textContent = pointsEarned.toFixed(2);
+            if (itemsEl) itemsEl.textContent = metalCount + plasticCount + paperCount;
+            if (transferEl) transferEl.textContent = pointsEarned.toFixed(2) + ' pts';
+            if (statusEl) statusEl.textContent = isActive ? 'ACTIVE' : 'COMPLETED';
 
             const statusBadge = document.getElementById('status-badge');
-            statusBadge.classList.remove('badge-active', 'badge-transferred');
-            
-            if (isActive) {
-                statusBadge.classList.add('badge-active');
-                statusBadge.textContent = 'ACTIVE';
-            } else {
-                statusBadge.classList.add('badge-transferred');
-                statusBadge.textContent = 'COMPLETED';
+            if (statusBadge) {
+                statusBadge.classList.remove('badge-active', 'badge-transferred');
+                
+                if (isActive) {
+                    statusBadge.classList.add('badge-active');
+                    statusBadge.textContent = 'ACTIVE';
+                } else {
+                    statusBadge.classList.add('badge-transferred');
+                    statusBadge.textContent = 'COMPLETED';
+                }
             }
 
+            console.log('[DISPLAY_SESSION] Display updated');
             startSessionTimer();
         }
 
@@ -1733,23 +1767,36 @@
 
             const pollSessionStatus = async () => {
                 try {
+                    console.log('[POLLING] Fetching session status for:', sessionId);
                     const response = await fetch(`/api/waste-sorter/session/${sessionId}/status`);
                     const data = await response.json();
                     
-                    if (data.success) {
+                    console.log('[POLLING] Response:', data);
+                    
+                    if (data.success && data.session) {
                         currentSession = data.session;
+                        console.log('[POLLING] Updated session:', {
+                            points: data.session.points_earned,
+                            metal: data.session.metal_count,
+                            plastic: data.session.plastic_count,
+                            paper: data.session.paper_count
+                        });
                         displaySession(data.session);
 
                         if (!data.session.is_active) {
+                            console.log('[POLLING] Session is no longer active, stopping polling');
                             clearInterval(sessionCheckInterval);
                             sessionCheckInterval = null;
                         }
+                    } else {
+                        console.error('[POLLING] Invalid response:', data);
                     }
                 } catch (error) {
-                    console.error('Polling error:', error);
+                    console.error('[POLLING] Error:', error);
                 }
             };
 
+            console.log('[MONITORING] Starting session monitoring for:', sessionId);
             pollSessionStatus();
             sessionCheckInterval = setInterval(pollSessionStatus, 5000);
         }

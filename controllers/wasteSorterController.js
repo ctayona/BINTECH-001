@@ -499,20 +499,27 @@ exports.getSessionStatus = async (req, res) => {
       });
     }
 
+    console.log('[GET_SESSION_STATUS] Fetching session:', sessionId);
+
     const { data: session, error } = await supabase
       .from('machine_sessions')
       .select('*')
       .eq('id', sessionId)
       .single();
 
+    if (error) {
+      console.error('[GET_SESSION_STATUS] Query error:', error.message);
+    }
+
     if (error || !session) {
+      console.warn('[GET_SESSION_STATUS] Session not found:', sessionId);
       return res.status(404).json({
         success: false,
         message: 'Session not found'
       });
     }
 
-    res.json({
+    const responseData = {
       success: true,
       session: {
         id: session.id,
@@ -525,7 +532,11 @@ exports.getSessionStatus = async (req, res) => {
         started_at: session.started_at,
         last_updated: session.updated_at
       }
-    });
+    };
+
+    console.log('[GET_SESSION_STATUS] Returning session:', responseData);
+
+    res.json(responseData);
   } catch (error) {
     console.error('Get session status error:', error);
     res.status(500).json({
@@ -1209,6 +1220,84 @@ exports.getSortingOverview = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: 'Failed to fetch sorting overview',
+      error: error.message
+    });
+  }
+};
+
+// ============================================
+// TEST: MANUALLY ADD POINTS TO SESSION (for debugging without ESP32)
+// ============================================
+exports.testAddPoints = async (req, res) => {
+  try {
+    const { sessionId, points, metalCount, plasticCount, paperCount } = req.body;
+
+    if (!sessionId) {
+      return res.status(400).json({
+        success: false,
+        message: 'sessionId is required'
+      });
+    }
+
+    console.log('[TEST] Manually adding points to session:', { sessionId, points, metalCount, plasticCount, paperCount });
+
+    const { data: session, error: sessionError } = await supabase
+      .from('machine_sessions')
+      .select('*')
+      .eq('id', sessionId)
+      .single();
+
+    if (sessionError || !session) {
+      return res.status(404).json({
+        success: false,
+        message: 'Session not found'
+      });
+    }
+
+    // Update session with test points
+    const newPoints = Number(points || 0);
+    const newMetal = Number(metalCount || 0);
+    const newPlastic = Number(plasticCount || 0);
+    const newPaper = Number(paperCount || 0);
+
+    const { error: updateError } = await supabase
+      .from('machine_sessions')
+      .update({
+        total_points: newPoints,
+        metal_count: newMetal,
+        plastic_count: newPlastic,
+        paper_count: newPaper,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', sessionId);
+
+    if (updateError) {
+      console.error('[TEST] Update error:', updateError);
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to update session',
+        error: updateError.message
+      });
+    }
+
+    console.log('[TEST] Points added successfully');
+
+    res.json({
+      success: true,
+      message: 'Test points added',
+      session: {
+        id: session.id,
+        points_earned: newPoints,
+        metal_count: newMetal,
+        plastic_count: newPlastic,
+        paper_count: newPaper
+      }
+    });
+  } catch (error) {
+    console.error('Test add points error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
       error: error.message
     });
   }

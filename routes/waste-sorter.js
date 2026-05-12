@@ -40,6 +40,13 @@ router.post('/api/bin-warning', wasteSorterController.binFullWarning);
 // Push live bin capacity percentages from ESP32 ultrasonic sensors
 router.post('/api/bin-capacity', wasteSorterController.updateBinCapacityTelemetry);
 
+// ============================================
+// TEST/DEBUG ROUTES
+// ============================================
+
+// Manually add points to a session (for testing without ESP32)
+router.post('/test/add-points', wasteSorterController.testAddPoints);
+
 // Aggregate sorting totals for admin analytics
 router.get('/analytics/overview', wasteSorterController.getSortingOverview);
 
