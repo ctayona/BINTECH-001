@@ -1,0 +1,85 @@
+**Project Overview**:
+- **Name**: BinTECH — Intelligent Waste Segregation & Incentive Platform
+- **Purpose**: Real-time hardware sorting (ESP32) + web backend (Node/Express + Supabase) + incentive system for users.
+
+**ERD (Entity Relationship Diagram) — key entities**:
+- **machine_sessions**: session id, user_id, machine_id, started_at, ended_at, metal_count, plastic_count, paper_count, total_points, status
+- **user_accounts**: system_id, email, displayName, profile data
+- **account_points**: system_id, points, total_points
+- **bins**: id, machine_id, code, location, waste_type, filled_percentage, status
+- **machine_sorting_telemetry**: machine_id, metal_fill_percentage, plastic_fill_percentage, paper_fill_percentage, counts, totals
+
+Show relationships: user_accounts 1--* machine_sessions ; machine_sessions *--1 machine_sorting_telemetry (summary) ; bins linked by machine_id + waste_type.
+
+**DFD (Data Flow)**:
+- **ESP32 hardware**: sensors -> local classification -> POST /api/waste-sorter/api/session/update -> backend
+- **Backend**: validates session -> updates machine_sessions + telemetry -> responds with resetMachine flag
+- **Frontend**: serves templates + authenticates users -> allows starting/ending sessions and transfers points
+
+**Cloud Deployment**:
+- **Host**: Render (Node.js app) serving Express API and static templates
+- **DB & Storage**: Supabase (Postgres + Storage buckets for images)
+- **Email**: SendGrid for notification
+- **Auth**: Google OAuth for user sign-in
+- **Config**: Environment variables required: SUPABASE_URL, SUPABASE_ANON_KEY (or SERVICE_ROLE_KEY server-side), SENDGRID_API_KEY, GOOGLE_CLIENT_ID, PORT
+
+**System Deployment (architecture)**:
+- ESP32 devices on local network -> WiFi -> call backend endpoints (device-specific machineId)
+- Backend runs on Render, exposes public API endpoints secured by session tokens / backend checks
+- Supabase manages persistent state, telemetry and storage
+- Static UI delivered via Express templates + client JS in `public/js`
+
+**Security & Operational Notes**:
+- Keep `SUPABASE_SERVICE_ROLE_KEY` server-only; never expose to client templates or frontend JS
+- Validate and sanitize all inputs from hardware and clients (controllers already use defensive checks)
+- Limit file upload size/types (multer configured to 5MB + filter)
+- Use HTTPS for all device -> backend traffic; ensure ESP32 `BACKEND_URL` uses HTTPS
+- Rotate tokens and service keys regularly; audit access to Supabase buckets
+
+**Core Features to Highlight in Presentation**:
+- Real-time sorting & verification using inductive/capacitive/IR + ultrasonic sensors
+- On-device classification + backend session synchronization
+- Points/incentive system with account linking and transfer
+- Bin occupancy telemetry and auto bin-full warnings
+- Admin dashboard and analytics (telemetry aggregation)
+
+**Demo Plan (recommended)**:
+1. Start a session via frontend (show UI + QR if used)
+2. Show ESP32 live logs (serial) performing detection -> classification
+3. Show motor runs for exact 5s and ultrasonic verification triggers points award
+4. Show backend `machine_sessions` and `machine_sorting_telemetry` update in Supabase (or via `GET /api/waste-sorter/api/device/:deviceId/session`)
+5. Transfer points to user account and show updated `account_points` record
+
+**Key Files & Paths (for quick reference)**:
+- `ESP32-CODE.txt` (firmware): ESP32 sensor & motor logic
+- `app.js`: Express app entry and template injection
+- `routes/waste-sorter.js` and `controllers/wasteSorterController.js`: hardware API
+- `config/supabase.js`: Supabase client config
+- `templates/` and `public/`: frontend UI and assets
+
+**Run & Test Commands (local)**:
+```
+npm install
+npm run dev        # start server locally
+# Use curl/postman to POST to hardware endpoints for test payloads
+```
+
+**Risks & Mitigations**:
+- Network reliability: ensure ESP32 has robust reconnect logic and retries for HTTP calls
+- False positives in detection: tune `DETECTION_SAMPLE_INTERVAL` and confirmation thresholds; show sample logs during demo
+- Data consistency: backend upserts telemetry and marks sessions completed atomically; test concurrent updates
+
+**Slide Suggestions** (order):
+1. Problem statement & goals
+2. System architecture (diagram)
+3. ERD and DFD (two slides)
+4. Hardware design & sensor list (ESP32 block diagram)
+5. Live demo steps + fallback screenshots
+6. Security & deployment notes
+7. Future work & limitations
+
+**Contact / Repo**:
+- Repo root: show `package.json`, `app.js`, `ESP32-CODE.txt` live in repository
+
+---
+Prepared for the presentation: use this file as the single-slide-content checklist and talking points.

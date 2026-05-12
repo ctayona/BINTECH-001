@@ -461,16 +461,39 @@
 
         /* Session Info */
         .session-info {
+            display: none;
+        }
+
+        .session-info.active:not(.session-overlay) {
+            display: block;
             background: white;
             border-radius: 1.5rem;
             padding: 2rem;
             box-shadow: 0 4px 20px rgba(15, 59, 46, 0.12);
             margin-bottom: 2rem;
-            display: none;
         }
 
-        .session-info.active {
-            display: block;
+        /* When used as an overlay (scanner active) - center with backdrop */
+        .session-info.session-overlay {
+            position: fixed !important;
+            inset: 0;
+            display: flex !important;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0,0,0,0.35);
+            z-index: 12000;
+            padding: 1.5rem;
+        }
+
+        .session-panel {
+            background: white;
+            color: var(--primary-dark);
+            border-radius: 1rem;
+            padding: 1.25rem 1.5rem;
+            box-shadow: 0 30px 70px rgba(3,44,22,0.15);
+            max-width: 480px;
+            width: 100%;
+            transform: translateZ(0);
         }
 
         .session-info h2 {
@@ -1173,6 +1196,7 @@
 
             <!-- Session Info -->
             <div class="session-info" id="session-info">
+                <div class="session-panel">
                 <h2>Active Session</h2>
                 
                 <div class="info-grid">
@@ -1181,6 +1205,8 @@
                         <div class="info-value">
                             <span id="session-status" style="font-size: 1rem;">ACTIVE</span>
                             <div class="status-badge badge-active" id="status-badge">Active</div>
+                        </div>
+                        </div>
                         </div>
                     </div>
                     <div class="info-item">
@@ -1692,11 +1718,10 @@
                         refreshNavPoints(updatedUser);
                     }
                     
-                    // Reset form
-                    setTimeout(() => {
-                        document.getElementById('start-scanner').style.display = 'inline-block';
-                        hideStatus();
-                    }, 2000);
+                        // Refresh page shortly so UI and session state are aligned with backend
+                        setTimeout(() => {
+                            try { window.location.reload(); } catch (e) { /* ignore */ }
+                        }, 1400);
                 } else {
                     showStatus(data.message || 'Failed to transfer points', 'error');
                 }
@@ -1742,11 +1767,10 @@
                     timerInterval = null;
                 }
 
-                document.getElementById('start-scanner').style.display = 'inline-block';
-                showStatus('Session ended', 'info');
-                // Ensure session overlay is removed when session ends
-                const sessionEl = document.getElementById('session-info');
-                if (sessionEl) sessionEl.classList.remove('session-overlay');
+                // Refresh page shortly so UI shows updated state
+                setTimeout(() => {
+                    try { window.location.reload(); } catch (e) { /* ignore */ }
+                }, 800);
             } catch (error) {
                 hideLoading();
                 showStatus('Error ending session: ' + error.message, 'error');
