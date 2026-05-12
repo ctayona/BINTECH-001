@@ -1181,7 +1181,11 @@ exports.getWebsiteLogs = async (req, res) => {
       () => supabase
         .from('user_accounts')
         .select('system_id, campus_id, role, email, full_name, first_name, middle_name, last_name, created_at, updated_at, google_id')
-        .order('created_at', { ascending: false })
+        .order('created_at', { ascending: false }),
+      () => supabase
+        .from('user_accounts')
+        .select('*')
+        .limit(500)
     );
 
     const legacyUsers = await safeQuery(
@@ -1197,7 +1201,11 @@ exports.getWebsiteLogs = async (req, res) => {
       () => supabase
         .from('student_accounts')
         .select('*')
-        .order('created_at', { ascending: false })
+        .order('created_at', { ascending: false }),
+      () => supabase
+        .from('student_accounts')
+        .select('*')
+        .limit(500)
     );
 
     const facultyAccounts = await safeQuery(
@@ -1205,7 +1213,11 @@ exports.getWebsiteLogs = async (req, res) => {
       () => supabase
         .from('faculty_accounts')
         .select('*')
-        .order('created_at', { ascending: false })
+        .order('created_at', { ascending: false }),
+      () => supabase
+        .from('faculty_accounts')
+        .select('*')
+        .limit(500)
     );
 
     const otherAccounts = await safeQuery(
@@ -1213,7 +1225,11 @@ exports.getWebsiteLogs = async (req, res) => {
       () => supabase
         .from('other_accounts')
         .select('*')
-        .order('created_at', { ascending: false })
+        .order('created_at', { ascending: false }),
+      () => supabase
+        .from('other_accounts')
+        .select('*')
+        .limit(500)
     );
 
     const adminAccounts = await safeQuery(
@@ -1255,42 +1271,79 @@ exports.getWebsiteLogs = async (req, res) => {
       'redemptions',
       () => supabase
         .from('redemptions')
-        .select('id, user_id, gmail, reward_id, points_spent, status, created_at')
+        .select('*')
         .order('created_at', { ascending: false })
-        .limit(100),
-      async (primaryError) => {
-        if (!String(primaryError.message || '').toLowerCase().includes('gmail')) return null;
-        return supabase
-          .from('redemptions')
-          .select('id, user_id, reward_id, points_spent, status, created_at')
-          .order('created_at', { ascending: false })
-          .limit(100);
-      }
+        .limit(100)
     );
+
+    // Fetch user accounts by system identifier/email for direct redemption lookup
+    const userAccountsByUUID = new Map();
+    if (userAccounts && Array.isArray(userAccounts)) {
+      userAccounts.forEach((account) => {
+        const accountName = String(
+          account.full_name
+          || `${account.first_name || ''} ${account.middle_name || ''} ${account.last_name || ''}`.replace(/\s+/g, ' ').trim()
+          || account.email
+          || 'Unknown'
+        ).trim();
+        const accountEmail = String(account.email || '').trim();
+        const accountIdentifier = String(account.system_id || account.id || '').trim();
+
+        if (accountIdentifier) {
+          userAccountsByUUID.set(accountIdentifier, {
+            name: accountName,
+            email: accountEmail
+          });
+        }
+
+        if (accountEmail) {
+          userAccountsByUUID.set(accountEmail.toLowerCase(), {
+            name: accountName,
+            email: accountEmail
+          });
+        }
+      });
+    }
 
     const userAccountMap = new Map();
     const accountLogs = [];
 
     const registerAccount = (row, source, roleOverride) => {
-      const identifier = String(row.system_id || row.id || '').trim();
-      if (!identifier) return;
+      const email = String(row.email || '').trim();
+      const normalizedEmail = email.toLowerCase();
+      const identifier = String(
+        row.system_id
+        || row.id
+        || row.student_id
+        || row.faculty_id
+        || row.account_id
+        || row.campus_id
+        || normalizedEmail
+        || ''
+      ).trim();
+      if (!identifier && !normalizedEmail) return;
 
       const firstName = row.first_name || row.First_Name || '';
       const middleName = row.middle_name || '';
       const lastName = row.last_name || row.Last_Name || '';
-      const fullName = String(row.full_name || `${firstName} ${middleName} ${lastName}`.replace(/\s+/g, ' ').trim() || row.email || 'Unknown').trim();
-      const email = String(row.email || 'Unknown').trim();
+      const fullName = String(
+        row.full_name
+        || `${firstName} ${middleName} ${lastName}`.replace(/\s+/g, ' ').trim()
+        || email
+        || 'Unknown'
+      ).trim();
       const role = String(roleOverride || row.role || 'user').trim();
       const createdAt = row.created_at || null;
       const updatedAt = row.updated_at || null;
       const campusId = String(row.campus_id || row.student_id || row.faculty_id || row.account_id || '').trim();
+      const sourceId = identifier || normalizedEmail;
 
       const entry = {
-        id: `${source}-${identifier}`,
+        id: `${source}-${sourceId}`,
         source,
-        systemId: identifier,
+        systemId: sourceId,
         name: fullName,
-        email,
+        email: email || 'Unknown',
         role,
         createdAt,
         updatedAt,
@@ -1308,6 +1361,7 @@ exports.getWebsiteLogs = async (req, res) => {
 
       if (identifier) {
         userAccountMap.set(identifier, lookupValue);
+        userAccountMap.set(identifier.toLowerCase(), lookupValue);
       }
 
       if (campusId) {
@@ -1317,10 +1371,11 @@ exports.getWebsiteLogs = async (req, res) => {
       const rowId = String(row.id || '').trim();
       if (rowId) {
         userAccountMap.set(rowId, lookupValue);
+        userAccountMap.set(rowId.toLowerCase(), lookupValue);
       }
 
-      if (email && email !== 'Unknown') {
-        userAccountMap.set(email.toLowerCase(), lookupValue);
+      if (normalizedEmail) {
+        userAccountMap.set(normalizedEmail, lookupValue);
       }
     };
 
@@ -1373,17 +1428,22 @@ exports.getWebsiteLogs = async (req, res) => {
     const redemptionLogs = (redemptions || []).map((redemption) => {
       const redemptionUserKey = String(redemption.user_id || '').trim();
       const redemptionEmailKey = String(redemption.gmail || redemption.email || '').trim().toLowerCase();
-      const account = userAccountMap.get(redemptionUserKey)
+
+      // Prefer the most specific account mapping first, then fall back to generic records.
+      let account = (redemptionEmailKey ? userAccountMap.get(redemptionEmailKey) : null)
+        || userAccountMap.get(redemptionUserKey)
         || userAccountMap.get(redemptionUserKey.toLowerCase())
-        || (redemptionEmailKey ? userAccountMap.get(redemptionEmailKey) : null)
+        || (redemptionEmailKey ? userAccountsByUUID.get(redemptionEmailKey) : null)
+        || userAccountsByUUID.get(redemptionUserKey)
         || null;
+      
       const reward = rewardLookup.get(String(redemption.reward_id || '')) || null;
       const redemptionEmail = String(redemption.gmail || redemption.email || account?.email || '').trim();
 
       return {
         id: redemption.id,
         userId: redemption.user_id,
-        userName: account?.name || 'Unknown user',
+        userName: account?.name || redemption.user_id || 'Unknown user',
         userEmail: redemptionEmail || 'Unknown',
         gmail: redemptionEmail || 'Unknown',
         rewardId: redemption.reward_id,

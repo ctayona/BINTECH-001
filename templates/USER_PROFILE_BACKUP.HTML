@@ -240,12 +240,19 @@
           </div>
           
           <!-- Center - Navigation Links -->
-          <div class="hidden md:flex items-center space-x-8">
-            <a href="/dashboard" class="nav-link text-white/80 hover:text-white text-sm font-medium">Dashboard</a>
-            <a href="/rewards" class="nav-link text-white/80 hover:text-white text-sm font-medium">Rewards</a>
-            <a href="/history" class="nav-link text-white/80 hover:text-white text-sm font-medium">History</a>
-            <a href="/how-it-works" class="nav-link text-white/80 hover:text-white text-sm font-medium">How It Works</a>
-            <a href="/qr-scanner" class="nav-link text-white/80 hover:text-white text-sm font-medium flex items-center gap-1"><span>💳</span> Transfer Points</a>
+<div class="hidden md:block relative">
+                    <button id="user-nav-pages-toggle" type="button" class="nav-link flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-4 py-2 text-sm font-medium text-white/85 hover:bg-white/10 hover:text-white transition" aria-haspopup="menu" aria-expanded="false" aria-controls="user-nav-pages-menu">
+                        <span>Pages</span>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                    </button>
+                    <div id="user-nav-pages-menu" class="hidden absolute right-0 mt-3 w-60 rounded-2xl border border-white/15 bg-[#143D2E]/96 shadow-2xl backdrop-blur-xl py-2" data-open="false" role="menu" aria-label="User pages navigation">
+                        <a href="/dashboard" data-nav-path="/dashboard" role="menuitem">Dashboard</a>
+                        <a href="/profile" data-nav-path="/profile" role="menuitem">Profile</a>
+                        <a href="/rewards" data-nav-path="/rewards" role="menuitem">Rewards</a>
+                        <a href="/history" data-nav-path="/history" role="menuitem">History</a>
+                        <a href="/how-it-works" data-nav-path="/how-it-works" role="menuitem">How It Works</a>
+                        <a href="/qr-scanner" data-nav-path="/qr-scanner" role="menuitem">Transfer Points</a>
+                    </div>
           </div>
           
           <!-- Right - Points & Logout -->
@@ -582,9 +589,7 @@
         <section>
           <div class="flex items-center gap-3">
             <span class="bintech-brand-mark" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
-                <path d="M13 3L4 14h6l-1 7 11-13h-6l1-5z" stroke-linecap="round" stroke-linejoin="round"></path>
-              </svg>
+              <img src="/PICS/BINTECHLOGO.png" alt="BinTECH Logo" style="height:28px;object-fit:contain" />
             </span>
             <p class="bintech-brand-title">Bintech</p>
           </div>
@@ -1432,10 +1437,43 @@
       const mobilePoints = document.getElementById('mobile-nav-points');
       if (!toggle || !panel) return;
 
+      const navRow = toggle.closest('.flex.items-center.justify-between') || toggle.closest('.nav-container');
+      const leftSection = navRow ? navRow.firstElementChild : null;
+      const rightSection = toggle.parentElement;
+
+      let topLabel = navRow ? navRow.querySelector('.bintech-mobile-top-label') : null;
+      if (!topLabel && rightSection) {
+        topLabel = document.createElement('span');
+        topLabel.className = 'bintech-mobile-top-label';
+        topLabel.textContent = 'BINTECH';
+        topLabel.style.display = 'none';
+        topLabel.style.color = '#ffffff';
+        topLabel.style.fontWeight = '700';
+        topLabel.style.fontSize = '0.95rem';
+        topLabel.style.letterSpacing = '0.04em';
+        topLabel.style.marginRight = '0.5rem';
+        rightSection.insertBefore(topLabel, toggle);
+      }
+
+      if (!panel.querySelector('.bintech-mobile-panel-brand')) {
+        panel.insertAdjacentHTML('afterbegin', '<div class="bintech-mobile-panel-brand" style="display:flex;align-items:center;gap:8px;padding-bottom:10px;margin-bottom:10px;border-bottom:1px solid rgba(255,255,255,.15)"><img src="/PICS/BINTECHLOGO.png" alt="BinTECH Logo" style="height:24px;object-fit:contain"><span style="color:#fff;font-weight:700;letter-spacing:.04em">BINTECH</span></div>');
+      }
+
       const closeMenu = () => {
         panel.dataset.open = 'false';
         panel.style.display = 'none';
         toggle.setAttribute('aria-expanded', 'false');
+      };
+
+      const applyMobileHeaderPolish = () => {
+        if (window.innerWidth < 768) {
+          if (leftSection) leftSection.style.display = 'none';
+          if (topLabel) topLabel.style.display = 'inline-flex';
+        } else {
+          if (leftSection) leftSection.style.display = '';
+          if (topLabel) topLabel.style.display = 'none';
+          closeMenu();
+        }
       };
 
       const openMenu = () => {
@@ -1459,17 +1497,14 @@
         link.addEventListener('click', closeMenu);
       });
 
-      window.addEventListener('resize', () => {
-        if (window.innerWidth >= 768) {
-          closeMenu();
-        }
-      });
+      window.addEventListener('resize', applyMobileHeaderPolish);
 
       document.addEventListener('keydown', (event) => {
         if (event.key === 'Escape') {
           closeMenu();
         }
       });
+      applyMobileHeaderPolish();
     }
 
     // ============================================

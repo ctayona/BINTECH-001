@@ -5,6 +5,7 @@
 const supabase = require('../config/supabase');
 const bcrypt = require('bcrypt');
 const emailService = require('../services/emailService');
+const { URL } = require('url');
 
 // ============================================
 // Helper Function: Classify Email Role
@@ -167,6 +168,63 @@ function getIdColumnNameByRole(role) {
   return idColumnMap[role.toLowerCase()] || 'staff_id';
 }
 
+function parseStorageObjectFromUrl(fileUrl) {
+  try {
+    if (!fileUrl) return null;
+    const parsed = new URL(String(fileUrl));
+    const path = parsed.pathname || '';
+    const match = path.match(/\/object\/(?:sign|public)\/([^/]+)\/(.+)$/);
+    if (!match) return null;
+
+    const bucket = decodeURIComponent(match[1]);
+    const objectPath = decodeURIComponent(match[2]);
+    if (!bucket || !objectPath) return null;
+
+    return { bucket, objectPath };
+  } catch (error) {
+    return null;
+  }
+}
+
+async function getLatestGmailPictureSignedUrl(systemId) {
+  if (!systemId) return null;
+
+  const { data: files, error: listError } = await supabase.storage
+    .from('gmail-pictures')
+    .list('', {
+      limit: 100,
+      offset: 0,
+      sortBy: { column: 'created_at', order: 'desc' }
+    });
+
+  if (listError) {
+    throw new Error(`Could not list gmail-pictures: ${listError.message || listError}`);
+  }
+
+  const prefix = `${systemId}_`;
+  const candidates = (files || []).filter((file) =>
+    String(file?.name || '').startsWith(prefix) && /_gphoto\./i.test(String(file?.name || ''))
+  );
+
+  if (candidates.length === 0) {
+    return null;
+  }
+
+  const latest = candidates[0];
+  const { data: signedData, error: signedError } = await supabase.storage
+    .from('gmail-pictures')
+    .createSignedUrl(latest.name, 60 * 60);
+
+  if (signedError || !signedData?.signedUrl) {
+    throw new Error(`Could not create signed URL for gmail-pictures object: ${signedError?.message || 'No URL returned'}`);
+  }
+
+  return {
+    name: latest.name,
+    signedUrl: signedData.signedUrl
+  };
+}
+
 // ============================================
 // Helper Function: Cleanup Orphaned Accounts
 // ============================================
@@ -313,11 +371,15 @@ exports.register = async (req, res) => {
       console.log(`✓ Generated staff account_id: ${staffAccountId}`);
     }
     
-    // For faculty with external email (non-UMak): generate staff account_id
+    // For faculty with external email (non-UMak): generate faculty_id
     // This allows faculty to sign up with Gmail, Yahoo, etc.
     if (userRole === 'faculty' && !campusId) {
-      staffAccountId = await generateStaffAccountId();
-      console.log(`✓ Generated account_id for external faculty email: ${staffAccountId}`);
+      // Generate faculty_id with FIX prefix for external faculty
+      const timestamp = Date.now().toString().slice(-5);
+      staffAccountId = 'FIX' + timestamp;
+      // Use generated faculty id also as campusId so user_accounts.campus_id is populated
+      campusId = staffAccountId;
+      console.log(`✓ Generated faculty_id for external faculty email: ${staffAccountId} (also set as campus_id)`);
     }
     
     console.log(`\n=== Registration Details ===`);
@@ -345,7 +407,7 @@ exports.register = async (req, res) => {
     try {
       const { data: existingUser, error: checkError } = await supabase
         .from('user_accounts')
-        .select('email, system_id, created_at')
+        .select('email, system_id, created_at, role')
         .ilike('email', trimmedEmail)  // Use ilike for case-insensitive search
         .maybeSingle();
       
@@ -362,17 +424,43 @@ exports.register = async (req, res) => {
         console.log(`⚠️ Email FOUND in database: ${existingUser.email}`);
         console.log(`   System ID: ${existingUser.system_id}`);
         console.log(`   Created at: ${createdAt.toISOString()}`);
-        
-        // Check if this is a ghost/orphaned account (created more than 1 hour ago but incomplete)
-        const ageInMinutes = (Date.now() - createdAt.getTime()) / (1000 * 60);
-        
-        if (ageInMinutes > 60) {
-          console.log(`   Account is ${Math.floor(ageInMinutes)} minutes old - might be orphaned, attempting cleanup...`);
-          // Try to clean up old orphaned records
-          await cleanupOrphanedAccount(existingUser.system_id);
-          console.log(`✓ Cleaned up orphaned account, proceeding with new registration`);
-        } else {
-          console.log(`❌ Email already registered (recent record)`);
+        // Immediately verify whether a role-specific profile exists for this system_id.
+        // If the role profile is missing, treat this as an orphan and attempt cleanup so the user can retry.
+        try {
+          const foundRole = existingUser.role || null;
+          if (foundRole) {
+            const roleTableName = getTableNameByRole(foundRole);
+            const { data: roleProfile, error: roleProfileErr } = await supabase
+              .from(roleTableName)
+              .select('system_id')
+              .eq('system_id', existingUser.system_id)
+              .maybeSingle();
+
+            if (roleProfileErr && roleProfileErr.code !== 'PGRST116') {
+              console.warn('Error checking role profile during orphan detection:', roleProfileErr.message);
+            }
+
+            if (!roleProfile) {
+              console.log(`   No role-specific profile found in ${roleTableName} for system_id ${existingUser.system_id} — treating as orphan and cleaning up.`);
+              await cleanupOrphanedAccount(existingUser.system_id);
+              console.log(`✓ Cleaned up orphaned account, proceeding with new registration`);
+            } else {
+              // Role profile exists — respect existing account regardless of age
+              console.log(`❌ Role profile exists for system_id ${existingUser.system_id}; email is registered`);
+              return res.status(400).json({
+                success: false,
+                message: 'Email already registered',
+                existingEmail: existingUser.email
+              });
+            }
+          } else {
+            // Role not set on the existing user — attempt cleanup
+            console.log(`   Existing user has no role set; treating as orphan and cleaning up.`);
+            await cleanupOrphanedAccount(existingUser.system_id);
+            console.log(`✓ Cleaned up orphaned account, proceeding with new registration`);
+          }
+        } catch (orphanErr) {
+          console.warn('Error during orphan-detection cleanup:', orphanErr);
           return res.status(400).json({
             success: false,
             message: 'Email already registered',
@@ -487,15 +575,15 @@ exports.register = async (req, res) => {
       roleSpecificData[idColumnName] = campusId;
       console.log(`Adding ${idColumnName}: ${campusId}`);
     } else if (userRole === 'faculty') {
-      // Faculty: use faculty_id from UMak email OR account_id for external emails
+      // Faculty: use faculty_id from UMak email OR generated faculty_id for external emails
       if (campusId) {
         // UMak faculty email (e.g., firstname.lastname@umak.edu.ph)
         roleSpecificData[idColumnName] = campusId;
         console.log(`Adding ${idColumnName}: ${campusId}`);
       } else {
-        // External faculty email (e.g., Gmail) - use generated account_id
-        roleSpecificData.account_id = staffAccountId;
-        console.log(`Adding account_id for external faculty: ${staffAccountId}`);
+        // External faculty email (e.g., Gmail) - use generated faculty_id
+        roleSpecificData[idColumnName] = staffAccountId;
+        console.log(`Adding ${idColumnName}: ${staffAccountId}`);
       }
     } else if (userRole === 'staff') {
       // Staff: use account_id (generated OTH+numbers format that was stored separately)
@@ -505,8 +593,59 @@ exports.register = async (req, res) => {
     
     // Add Google profile picture if available (from Google signup)
     if (profile_picture) {
-      roleSpecificData.profile_picture = profile_picture;
-      console.log(`✓ Adding Google profile picture URL: ${profile_picture.substring(0, 50)}...`);
+      // If an external Google photo URL is provided, fetch and store in 'gmail-pictures' bucket
+      try {
+        console.log('✓ Google profile picture provided - attempting to store in gmail-pictures bucket');
+        const isExternal = /googleusercontent\.com|lh3\.googleusercontent\.com|googleapis\.com/i.test(profile_picture);
+        if (isExternal) {
+          try {
+            // Download image and upload to Supabase gmail-pictures bucket
+            const fetchResp = await fetch(profile_picture);
+            if (!fetchResp.ok) {
+              console.warn('Could not fetch external Google photo - status', fetchResp.status);
+              roleSpecificData.profile_picture = profile_picture; // fallback to original
+            } else {
+              const buffer = Buffer.from(await fetchResp.arrayBuffer());
+              const contentType = fetchResp.headers.get('content-type') || 'image/jpeg';
+              const timestamp = Date.now();
+              const ext = contentType.split('/').pop().split(';')[0] || 'jpg';
+              const filename = `${systemId || 'user'}_${timestamp}_gphoto.${ext}`;
+
+              console.log(`Uploading Google photo to gmail-pictures bucket: ${filename}`);
+              const { data: uploadData, error: uploadError } = await supabase.storage
+                .from('gmail-pictures')
+                .upload(filename, buffer, { contentType });
+
+              if (uploadError) {
+                console.error('❌ Failed to upload google photo to gmail-pictures:', uploadError);
+                roleSpecificData.profile_picture = profile_picture;
+              } else {
+                console.log(`✓ Google photo uploaded successfully to gmail-pictures/${filename}`);
+                // Create signed URL for long-term access (5 years)
+                const { data: signedData, error: signedError } = await supabase.storage
+                  .from('gmail-pictures')
+                  .createSignedUrl(filename, 60 * 60 * 24 * 365 * 5);
+
+                if (signedError) {
+                  console.error('❌ Failed to create signed URL for gmail-pictures:', signedError);
+                  roleSpecificData.profile_picture = profile_picture;
+                } else {
+                  roleSpecificData.profile_picture = signedData.signedUrl;
+                  console.log('✓ Google photo signed URL created and stored');
+                }
+              }
+            }
+          } catch (fetchErr) {
+            console.error('❌ Error fetching Google photo:', fetchErr.message);
+            roleSpecificData.profile_picture = profile_picture;
+          }
+        } else {
+          roleSpecificData.profile_picture = profile_picture;
+        }
+      } catch (err) {
+        console.error('❌ Error handling google profile picture during registration:', err);
+        roleSpecificData.profile_picture = profile_picture;
+      }
     }
 
     console.log(`Inserting into ${roleTableName}:`, roleSpecificData);
@@ -588,16 +727,17 @@ exports.register = async (req, res) => {
 
     // Step 5: Send welcome email (no verification needed - user is already logged in)
     console.log(`\nSending welcome email to ${email}...`);
-    const emailSent = await emailService.sendSignupWelcomeEmail(
-      email,
-      firstName
-    );
-    
-    if (emailSent) {
-      console.log(`✅ Welcome email sent successfully to ${email}`);
-    } else {
-      console.warn(`⚠️ Failed to send welcome email to ${email}, but account was created`);
-    }
+    void emailService.sendSignupWelcomeEmail(email, firstName)
+      .then((emailSent) => {
+        if (emailSent) {
+          console.log(`✅ Welcome email queued successfully for ${email}`);
+        } else {
+          console.warn(`⚠️ Failed to send welcome email to ${email}, but account was created`);
+        }
+      })
+      .catch((emailError) => {
+        console.error(`❌ Unexpected welcome email failure for ${email}:`, emailError && emailError.message ? emailError.message : emailError);
+      });
 
     // Step 6: Return success with combined user data
     res.status(201).json({
@@ -614,7 +754,7 @@ exports.register = async (req, res) => {
         campus_id: staffAccountId || campusId || null,
         account_id: staffAccountId || null
       },
-      emailSent: emailSent
+      emailSent: true
     });
   } catch (error) {
     console.error('Registration error:', error);
@@ -751,13 +891,6 @@ exports.login = async (req, res) => {
         const lastName = adminUser.Last_Name || fullName.split(' ').slice(1).join(' ') || 'User';
         const normalizedRole = String(adminUser.role || 'admin').trim().toLowerCase();
 
-        // Set user_role cookie so maintenance middleware can recognize admin
-        res.cookie('user_role', normalizedRole, {
-          httpOnly: false,
-          maxAge: 86400 * 1000, // 24 hours
-          path: '/'
-        });
-
         return res.json({
           success: true,
           message: 'Login successful',
@@ -866,13 +999,6 @@ exports.login = async (req, res) => {
     const lastName = roleProfile?.last_name || '';
     const fullName = `${firstName} ${middleName ? middleName + ' ' : ''}${lastName}`.trim() || firstName;
 
-    // Set user_role cookie so maintenance middleware can recognize admin/head
-    res.cookie('user_role', normalizedRole, {
-      httpOnly: false,
-      maxAge: 86400 * 1000, // 24 hours
-      path: '/'
-    });
-
     return res.json({
       success: true,
       message: 'Login successful',
@@ -934,9 +1060,6 @@ exports.logout = async (req, res) => {
     //   }]);
     
     console.log(`✓ User ${userEmail} logged out successfully`);
-    
-    // Clear the user_role cookie
-    res.clearCookie('user_role', { path: '/' });
     
     res.json({
       success: true,
@@ -1412,7 +1535,7 @@ exports.updateProfile = async (req, res) => {
       system_id, firstname, middleName, lastName, email,
       birthdate, sex, program, yearLevel, cor,
       department, position, designation, institution,
-      profile_picture
+      profile_picture, sync_google_photo
     } = req.body;
 
     if (!system_id || !firstname || !lastName) {
@@ -1480,7 +1603,115 @@ exports.updateProfile = async (req, res) => {
     }
     
     // Add profile picture (available for all roles)
-    if (profile_picture) updateObject.profile_picture = profile_picture;
+    if (profile_picture || sync_google_photo) {
+      try {
+        let incomingProfilePicture = profile_picture;
+
+        if (sync_google_photo) {
+          console.log('🔄 Sync Google photo requested - fetching latest original from gmail-pictures bucket...');
+          const latestGmailPicture = await getLatestGmailPictureSignedUrl(system_id);
+          if (!latestGmailPicture) {
+            return res.status(400).json({
+              success: false,
+              message: 'No original Google photo found in gmail-pictures for this account'
+            });
+          }
+          incomingProfilePicture = latestGmailPicture.signedUrl;
+          console.log(`✓ Using latest gmail-pictures photo: ${latestGmailPicture.name}`);
+        }
+
+        if (!incomingProfilePicture) {
+          throw new Error('No profile picture source available for sync/update');
+        }
+
+        console.log('Processing profile picture update:', String(incomingProfilePicture).substring(0, 100) + '...');
+        
+        // Fetch existing role record to find current profile picture (for removal if needed)
+        const { data: existingRoleRow } = await supabase
+          .from(roleTable)
+          .select('profile_picture')
+          .eq('system_id', system_id)
+          .maybeSingle();
+
+        // If incoming profile_picture points to gmail-pictures, copy it into profile-pictures
+        const incomingIsGmailBucket = /gmail-pictures/i.test(String(incomingProfilePicture || ''));
+
+        if (incomingIsGmailBucket) {
+          console.log('📸 Detected google photo from gmail-pictures - syncing to profile-pictures...');
+          try {
+            // Download incoming image from gmail-pictures signed URL
+            const resp = await fetch(incomingProfilePicture);
+            if (!resp.ok) {
+              console.error('❌ Failed to fetch from gmail-pictures, status:', resp.status);
+              updateObject.profile_picture = incomingProfilePicture;
+            } else {
+              console.log('✓ Successfully fetched image from gmail-pictures');
+              const buf = Buffer.from(await resp.arrayBuffer());
+              const ct = resp.headers.get('content-type') || 'image/jpeg';
+              const ext = ct.split('/').pop().split(';')[0] || 'jpg';
+              const newFilename = `${system_id}_${Date.now()}_profile.${ext}`;
+
+              console.log(`Uploading to profile-pictures/${newFilename}...`);
+              const { data: uploadData, error: uploadErr } = await supabase.storage
+                .from('profile-pictures')
+                .upload(newFilename, buf, { contentType: ct });
+
+              if (uploadErr) {
+                console.error('❌ Failed to upload to profile-pictures:', uploadErr);
+                updateObject.profile_picture = incomingProfilePicture; // fallback
+              } else {
+                console.log('✓ Image uploaded to profile-pictures');
+                const { data: signed, error: signErr } = await supabase.storage
+                  .from('profile-pictures')
+                  .createSignedUrl(newFilename, 60 * 60 * 24 * 365 * 5);
+
+                if (signErr) {
+                  console.error('❌ Failed to create signed URL:', signErr);
+                  updateObject.profile_picture = incomingProfilePicture;
+                } else {
+                  updateObject.profile_picture = signed.signedUrl;
+                  console.log('✓ Created signed URL for profile-pictures');
+                }
+
+                // Delete previous profile picture if it exists and is in profile-pictures
+                try {
+                  const prevUrl = existingRoleRow?.profile_picture || null;
+                  if (prevUrl) {
+                    const prevStorage = parseStorageObjectFromUrl(prevUrl);
+                    const allowedDeleteBuckets = new Set(['profile-pictures', 'cor-uploads']);
+                    if (prevStorage && allowedDeleteBuckets.has(prevStorage.bucket)) {
+                      console.log(`Deleting previous profile picture: ${prevStorage.bucket}/${prevStorage.objectPath}`);
+                      const { error: delErr } = await supabase.storage
+                        .from(prevStorage.bucket)
+                        .remove([prevStorage.objectPath]);
+                      if (delErr) {
+                        console.warn('Could not delete previous profile picture:', delErr);
+                      } else {
+                        console.log('✓ Deleted previous profile picture object from bucket');
+                      }
+                    }
+                  }
+                } catch (delErr) {
+                  console.warn('Error during deletion of previous picture:', delErr.message);
+                }
+              }
+            }
+          } catch (fetchErr) {
+            console.error('❌ Error fetching/syncing google photo:', fetchErr);
+            updateObject.profile_picture = incomingProfilePicture;
+          }
+        } else {
+          // Not a google-photo sync request: just set whatever URL/value was provided
+          console.log('Profile picture from non-gmail source, setting directly');
+          updateObject.profile_picture = incomingProfilePicture;
+        }
+      } catch (err) {
+        console.error('❌ Error while handling profile_picture sync:', err);
+        if (profile_picture) {
+          updateObject.profile_picture = profile_picture;
+        }
+      }
+    }
 
     console.log('Update object:', updateObject);
 

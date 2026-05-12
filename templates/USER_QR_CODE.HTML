@@ -68,6 +68,42 @@
             gap: 1rem;
         }
 
+        .nav-logo-link,
+        .nav-profile-link,
+        .nav-user-link {
+            text-decoration: none;
+            transition: opacity 0.25s ease, color 0.25s ease;
+        }
+
+        .nav-logo-link:hover,
+        .nav-profile-link:hover,
+        .nav-user-link:hover {
+            opacity: 0.85;
+        }
+
+        .nav-profile-picture,
+        .nav-profile-initials {
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 9999px;
+            border: 2px solid rgba(212, 225, 87, 0.45);
+        }
+
+        .nav-profile-picture {
+            object-fit: cover;
+            display: block;
+        }
+
+        .nav-profile-initials {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(212, 225, 87, 0.2);
+            color: var(--accent-yellow);
+            font-size: 0.8rem;
+            font-weight: 700;
+        }
+
         .profile-btn {
             width: 2.5rem;
             height: 2.5rem;
@@ -154,6 +190,92 @@
         .nav-link:hover::after,
         .nav-link.active::after {
             width: 100%;
+        }
+
+        /* Dropdown Styles */
+        .nav-dropdown {
+            position: relative;
+        }
+
+        .nav-dropdown-toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: rgba(255, 255, 255, 0.7);
+            font-weight: 500;
+            font-size: 0.875rem;
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid transparent;
+            background: transparent;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .nav-dropdown-toggle:hover {
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .nav-dropdown-toggle svg {
+            width: 16px;
+            height: 16px;
+            transition: transform 0.3s ease;
+        }
+
+        .nav-dropdown-toggle.open svg {
+            transform: rotate(180deg);
+        }
+
+        .nav-dropdown-menu {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            margin-top: 8px;
+            min-width: 220px;
+            background: #0F3B2E;
+            border: 1px solid rgba(212, 225, 87, 0.2);
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-8px);
+            transition: all 0.3s ease;
+            z-index: 100;
+            overflow: hidden;
+        }
+
+        .nav-dropdown.open .nav-dropdown-menu {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .nav-dropdown-menu a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+        }
+
+        .nav-dropdown-menu a:hover {
+            background: rgba(212, 225, 87, 0.15);
+            color: #D4E157;
+            border-left-color: #D4E157;
+            padding-left: 19px;
+        }
+
+        .nav-dropdown-menu a.active {
+            background: rgba(212, 225, 87, 0.2);
+            color: #D4E157;
+            border-left-color: #D4E157;
         }
 
         .nav-right {
@@ -526,6 +648,10 @@
             display: none;
         }
 
+        .hidden {
+            display: none !important;
+        }
+
         @media (max-width: 768px) {
             .nav-container {
                 height: auto;
@@ -596,6 +722,10 @@
                 max-width: 220px;
             }
 
+            .share-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
             .scanner-controls {
                 padding: 1.1rem;
             }
@@ -603,6 +733,234 @@
             .mobile-nav-panel[data-open="true"] {
                 display: block;
             }
+        }
+
+        /* Modal and Transfer Styles */
+        .modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 1rem;
+            padding: 2rem;
+            max-width: 500px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.3s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .close-modal {
+            cursor: pointer;
+            color: #999;
+            transition: color 0.2s ease;
+        }
+
+        .close-modal:hover {
+            color: #333;
+        }
+
+        .transfer-btn {
+            background: linear-gradient(135deg, #D4E157, #C4D050);
+            color: #0F3B2E !important;
+            font-weight: 600;
+        }
+
+        .transfer-btn:hover {
+            background: linear-gradient(135deg, #E4F050, #D4E157);
+            transform: translateY(-2px);
+        }
+
+        .transfer-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .quick-select-btn {
+            cursor: pointer;
+            font-size: 0.875rem;
+            transition: all 0.3s ease;
+        }
+
+        .quick-select-btn:hover {
+            transform: translateY(-2px);
+            background: rgba(212, 225, 87, 0.1);
+        }
+
+        .share-panel {
+            background: linear-gradient(135deg, var(--secondary-gradient-start), var(--secondary-gradient-end));
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin: 1.5rem auto 2rem;
+            color: #fff;
+            max-width: 980px;
+            box-shadow: 0 4px 20px rgba(15, 59, 46, 0.12);
+        }
+
+        .share-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-bottom: 1.2rem;
+            flex-wrap: wrap;
+        }
+
+        .share-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.8rem;
+            margin-bottom: 0.2rem;
+        }
+
+        .share-subtitle {
+            color: rgba(255, 255, 255, 0.72);
+        }
+
+        .share-balance {
+            border: 2px solid rgba(212, 225, 87, 0.5);
+            border-radius: 0.8rem;
+            padding: 0.7rem 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            min-width: 150px;
+        }
+
+        .share-balance-label {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.72rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .share-balance-value {
+            font-family: 'Playfair Display', serif;
+            font-size: 2rem;
+            color: var(--accent-yellow);
+            line-height: 1.1;
+        }
+
+        .share-label {
+            display: block;
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.9);
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            margin-bottom: 0.45rem;
+        }
+
+        .share-input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            color: #fff;
+            border-radius: 0.65rem;
+            padding: 0.75rem 0.9rem;
+            outline: none;
+        }
+
+        .share-input::placeholder {
+            color: rgba(255, 255, 255, 0.55);
+        }
+
+        .share-input:focus {
+            border-color: rgba(212, 225, 87, 0.6);
+            box-shadow: 0 0 0 3px rgba(212, 225, 87, 0.15);
+        }
+
+        .share-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 0.6rem;
+        }
+
+        .share-range-row {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .share-range-row input[type="range"] {
+            flex: 1;
+            accent-color: var(--accent-yellow);
+        }
+
+        .share-actions {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-top: 1.2rem;
+            flex-wrap: wrap;
+        }
+
+        .share-note {
+            color: rgba(255, 255, 255, 0.66);
+            font-size: 0.78rem;
+        }
+
+        .share-send-btn {
+            border: none;
+            border-radius: 0.65rem;
+            background: linear-gradient(135deg, #D4E157, #C4D050);
+            color: #0F3B2E;
+            font-weight: 700;
+            cursor: pointer;
+            padding: 0.8rem 1.2rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .share-send-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(212, 225, 87, 0.3);
+        }
+
+        .share-send-btn:disabled {
+            opacity: 0.65;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Card and gradient helpers (parity with Rewards page) */
+        .card-shadow { box-shadow: 0 4px 20px rgba(15, 59, 46, 0.12); }
+        .gradient-dark { background: linear-gradient(135deg, var(--secondary-gradient-start), var(--secondary-gradient-end)); }
+
+        /* Session overlay when scanner is active */
+        .session-overlay {
+            position: fixed !important;
+            right: 1.5rem;
+            top: 6rem;
+            width: min(420px, 92%);
+            z-index: 12000;
+            background: rgba(255,255,255,0.98);
+            color: var(--primary-dark);
+            border-radius: 1rem;
+            padding: 1rem 1.25rem;
+            box-shadow: 0 30px 70px rgba(3,44,22,0.2);
+            transform: translateZ(0);
         }
 
         @media (min-width: 768px) {
@@ -631,23 +989,54 @@
             <div class="nav-container">
                 <!-- Left -->
                 <div class="nav-left">
-                    <button class="profile-btn" onclick="window.location.href='/profile'" title="View Profile">
-                        <svg fill="currentColor" viewbox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
-                        </svg>
-                    </button>
+                    <a href="/profile" class="nav-logo-link hidden md:flex" aria-label="Go to profile" style="align-items:center;gap:8px">
+                        <span style="color:#ffffff;font-weight:700;letter-spacing:0.04em">BINTECH</span>
+                        <img src="/PICS/BINTECHLOGO.png" alt="BinTECH Logo" style="height:48px;object-fit:contain;margin-top:-8px;">
+                    </a>
+                    <a href="/profile" class="nav-profile-link" aria-label="Go to profile">
+                        <img id="nav-profile-picture" class="nav-profile-picture" alt="Profile photo">
+                        <div id="nav-profile-initials" class="nav-profile-initials">--</div>
+                    </a>
                     <div class="nav-welcome show">
                         <p>Welcome Back</p>
-                        <p id="nav-user-name">User</p>
+                        <a href="/profile" class="nav-user-link">
+                            <p id="nav-user-name">User</p>
+                        </a>
                     </div>
                 </div>
 
                 <!-- Center -->
-                <div class="nav-center show">
-                    <a href="/dashboard" class="nav-link">Dashboard</a>
-                    <a href="/rewards" class="nav-link">Rewards</a>
-                    <a href="/history" class="nav-link">History</a>
-                    <a href="/how-it-works" class="nav-link">How It Works</a>
-                    <a href="/qr-scanner" class="nav-link active">Transfer Points</a>
+                <div class="nav-center show nav-dropdown">
+                    <button class="nav-dropdown-toggle" id="nav-dropdown-btn" aria-label="Pages" aria-expanded="false">
+                        <span>Pages</span>
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" /></svg>
+                    </button>
+                    <div class="nav-dropdown-menu">
+                        <a href="/dashboard" class="nav-page-link" data-page="dashboard">
+                            <span>📊</span>
+                            <span>Dashboard</span>
+                        </a>
+                        <a href="/profile" class="nav-page-link" data-page="profile">
+                            <span>👤</span>
+                            <span>Profile</span>
+                        </a>
+                        <a href="/rewards" class="nav-page-link" data-page="rewards">
+                            <span>🎁</span>
+                            <span>Rewards</span>
+                        </a>
+                        <a href="/history" class="nav-page-link" data-page="history">
+                            <span>📜</span>
+                            <span>History</span>
+                        </a>
+                        <a href="/how-it-works" class="nav-page-link" data-page="how-it-works">
+                            <span>ℹ️</span>
+                            <span>How It Works</span>
+                        </a>
+                        <a href="/qr-scanner" class="nav-page-link" data-page="qr-scanner">
+                            <span>📱</span>
+                            <span>Transfer Points</span>
+                        </a>
+                    </div>
                 </div>
 
                 <!-- Right -->
@@ -662,12 +1051,16 @@
                     <button class="logout-btn" onclick="handleLogout()">Logout</button>
                 </div>
             </div>
+            <!-- Mobile Menu Panel: Navigation -->
             <div id="mobile-nav-panel" class="mobile-nav-panel" data-open="false" style="display:none;padding:0.9rem 1rem 1rem;border-top:1px solid rgba(255,255,255,.15);background:rgba(20,61,46,.95)">
-                <a href="/dashboard" class="nav-link" style="display:block;margin-bottom:0.7rem;">Dashboard</a>
-                <a href="/rewards" class="nav-link" style="display:block;margin-bottom:0.7rem;">Rewards</a>
-                <a href="/history" class="nav-link" style="display:block;margin-bottom:0.7rem;">History</a>
-                <a href="/how-it-works" class="nav-link" style="display:block;margin-bottom:0.7rem;">How It Works</a>
-                <a href="/qr-scanner" class="nav-link active" style="display:block;margin-bottom:0.9rem;">Transfer Points</a>
+                <div style="display:flex;flex-direction:column;gap:0.75rem;">
+                    <a href="/dashboard" class="nav-link" style="display:block;color:rgba(255,255,255,.9);font-size:0.875rem;font-weight:500;">Dashboard</a>
+                    <a href="/profile" class="nav-link" style="display:block;color:rgba(255,255,255,.9);font-size:0.875rem;font-weight:500;">Profile</a>
+                    <a href="/rewards" class="nav-link" style="display:block;color:rgba(255,255,255,.9);font-size:0.875rem;font-weight:500;">Rewards</a>
+                    <a href="/history" class="nav-link" style="display:block;color:rgba(255,255,255,.9);font-size:0.875rem;font-weight:500;">History</a>
+                    <a href="/how-it-works" class="nav-link" style="display:block;color:rgba(255,255,255,.9);font-size:0.875rem;font-weight:500;">How It Works</a>
+                    <a href="/qr-scanner" class="nav-link active" style="display:block;color:var(--accent-yellow);font-size:0.875rem;font-weight:500;">Transfer Points</a>
+                </div>
                 <div style="padding-top:0.8rem;border-top:1px solid rgba(255,255,255,.15);display:flex;align-items:center;justify-content:space-between;gap:0.5rem;">
                     <span id="mobile-nav-points" style="color:var(--accent-yellow);font-size:0.85rem;font-weight:700;">0 Points</span>
                     <button class="logout-btn" onclick="handleLogout()" style="display:inline-block;padding:0.35rem 0.7rem;font-size:0.72rem;">Logout</button>
@@ -706,6 +1099,78 @@
                 </div>
             </div>
 
+            <!-- Share EcoPoints -->
+            <div class="share-panel card-shadow">
+                <div class="share-header">
+                    <div>
+                        <h2 class="share-title">Share EcoPoints</h2>
+                        <p class="share-subtitle">Spread the green — send points to a friend</p>
+                    </div>
+                    <div class="share-balance">
+                        <p class="share-balance-label">Your Balance</p>
+                        <p class="share-balance-value"><span id="balance-display">0</span></p>
+                    </div>
+                </div>
+
+                <div style="margin-bottom:1rem;">
+                    <label class="share-label" for="recipient-email">Recipient Email</label>
+                    <input type="email" id="recipient-email" class="share-input" placeholder="e.g., student@umak.edu.ph">
+                    <p style="color:#fca5a5;font-size:0.84rem;margin-top:0.4rem;display:none;" id="email-error">Please enter a valid email address.</p>
+                </div>
+
+                <div style="margin-bottom:1rem;">
+                    <p class="share-label">Quick Select</p>
+                    <div class="share-grid">
+                        <button class="quick-select-btn btn btn-secondary" data-amount="10">10 pts</button>
+                        <button class="quick-select-btn btn btn-secondary" data-amount="25">25 pts</button>
+                        <button class="quick-select-btn btn btn-secondary" data-amount="50">50 pts</button>
+                        <button class="quick-select-btn btn btn-secondary" data-amount="75">75 pts</button>
+                        <button class="quick-select-btn btn btn-secondary" data-amount="100">100 pts</button>
+                        <button class="quick-select-btn btn btn-secondary" data-amount="custom">Custom</button>
+                    </div>
+                </div>
+
+                <div style="margin-bottom:0.8rem;">
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.4rem;">
+                        <label for="share-transfer-amount" style="font-size:0.88rem;font-weight:600;color:rgba(255,255,255,.9);">Transfer amount</label>
+                        <span style="color:#D4E157;font-weight:700;"><span id="share-amount-display">10</span> pts</span>
+                    </div>
+                    <div class="share-range-row">
+                        <span style="font-size:0.82rem;color:rgba(255,255,255,.72);">Min 10</span>
+                        <input type="range" id="share-transfer-amount" min="10" max="100" value="10">
+                        <span style="font-size:0.82rem;color:rgba(255,255,255,.72);">Max 100</span>
+                    </div>
+                </div>
+
+                <div class="share-actions">
+                    <p class="share-note">Max 100 pts per transaction</p>
+                    <button class="share-send-btn" id="share-transfer-btn">
+                        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8m0 8l-6-4m6 4l6-4"/></svg>
+                        Send Points
+                    </button>
+                </div>
+            </div>
+
+            <!-- Transfer Confirm Modal (copied) -->
+            <div id="transfer-confirm-modal" class="modal-backdrop" style="display:none;">
+                <div class="modal-content" style="max-width:420px;">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="font-playfair text-2xl text-[#0F3B2E]">Confirm Transfer</h2>
+                        <span class="close-modal text-2xl" onclick="closeTransferConfirmModal()">×</span>
+                    </div>
+                    <div class="bg-[#0F3B2E]/5 rounded-lg p-4 mb-6">
+                        <p class="text-[#0F3B2E] mb-3">You're about to transfer:</p>
+                        <p class="text-3xl font-bold text-[#5DAE60] mb-2"><span id="confirm-amount">10</span> Points</p>
+                        <p class="text-[#0F3B2E]/70 text-sm">to <span id="confirm-recipient" class="font-semibold text-[#0F3B2E]">recipient@umak.edu.ph</span></p>
+                    </div>
+                    <p class="text-[#0F3B2E]/60 text-sm mb-6">This action cannot be undone. Please confirm you want to proceed.</p>
+                    <div class="flex gap-3 justify-end">
+                        <button class="px-6 py-2 rounded-lg font-semibold border border-[#0F3B2E] text-[#0F3B2E] hover:bg-[#0F3B2E]/5 transition-all" onclick="closeTransferConfirmModal()">Cancel</button>
+                        <button class="px-6 py-2 rounded-lg font-semibold bg-gradient-to-r from-[#5DAE60] to-[#4CAF50] text-white hover:shadow-lg transition-all" onclick="confirmTransfer()">Yes, Transfer</button>
+                    </div>
+                </div>
+            </div>
+
             <!-- Session Info -->
             <div class="session-info" id="session-info">
                 <h2>Active Session</h2>
@@ -739,13 +1204,13 @@
                         <div class="transfer-amount-icon">âœ¨</div>
                         <div class="transfer-amount-info">
                             <div class="transfer-amount-label">Available to Transfer</div>
-                            <div class="transfer-amount-value" id="transfer-amount">0 pts</div>
+                            <div class="transfer-amount-value" id="session-transfer-amount">0 pts</div>
                         </div>
                     </div>
 
                     <div class="control-buttons">
-                        <button class="btn btn-success" id="transfer-btn" onclick="transferPoints()">
-                            âœ“ Transfer Points Now
+                        <button class="btn btn-success" id="session-transfer-btn" onclick="transferPoints()">
+                            Transfer Points Now
                         </button>
                         <button class="btn btn-secondary" id="cancel-btn" onclick="endSession()">End Session</button>
                     </div>
@@ -776,16 +1241,134 @@
             return Number.isFinite(n) ? n : fallback;
         }
 
+        function updateNavProfile(user) {
+            const navName = document.getElementById('nav-user-name');
+            const navImg = document.getElementById('nav-profile-picture');
+            const navInitials = document.getElementById('nav-profile-initials');
+            const displayName = user?.full_name || user?.email || 'User';
+
+            if (navName) {
+                navName.textContent = displayName;
+            }
+
+            const nameParts = String(displayName).trim().split(' ').filter(Boolean);
+            const initials = (
+                (nameParts[0]?.charAt(0) || displayName.charAt(0) || 'U') +
+                (nameParts[1]?.charAt(0) || 'S')
+            ).toUpperCase();
+
+            if (navInitials) {
+                navInitials.textContent = initials;
+                navInitials.style.display = 'flex';
+            }
+
+            if (navImg) {
+                if (user?.profile_picture) {
+                    navImg.src = user.profile_picture;
+                    navImg.style.display = 'block';
+                    if (navInitials) navInitials.style.display = 'none';
+                } else {
+                    navImg.removeAttribute('src');
+                    navImg.style.display = 'none';
+                }
+            }
+        }
+
+        // Navigation Dropdown Handler
+        function initializeNavDropdown() {
+            const dropdownBtn = document.getElementById('nav-dropdown-btn');
+            const dropdownContainer = document.querySelector('.nav-dropdown');
+            const pageLinks = document.querySelectorAll('.nav-page-link');
+            const currentPage = window.location.pathname;
+
+            if (!dropdownBtn || !dropdownContainer) return;
+
+            // Set active link based on current page
+            pageLinks.forEach(link => {
+                const href = link.getAttribute('href');
+                if (currentPage.includes(href)) {
+                    link.classList.add('active');
+                } else {
+                    link.classList.remove('active');
+                }
+            });
+
+            // Toggle dropdown
+            dropdownBtn.addEventListener('click', () => {
+                dropdownContainer.classList.toggle('open');
+                dropdownBtn.setAttribute('aria-expanded', dropdownContainer.classList.contains('open'));
+            });
+
+            // Close dropdown when a link is clicked
+            pageLinks.forEach(link => {
+                link.addEventListener('click', () => {
+                    dropdownContainer.classList.remove('open');
+                    dropdownBtn.setAttribute('aria-expanded', 'false');
+                });
+            });
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!dropdownContainer.contains(e.target) && !dropdownBtn.contains(e.target)) {
+                    dropdownContainer.classList.remove('open');
+                    dropdownBtn.setAttribute('aria-expanded', 'false');
+                }
+            });
+        }
+
         // Initialize user display on page load
         window.addEventListener('DOMContentLoaded', () => {
             const user = AuthManager.getUser();
             if (user) {
-                document.getElementById('nav-user-name').textContent = user.full_name || user.email || 'User';
+                updateNavProfile(user);
                 refreshNavPoints(user);
                 initializeUserMobileMenu();
+                initializeNavDropdown();
 
                 // Auto-attach to active machine session so live counters are visible immediately.
                 attachExistingMachineSession();
+                // Attach transfer UI listeners (share points parity with Rewards page)
+                document.getElementById('share-transfer-btn')?.addEventListener('click', function() {
+                    const email = document.getElementById('recipient-email')?.value || '';
+                    const amount = Number(document.getElementById('share-transfer-amount')?.value || 0);
+                    const emailError = document.getElementById('email-error');
+                    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+                    if (!email || !emailRegex.test(email)) {
+                        if (emailError) emailError.style.display = 'block';
+                        return;
+                    }
+                    if (emailError) emailError.style.display = 'none';
+
+                    if (!amount || amount < 10 || amount > 100) {
+                        alert('Transfer amount must be between 10 and 100 points');
+                        return;
+                    }
+
+                    // Show confirmation modal
+                    showTransferConfirmModal((user.email || ''), email, amount);
+                });
+
+                document.querySelectorAll('.quick-select-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const val = btn.dataset.amount;
+                        if (val === 'custom') {
+                            const custom = prompt('Enter amount (10-100):', '10');
+                            const n = Number(custom || 10);
+                            if (!n || n < 10 || n > 100) return;
+                            document.getElementById('share-transfer-amount').value = n;
+                            document.getElementById('share-amount-display').textContent = n;
+                        } else {
+                            const n = Number(val || 10);
+                            document.getElementById('share-transfer-amount').value = n;
+                            document.getElementById('share-amount-display').textContent = n;
+                        }
+                    });
+                });
+
+                document.getElementById('share-transfer-amount')?.addEventListener('input', (e) => {
+                    document.getElementById('share-amount-display').textContent = e.target.value;
+                });
             } else {
                 window.location.href = '/';
             }
@@ -882,6 +1465,9 @@
                         video.play();
                         document.getElementById('start-scanner').style.display = 'none';
                         document.getElementById('stop-scanner').style.display = 'inline-block';
+                            // Show session panel as overlay while scanner is active
+                            const sessionEl = document.getElementById('session-info');
+                            if (sessionEl) sessionEl.classList.add('session-overlay');
                         
                         const canvas = document.createElement('canvas');
                         const context = canvas.getContext('2d');
@@ -917,6 +1503,9 @@
             
             document.getElementById('start-scanner').style.display = 'inline-block';
             document.getElementById('stop-scanner').style.display = 'none';
+            // Remove session overlay when scanner stops
+            const sessionEl = document.getElementById('session-info');
+            if (sessionEl) sessionEl.classList.remove('session-overlay');
         }
 
         async function handleQRCodeScanned(qrData) {
@@ -998,7 +1587,7 @@
             document.getElementById('session-info').classList.add('active');
             document.getElementById('points-earned').textContent = pointsEarned.toFixed(2);
             document.getElementById('items-sorted').textContent = metalCount + plasticCount + paperCount;
-            document.getElementById('transfer-amount').textContent = pointsEarned.toFixed(2) + ' pts';
+            document.getElementById('session-transfer-amount').textContent = pointsEarned.toFixed(2) + ' pts';
             document.getElementById('session-status').textContent = isActive ? 'ACTIVE' : 'COMPLETED';
             
             const statusBadge = document.getElementById('status-badge');
@@ -1155,11 +1744,77 @@
 
                 document.getElementById('start-scanner').style.display = 'inline-block';
                 showStatus('Session ended', 'info');
+                // Ensure session overlay is removed when session ends
+                const sessionEl = document.getElementById('session-info');
+                if (sessionEl) sessionEl.classList.remove('session-overlay');
             } catch (error) {
                 hideLoading();
                 showStatus('Error ending session: ' + error.message, 'error');
                 console.error('End session error:', error);
             }
+        }
+
+        // ================= Transfer functions (copied from Rewards page) =================
+        let pendingTransfer = null;
+        function showTransferConfirmModal(senderEmail, receiverEmail, amount) {
+            document.getElementById('confirm-amount').textContent = amount;
+            document.getElementById('confirm-recipient').textContent = receiverEmail;
+            const modal = document.getElementById('transfer-confirm-modal');
+            if (modal) modal.style.display = 'block';
+            pendingTransfer = { senderEmail, receiverEmail, amount };
+        }
+
+        function closeTransferConfirmModal() {
+            const modal = document.getElementById('transfer-confirm-modal');
+            if (modal) modal.style.display = 'none';
+            pendingTransfer = null;
+        }
+
+        function confirmTransfer() {
+            if (!pendingTransfer) {
+                alert('No transfer data. Please try again.');
+                return;
+            }
+
+            const { senderEmail, receiverEmail, amount } = pendingTransfer;
+            const transferBtn = document.getElementById('share-transfer-btn');
+            const originalContent = transferBtn ? transferBtn.innerHTML : 'Send Points';
+
+            closeTransferConfirmModal();
+            if (transferBtn) {
+                transferBtn.disabled = true;
+                transferBtn.textContent = 'Processing...';
+            }
+
+            fetch('/api/rewards/transfer/peer', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ senderEmail, receiverEmail, pointsAmount: amount })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    if (transferBtn) transferBtn.textContent = 'TRANSFER SENT! ✓';
+                    alert(`Successfully transferred ${amount} points to ${receiverEmail}!`);
+                    setTimeout(() => {
+                        if (transferBtn) { transferBtn.innerHTML = originalContent; transferBtn.disabled = false; }
+                        document.getElementById('recipient-email').value = '';
+                        document.getElementById('share-transfer-amount').value = '10';
+                        document.getElementById('share-amount-display').textContent = '10';
+                        if (data.transfer?.senderNewBalance !== undefined) {
+                            syncLivePoints(data.transfer.senderNewBalance);
+                        }
+                    }, 1500);
+                } else {
+                    alert('Transfer failed: ' + (data.message || 'Unknown error'));
+                    if (transferBtn) { transferBtn.innerHTML = originalContent; transferBtn.disabled = false; }
+                }
+            })
+            .catch(error => {
+                console.error('Transfer error:', error);
+                alert('Transfer failed: ' + error.message);
+                if (transferBtn) { transferBtn.innerHTML = originalContent; transferBtn.disabled = false; }
+            });
         }
 
         function handleLogout() {
@@ -1174,10 +1829,21 @@
             const mobilePoints = document.getElementById('mobile-nav-points');
             if (!toggle || !panel) return;
 
+            const navRow = toggle.closest('.flex.items-center.justify-between') || toggle.closest('.nav-container');
+            const leftSection = navRow ? navRow.firstElementChild : null;
             const closeMenu = () => {
                 panel.dataset.open = 'false';
                 panel.style.display = 'none';
                 toggle.setAttribute('aria-expanded', 'false');
+            };
+
+            const applyMobileHeaderPolish = () => {
+                if (window.innerWidth < 768) {
+                    if (leftSection) leftSection.style.display = '';
+                } else {
+                    if (leftSection) leftSection.style.display = '';
+                    closeMenu();
+                }
             };
 
             const openMenu = () => {
@@ -1201,17 +1867,15 @@
                 link.addEventListener('click', closeMenu);
             });
 
-            window.addEventListener('resize', () => {
-                if (window.innerWidth >= 768) {
-                    closeMenu();
-                }
-            });
+            window.addEventListener('resize', applyMobileHeaderPolish);
 
             document.addEventListener('keydown', (event) => {
                 if (event.key === 'Escape') {
                     closeMenu();
                 }
             });
+
+            applyMobileHeaderPolish();
         }
     </script>
 </body>

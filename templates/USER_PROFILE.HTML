@@ -47,6 +47,92 @@
       transition: width 0.3s ease;
     }
     .nav-link:hover::after, .nav-link.active::after { width: 100%; }
+
+    /* Dropdown Styles */
+    .nav-dropdown {
+      position: relative;
+    }
+
+    .nav-dropdown-toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: rgba(255, 255, 255, 0.7);
+      font-weight: 500;
+      font-size: 0.875rem;
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 1px solid transparent;
+      background: transparent;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .nav-dropdown-toggle:hover {
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .nav-dropdown-toggle svg {
+      width: 16px;
+      height: 16px;
+      transition: transform 0.3s ease;
+    }
+
+    .nav-dropdown-toggle.open svg {
+      transform: rotate(180deg);
+    }
+
+    .nav-dropdown-menu {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      margin-top: 8px;
+      min-width: 220px;
+      background: #0F3B2E;
+      border: 1px solid rgba(212, 225, 87, 0.2);
+      border-radius: 12px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-8px);
+      transition: all 0.3s ease;
+      z-index: 100;
+      overflow: hidden;
+    }
+
+    .nav-dropdown.open .nav-dropdown-menu {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+
+    .nav-dropdown-menu a {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      color: rgba(255, 255, 255, 0.8);
+      text-decoration: none;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      border-left: 3px solid transparent;
+    }
+
+    .nav-dropdown-menu a:hover {
+      background: rgba(212, 225, 87, 0.15);
+      color: #D4E157;
+      border-left-color: #D4E157;
+      padding-left: 19px;
+    }
+
+    .nav-dropdown-menu a.active {
+      background: rgba(212, 225, 87, 0.2);
+      color: #D4E157;
+      border-left-color: #D4E157;
+    }
     
     .form-input {
       border: 1.5px solid #E0E0E0;
@@ -150,24 +236,59 @@
     <nav class="gradient-dark sticky top-0 z-50">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex items-center justify-between h-16">
-          <!-- Left - User Welcome -->
+          <!-- Left - Logo + Profile Photo + User Info (All clickable) -->
           <div class="flex items-center space-x-3">
-            <button onclick="window.location.href='/profile'" class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center overflow-hidden border-2 border-[#D4E157]/30 hover:border-[#D4E157]/60 hover:bg-white/20 transition-all cursor-pointer" title="My Profile">
-              <svg class="w-6 h-6 text-[#D4E157]" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" /></svg>
-            </button>
-            <div class="hidden sm:block">
+            <!-- Logo with brand text -->
+            <a href="/profile" class="hover:opacity-80 transition-opacity cursor-pointer flex-shrink-0 hidden md:flex" style="align-items:center;gap:8px">
+              <span style="color:#ffffff;font-weight:700;letter-spacing:0.04em">BINTECH</span>
+              <img src="/PICS/BINTECHLOGO.png" alt="BinTECH Logo" style="height:48px;object-fit:contain;margin-top:-8px;">
+            </a>
+            
+            <!-- Profile Photo -->
+            <a href="/profile" class="hover:opacity-80 transition-opacity cursor-pointer flex-shrink-0">
+              <img id="nav-profile-picture" src="" alt="Profile" class="h-12 w-12 rounded-full object-cover border-2 border-[#D4E157]/50 hidden" />
+              <div id="nav-profile-initials" class="h-12 w-12 rounded-full bg-[#D4E157]/20 flex items-center justify-center text-[#D4E157] font-bold text-sm border-2 border-[#D4E157]/50">--</div>
+            </a>
+            
+            <!-- User Info (Name + Label) -->
+            <a href="/profile" class="nav-welcome show hover:opacity-80 transition-opacity cursor-pointer">
               <p class="text-[#D4E157]/70 text-xs uppercase tracking-wider">My Profile</p>
               <p id="nav-user-name" class="text-white font-semibold text-sm">User Name</p>
-            </div>
+            </a>
           </div>
           
-          <!-- Center - Navigation Links -->
-          <div class="hidden md:flex items-center space-x-8">
-            <a href="/dashboard" class="nav-link text-white/80 hover:text-white text-sm font-medium">Dashboard</a>
-            <a href="/rewards" class="nav-link text-white/80 hover:text-white text-sm font-medium">Rewards</a>
-            <a href="/history" class="nav-link text-white/80 hover:text-white text-sm font-medium">History</a>
-            <a href="/how-it-works" class="nav-link text-white/80 hover:text-white text-sm font-medium">How It Works</a>
-            <a href="/qr-scanner" class="nav-link text-white/80 hover:text-white text-sm font-medium flex items-center gap-1"><span>💳</span> Transfer Points</a>
+          <!-- Center - Navigation Dropdown -->
+          <div class="nav-dropdown hidden md:block">
+            <button class="nav-dropdown-toggle" id="nav-dropdown-btn" aria-label="Pages" aria-expanded="false">
+              <span>Pages</span>
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" /></svg>
+            </button>
+            <div class="nav-dropdown-menu">
+              <a href="/dashboard" class="nav-page-link" data-page="dashboard">
+                <span>📊</span>
+                <span>Dashboard</span>
+              </a>
+              <a href="/profile" class="nav-page-link" data-page="profile">
+                <span>👤</span>
+                <span>Profile</span>
+              </a>
+              <a href="/rewards" class="nav-page-link" data-page="rewards">
+                <span>🎁</span>
+                <span>Rewards</span>
+              </a>
+              <a href="/history" class="nav-page-link" data-page="history">
+                <span>📜</span>
+                <span>History</span>
+              </a>
+              <a href="/how-it-works" class="nav-page-link" data-page="how-it-works">
+                <span>ℹ️</span>
+                <span>How It Works</span>
+              </a>
+              <a href="/qr-scanner" class="nav-page-link" data-page="qr-scanner">
+                <span>📱</span>
+                <span>Transfer Points</span>
+              </a>
+            </div>
           </div>
           
           <!-- Right - Points & Logout -->
@@ -187,14 +308,17 @@
           </div>
         </div>
       </div>
-      <div id="mobile-nav-panel" class="mobile-nav-panel md:hidden border-t border-white/15 bg-[#143D2E]/95 px-4 py-4 space-y-3" data-open="false" style="display:none;">
-        <a href="/dashboard" class="block text-white/90 text-sm font-medium">Dashboard</a>
-        <a href="/profile" class="block text-[#D4E157] text-sm font-medium">Profile</a>
-        <a href="/rewards" class="block text-white/90 text-sm font-medium">Rewards</a>
-        <a href="/history" class="block text-white/90 text-sm font-medium">History</a>
-        <a href="/how-it-works" class="block text-white/90 text-sm font-medium">How It Works</a>
-        <a href="/qr-scanner" class="block text-white/90 text-sm font-medium">Transfer Points</a>
-        <div class="pt-2 border-t border-white/15 flex items-center justify-between">
+      <!-- Mobile Menu Panel: Navigation -->
+      <div id="mobile-nav-panel" class="mobile-nav-panel md:hidden border-t border-white/15 bg-[#143D2E]/95 px-4 py-4" data-open="false" style="display:none;">
+        <div class="space-y-3">
+          <a href="/dashboard" class="block text-white/90 hover:text-[#D4E157] text-sm font-medium transition">Dashboard</a>
+          <a href="/profile" class="block text-[#D4E157] text-sm font-medium">Profile</a>
+          <a href="/rewards" class="block text-white/90 hover:text-[#D4E157] text-sm font-medium transition">Rewards</a>
+          <a href="/history" class="block text-white/90 hover:text-[#D4E157] text-sm font-medium transition">History</a>
+          <a href="/how-it-works" class="block text-white/90 hover:text-[#D4E157] text-sm font-medium transition">How It Works</a>
+          <a href="/qr-scanner" class="block text-white/90 hover:text-[#D4E157] text-sm font-medium transition">Transfer Points</a>
+        </div>
+        <div class="pt-3 border-t border-white/15 flex items-center justify-between">
           <span id="mobile-nav-points" class="text-[#D4E157] text-sm font-semibold">0 Points</span>
           <button onclick="handleLogout()" class="px-3 py-1.5 text-white/80 text-xs border border-white/30 rounded-full hover:bg-white/10">Logout</button>
         </div>
@@ -537,58 +661,62 @@
         <section>
           <div class="flex items-center gap-3">
             <span class="bintech-brand-mark" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
-                <path d="M13 3L4 14h6l-1 7 11-13h-6l1-5z" stroke-linecap="round" stroke-linejoin="round"></path>
-              </svg>
+              <img src="/PICS/BINTECHLOGO.png" alt="BinTECH Logo" style="height:28px;object-fit:contain" />
             </span>
             <p class="bintech-brand-title">Bintech</p>
           </div>
           <p class="bintech-brand-copy">Bintech builds secure, intuitive financial technology for modern users, blending speed, trust, and smarter money workflows.</p>
         </section>
 
-        <nav class="bintech-user-footer__nav" aria-label="Company links">
-          <h4>Company</h4>
+        <nav class="bintech-user-footer__nav" aria-label="Quick actions">
+          <h4>Quick Actions</h4>
           <ul>
-            <li><a href="#">About</a></li>
-            <li><a href="#">Contact</a></li>
+            <li><a href="/dashboard">Open Dashboard</a></li>
+            <li><a href="/qr-scanner">Transfer Points</a></li>
+            <li><a href="/history">View History</a></li>
+            <li><a href="/rewards">Browse Rewards</a></li>
           </ul>
         </nav>
 
-        <nav class="bintech-user-footer__nav" aria-label="Products links">
-          <h4>Products</h4>
+        <nav class="bintech-user-footer__nav" aria-label="Profile links">
+          <h4>Profile</h4>
           <ul>
-            <li><a href="#">Rewards</a></li>
+            <li><a href="/profile">Manage Profile</a></li>
+            <li><a href="#" onclick="handleLogout(); return false;">Logout</a></li>
           </ul>
         </nav>
 
-        <nav class="bintech-user-footer__nav" aria-label="Resources links">
-          <h4>Resources</h4>
+        <nav class="bintech-user-footer__nav" aria-label="Support links">
+          <h4>Support</h4>
           <ul>
-            <li><a href="#">Help Center</a></li>
-            <li><a href="#">Developers</a></li>
+            <li><a href="/how-it-works">How It Works</a></li>
+            <li><a href="mailto:support@bintech.local">Email Support</a></li>
           </ul>
         </nav>
 
-        <nav class="bintech-user-footer__nav" aria-label="Legal links">
-          <h4>Legal</h4>
+        <nav class="bintech-user-footer__nav" aria-label="System links">
+          <h4>System</h4>
           <ul>
-            <li><a href="#">Terms</a></li>
-            <li><a href="#">Privacy</a></li>
+            <li><a href="/admin/website-logs">Activity Logs</a></li>
+            <li><a href="/dashboard#points">Points Overview</a></li>
           </ul>
         </nav>
 
         <section class="bintech-user-footer__subscribe bintech-user-footer__glass">
-          <h4>Subscribe To Our Newsletter</h4>
-          <p>Get product releases, security updates, and fintech insights delivered monthly.</p>
+          <h4>System Snapshot</h4>
+          <p>Update your profile, check your points, and jump directly into rewards or scanning when needed.</p>
           <form class="bintech-newsletter-form" onsubmit="event.preventDefault();">
-            <input type="email" placeholder="you@domain.com" aria-label="Email address">
-            <button type="submit">Join</button>
+            <button type="button" onclick="window.location.href='/profile'">Profile</button>
+            <button type="button" onclick="window.location.href='/dashboard'">Dashboard</button>
           </form>
         </section>
       </div>
 
       <div class="bintech-footer-bottom">
         <p>© 2026 Bintech. All rights reserved.</p>
+        <div style="display:flex;align-items:center;gap:8px">
+          <img src="/PICS/BINTECHLOGO.png" alt="BinTECH Logo" style="height:28px;object-fit:contain" />
+        </div>
         <div class="bintech-social-list" aria-label="Social media">
           <a href="#" aria-label="X">
             <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.901 3H21l-4.588 5.244L21.808 21h-4.226l-3.31-4.889L9.996 21H7.896l4.907-5.609L2.192 3h4.332l2.993 4.422L13.099 3h5.802zm-1.48 16h1.171L7.946 4.89H6.69L17.42 19z"></path></svg>
@@ -866,6 +994,37 @@
           document.getElementById('profilePictureImg').src = profile.profile_picture;
           document.getElementById('profilePictureImg').classList.remove('hidden');
           document.getElementById('profileInitials').classList.add('hidden');
+          
+          // Also update navbar profile pictures
+          const navProfileImg = document.getElementById('nav-profile-picture');
+          const navProfileInitials = document.getElementById('nav-profile-initials');
+          const mobileNavProfileImg = document.getElementById('mobile-nav-profile-picture');
+          const mobileNavProfileInitials = document.getElementById('mobile-nav-profile-initials');
+          
+          if (navProfileImg && navProfileInitials) {
+            navProfileImg.src = profile.profile_picture;
+            navProfileImg.classList.remove('hidden');
+            navProfileInitials.classList.add('hidden');
+          }
+          
+          if (mobileNavProfileImg && mobileNavProfileInitials) {
+            mobileNavProfileImg.src = profile.profile_picture;
+            mobileNavProfileImg.classList.remove('hidden');
+            mobileNavProfileInitials.classList.add('hidden');
+          }
+        } else {
+          // Show initials in navbar if no picture
+          const firstName = profile.first_name || 'U';
+          const lastName = profile.last_name || 'U';
+          const initials = (firstName.charAt(0) + lastName.charAt(0)).toUpperCase();
+          const navProfileInitials = document.getElementById('nav-profile-initials');
+          const mobileNavProfileInitials = document.getElementById('mobile-nav-profile-initials');
+          if (navProfileInitials) {
+            navProfileInitials.textContent = initials;
+          }
+          if (mobileNavProfileInitials) {
+            mobileNavProfileInitials.textContent = initials;
+          }
         }
         
         if (profile.campus_id) {
@@ -890,8 +1049,11 @@
         });
 
         // Update profile card display
-        const fullName = `${profile.first_name || ''} ${profile.last_name || ''}`.trim();
-        const initials = `${(profile.first_name?.charAt(0) || 'U').toUpperCase()}${(profile.last_name?.charAt(0) || 'U').toUpperCase()}`;
+        const fullName = String(
+          profile.full_name
+          || [profile.first_name, profile.middle_name, profile.last_name].filter(Boolean).join(' ')
+        ).replace(/\s+/g, ' ').trim();
+        const initials = `${(profile.first_name?.charAt(0) || profile.full_name?.charAt(0) || 'U').toUpperCase()}${(profile.last_name?.charAt(0) || profile.full_name?.split(' ')?.[1]?.charAt(0) || 'P').toUpperCase()}`;
         
         console.log('Setting display values - Full Name:', fullName, 'Initials:', initials);
         document.getElementById('profileFullName').textContent = fullName || 'User Profile';
@@ -902,7 +1064,9 @@
         const points = profile.points || 0;
         document.getElementById('profilePoints').textContent = points.toLocaleString();
         document.getElementById('nav-points').textContent = `${points.toLocaleString()} Points`;
-        document.getElementById('nav-user-name').textContent = profile.first_name || profile.email?.split('@')[0] || 'User';
+        document.querySelectorAll('#nav-user-name, #mobile-nav-user-name').forEach((el) => {
+          el.textContent = fullName || profile.email?.split('@')[0] || 'User';
+        });
 
         // Member since date
         const memberDate = new Date(profile.created_at);
@@ -1034,7 +1198,8 @@
             firstname: profile.first_name,
             lastName: profile.last_name,
             middleName: profile.middle_name,
-            profile_picture: profile.profile_picture
+            profile_picture: profile.profile_picture,
+            sync_google_photo: true
           })
         });
 
@@ -1047,13 +1212,51 @@
           throw new Error(updateData.message || 'Failed to update profile');
         }
 
+        const updatedProfilePicture = updateData?.profile?.profile_picture || profile.profile_picture;
+
+        // Persist updated profile into sessionStorage so other pages pick it up immediately
+        try {
+          const stored = sessionStorage.getItem('bintech_user');
+          if (stored) {
+            const userObj = JSON.parse(stored);
+            userObj.profile_picture = updatedProfilePicture;
+            sessionStorage.setItem('bintech_user', JSON.stringify(userObj));
+            // Also update other keys used across the app
+            sessionStorage.setItem('user', JSON.stringify(userObj));
+            localStorage.setItem('user', JSON.stringify(userObj));
+          }
+        } catch (e) {
+          console.warn('Could not update sessionStorage with new profile picture', e);
+        }
+
         // Refresh the profile picture display
-        document.getElementById('profilePictureImg').src = profile.profile_picture;
+        document.getElementById('profilePictureImg').src = updatedProfilePicture;
         document.getElementById('profilePictureImg').classList.remove('hidden');
         document.getElementById('profileInitials').classList.add('hidden');
         
+        // Also update navbar profile pictures immediately on this page
+        const navProfileImg = document.getElementById('nav-profile-picture');
+        const navProfileInitials = document.getElementById('nav-profile-initials');
+        const mobileNavProfileImg = document.getElementById('mobile-nav-profile-picture');
+        const mobileNavProfileInitials = document.getElementById('mobile-nav-profile-initials');
+        
+        if (navProfileImg && navProfileInitials) {
+          navProfileImg.src = updatedProfilePicture;
+          navProfileImg.classList.remove('hidden');
+          navProfileInitials.classList.add('hidden');
+        }
+        
+        if (mobileNavProfileImg && mobileNavProfileInitials) {
+          mobileNavProfileImg.src = updatedProfilePicture;
+          mobileNavProfileImg.classList.remove('hidden');
+          mobileNavProfileInitials.classList.add('hidden');
+        }
+
         showSuccess('✓ Google profile photo synced successfully!');
         console.log('✓ Google profile photo synced');
+
+        // Reload the page so other pages will read the updated sessionStorage on navigation
+        setTimeout(() => { try { window.location.reload(); } catch (e) { console.warn('reload failed', e); } }, 600);
       } catch (error) {
         console.error('Error syncing Google profile photo:', error);
         showError('Failed to sync Google profile photo: ' + error.message);
@@ -1217,11 +1420,13 @@
         sessionStorage.setItem('user', JSON.stringify(currentUser));
 
         // Update display
-        const fullName = `${firstName} ${lastName}`.trim();
+        const fullName = [firstName, document.getElementById('middleName')?.value.trim(), lastName].filter(Boolean).join(' ').replace(/\s+/g, ' ').trim();
         const initials = firstName.charAt(0) + lastName.charAt(0);
         document.getElementById('profileFullName').textContent = fullName;
         document.getElementById('profileInitials').textContent = initials.toUpperCase();
-        document.getElementById('nav-user-name').textContent = firstName;
+        document.querySelectorAll('#nav-user-name, #mobile-nav-user-name').forEach((el) => {
+          el.textContent = fullName;
+        });
 
         // Show success and exit edit mode
         showSuccess('Profile updated successfully! ✓');
@@ -1229,6 +1434,8 @@
         submitBtn.disabled = false;
         submitBtn.textContent = originalText;
         toggleEditMode(); // Exit edit mode
+        // Refresh the page so all components (nav, session storage, SDKs) reload with updated data
+        setTimeout(() => { window.location.reload(); }, 600);
 
       } catch (error) {
         console.error('Error saving profile:', error);
@@ -1459,17 +1666,28 @@
       }
     }
 
-    function initializeUserMobileMenu() {
+     function initializeUserMobileMenu() {
       const toggle = document.getElementById('mobile-nav-toggle');
       const panel = document.getElementById('mobile-nav-panel');
       const navPoints = document.getElementById('nav-points');
       const mobilePoints = document.getElementById('mobile-nav-points');
       if (!toggle || !panel) return;
 
+      const navRow = toggle.closest('.flex.items-center.justify-between') || toggle.closest('.nav-container');
+      const leftSection = navRow ? navRow.firstElementChild : null;
       const closeMenu = () => {
         panel.dataset.open = 'false';
         panel.style.display = 'none';
         toggle.setAttribute('aria-expanded', 'false');
+      };
+
+      const applyMobileHeaderPolish = () => {
+        if (window.innerWidth < 768) {
+          if (leftSection) leftSection.style.display = '';
+        } else {
+          if (leftSection) leftSection.style.display = '';
+          closeMenu();
+        }
       };
 
       const openMenu = () => {
@@ -1493,24 +1711,63 @@
         link.addEventListener('click', closeMenu);
       });
 
-      window.addEventListener('resize', () => {
-        if (window.innerWidth >= 768) {
-          closeMenu();
-        }
-      });
+      window.addEventListener('resize', applyMobileHeaderPolish);
 
       document.addEventListener('keydown', (event) => {
         if (event.key === 'Escape') {
           closeMenu();
         }
       });
+      applyMobileHeaderPolish();
     }
 
     // ============================================
     // INITIALIZE ON PAGE LOAD
     // ============================================
+    function initializeNavDropdown() {
+      const dropdownBtn = document.getElementById('nav-dropdown-btn');
+      const dropdownContainer = document.querySelector('.nav-dropdown');
+      const pageLinks = document.querySelectorAll('.nav-page-link');
+      const currentPage = window.location.pathname;
+
+      if (!dropdownBtn || !dropdownContainer) return;
+
+      // Set active link based on current page
+      pageLinks.forEach(link => {
+        const href = link.getAttribute('href');
+        if (currentPage.includes(href)) {
+          link.classList.add('active');
+        } else {
+          link.classList.remove('active');
+        }
+      });
+
+      // Toggle dropdown
+      dropdownBtn.addEventListener('click', () => {
+        dropdownContainer.classList.toggle('open');
+        dropdownBtn.setAttribute('aria-expanded', dropdownContainer.classList.contains('open'));
+      });
+
+      // Close dropdown when a link is clicked
+      pageLinks.forEach(link => {
+        link.addEventListener('click', () => {
+          dropdownContainer.classList.remove('open');
+          dropdownBtn.setAttribute('aria-expanded', 'false');
+        });
+      });
+
+      // Close dropdown when clicking outside
+      document.addEventListener('click', (e) => {
+        if (!dropdownContainer.contains(e.target) && !dropdownBtn.contains(e.target)) {
+          dropdownContainer.classList.remove('open');
+          dropdownBtn.setAttribute('aria-expanded', 'false');
+        }
+      });
+    }
+
     document.addEventListener('DOMContentLoaded', initializePage);
     document.addEventListener('DOMContentLoaded', initializeUserMobileMenu);
+    document.addEventListener('DOMContentLoaded', initializeNavDropdown);
   </script>
  </body>
 </html>

@@ -4,6 +4,31 @@
  */
 
 // ============================================
+// Fetch Interceptor for Auth Headers
+// ============================================
+// Automatically add x-user-role header to all requests
+// This allows the admin bypass middleware to recognize admin users
+const originalFetch = window.fetch;
+window.fetch = function(...args) {
+  const [resource, config = {}] = args;
+  
+  // Get the user's role from session storage
+  const userStr = sessionStorage.getItem('bintech_user');
+  const user = userStr ? JSON.parse(userStr) : null;
+  const userRole = user?.role || null;
+  
+  // Add x-user-role header if user is logged in
+  if (userRole) {
+    config.headers = config.headers || {};
+    config.headers['x-user-role'] = userRole;
+    console.log(`[fetch-interceptor] Added x-user-role: ${userRole} to ${resource}`);
+  }
+  
+  // Call original fetch with modified config
+  return originalFetch.call(this, resource, config);
+};
+
+// ============================================
 // Toast Notification System
 // ============================================
 function createToastContainer() {
@@ -21,6 +46,176 @@ function createToastContainer() {
     document.body.appendChild(container);
   }
   return container;
+}
+
+// Ensure mobile top username element and styles exist (created dynamically)
+function ensureMobileTopUsername() {
+  try {
+    if (document.getElementById('mobile-top-username')) return;
+
+    const styleId = 'bintech-mobile-top-username-style';
+    if (!document.getElementById(styleId)) {
+      const s = document.createElement('style');
+      s.id = styleId;
+      s.textContent = `
+        @media (max-width: 767px) {
+          .bintech-brand-text { display: none !important; }
+          #mobile-top-username { display: inline-block !important; margin-right: 8px; color: #ffffff; font-weight:700; }
+        }
+      `;
+      document.head.appendChild(s);
+    }
+
+    // Find the primary profile/brand anchor
+    const logoAnchor = document.querySelector('a[href="/profile"]');
+    if (!logoAnchor) return;
+
+    // Mark existing brand span so it can be hidden on small screens
+    const brandSpan = logoAnchor.querySelector('span');
+    if (brandSpan) brandSpan.classList.add('bintech-brand-text');
+
+    const mobileSpan = document.createElement('span');
+    mobileSpan.id = 'mobile-top-username';
+    mobileSpan.style.display = 'none';
+    mobileSpan.setAttribute('aria-hidden', 'true');
+    // insert before first child so it appears left of the logo image on small screens
+    logoAnchor.insertBefore(mobileSpan, logoAnchor.firstChild);
+  } catch (e) {
+    // silent
+  }
+}
+
+// Populate admin sidebar/profile widgets across admin pages
+function populateAdminProfile() {
+  try {
+    const admin = JSON.parse(sessionStorage.getItem('bintech_user') || 'null');
+    if (!admin) return;
+
+    const nameEl = document.getElementById('adminName');
+    const emailEl = document.getElementById('adminEmail');
+    const initialsEl = document.getElementById('adminInitials');
+    const profileImg = document.getElementById('admin-profile-picture');
+
+    const fullName = admin.full_name || [admin.first_name, admin.last_name].filter(Boolean).join(' ') || admin.email || 'Admin';
+    const email = admin.email || admin.Email || '';
+
+    if (nameEl) nameEl.textContent = fullName;
+    if (emailEl) emailEl.textContent = email || 'Administrator';
+
+    const initials = (admin.first_name?.charAt(0) || admin.full_name?.charAt(0) || 'A') + (admin.last_name?.charAt(0) || '');
+    if (initialsEl) initialsEl.textContent = initials.toUpperCase();
+
+    if (admin.profile_picture && profileImg) {
+      profileImg.src = admin.profile_picture;
+      profileImg.classList.remove('hidden');
+      if (initialsEl) initialsEl.classList.add('hidden');
+    }
+  } catch (e) {
+    console.warn('populateAdminProfile failed', e);
+  }
+}
+
+function initializeAdminSidebarToggle() {
+  const sidebar = document.querySelector('aside');
+  const main = document.querySelector('main');
+
+  if (!sidebar || !main || !sidebar.classList.contains('bg-forest')) return;
+  if (document.getElementById('bintech-admin-sidebar-toggle')) return;
+
+  if (!document.getElementById('bintech-admin-sidebar-toggle-style')) {
+    const toggleStyle = document.createElement('style');
+    toggleStyle.id = 'bintech-admin-sidebar-toggle-style';
+    toggleStyle.textContent = `
+      /* animate aside with transform instead of display:none for smooth drawer effect */
+      aside {
+        margin-left: 0;
+        transition: transform 280ms ease;
+        transition-property: transform, margin-left;
+        will-change: transform;
+      }
+
+      body.bintech-admin-sidebar-collapsed aside {
+        transform: translateX(-110%);
+        margin-left: -16rem;
+      }
+
+      #bintech-admin-sidebar-toggle {
+        position: fixed;
+        top: 50%;
+        left: calc(16rem - 18px);
+        z-index: 130;
+        width: 44px;
+        height: 44px;
+        border-radius: 9999px;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        background: rgba(26, 58, 47, 0.96);
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 6px 18px rgba(0,0,0,0.18);
+        backdrop-filter: blur(6px);
+        cursor: pointer;
+        transform: translateY(-50%);
+        transition: transform 0.25s ease, left 0.28s ease;
+      }
+
+      body.bintech-admin-sidebar-collapsed #bintech-admin-sidebar-toggle {
+        left: -18px;
+      }
+
+      #bintech-admin-sidebar-toggle.open {
+        transform: translateY(-50%) rotate(180deg);
+      }
+
+      #bintech-admin-sidebar-toggle:hover {
+        left: calc(16rem - 22px);
+      }
+
+      body.bintech-admin-sidebar-collapsed #bintech-admin-sidebar-toggle:hover {
+        left: -22px;
+      }
+
+      @media (max-width: 1024px) {
+        #bintech-admin-sidebar-toggle {
+          display: none;
+        }
+      }
+    `;
+    document.head.appendChild(toggleStyle);
+  }
+
+  const toggleButton = document.createElement('button');
+  toggleButton.id = 'bintech-admin-sidebar-toggle';
+  toggleButton.type = 'button';
+  toggleButton.setAttribute('aria-label', 'Toggle admin sidebar');
+  toggleButton.innerHTML = `
+    <svg class="bintech-admin-sidebar-toggle-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M15 18l-6-6 6-6" />
+    </svg>
+  `;
+
+  const updateIcon = () => {
+    const collapsed = document.body.classList.contains('bintech-admin-sidebar-collapsed');
+    toggleButton.innerHTML = collapsed
+      ? '<svg class="bintech-admin-sidebar-toggle-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 18l6-6-6-6" /></svg>'
+      : '<svg class="bintech-admin-sidebar-toggle-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 18l-6-6 6-6" /></svg>';
+  };
+
+  toggleButton.addEventListener('click', () => {
+    const collapsed = document.body.classList.toggle('bintech-admin-sidebar-collapsed');
+    if (collapsed) {
+      toggleButton.classList.add('open');
+    } else {
+      toggleButton.classList.remove('open');
+    }
+    updateIcon();
+  });
+
+  // Initialize button state based on body class
+  if (document.body.classList.contains('bintech-admin-sidebar-collapsed')) toggleButton.classList.add('open');
+  updateIcon();
+  document.body.appendChild(toggleButton);
 }
 
 function showToast(message, type = 'info', duration = 3000) {
@@ -128,30 +323,31 @@ class AuthManager {
   }
 }
 
-// ============================================
-// Fetch Interceptor for Auth Headers
-// ============================================
-// Automatically add x-user-role header to all requests
-// This allows the admin bypass middleware to recognize admin users
-const originalFetch = window.fetch;
-window.fetch = function(...args) {
-  const [resource, config = {}] = args;
-  
-  // Get the user's role from storage
-  const user = AuthManager.getUser();
-  const userRole = user?.role || null;
-  
-  // Add x-user-role header if user is logged in
-  if (userRole) {
-    config.headers = config.headers || {};
-    config.headers['x-user-role'] = userRole;
-    console.log(`[fetch-interceptor] Added x-user-role: ${userRole} to ${resource}`);
+// Global logout helper used by templates. Posts to backend for audit/logging then clears client session.
+window.handleLogout = async function() {
+  try {
+    const user = AuthManager.getUser();
+    const payload = { email: user?.email || user?.Email || user?.email_address || null };
+    if (payload.email) {
+      // Best-effort: inform backend about logout for audit trail
+      try {
+        await fetch('/auth/logout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+      } catch (e) {
+        console.warn('Logout audit POST failed', e);
+      }
+    }
+  } catch (e) {
+    console.warn('handleLogout: could not determine user to send logout audit', e);
+  } finally {
+    AuthManager.logout();
+    // small delay for fetch to reach server if it was sent
+    setTimeout(() => { window.location.href = '/'; }, 120);
   }
-  
-  // Call original fetch with modified config
-  return originalFetch.call(this, resource, config);
 };
-
 
 // ============================================
 // User Account Display Functions
@@ -195,6 +391,17 @@ function updateAccountDisplay() {
     el.textContent = initials.toUpperCase();
   });
 
+  // Mobile top bar username (for small screens where brand text is hidden)
+  try {
+    const mobileTop = document.getElementById('mobile-top-username');
+    if (mobileTop) mobileTop.textContent = user.full_name || user.email || 'User';
+
+    const mobileNavUserName = document.getElementById('mobile-nav-user-name');
+    if (mobileNavUserName) mobileNavUserName.textContent = user.full_name || user.email || 'User';
+  } catch (e) {
+    // ignore
+  }
+
   // Update profile picture initial
   document.querySelectorAll('.user-avatar, [class*="avatar"]').forEach(el => {
     if (!el.querySelector('img')) {
@@ -225,12 +432,21 @@ function updateAuthUI() {
 
 // Initialize account info on page load
 function initializeUserDisplay() {
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-      updateAuthUI();
-    });
-  } else {
+  // Prevent double-initialization when the script appears multiple times
+  if (window.__bintech_auth_initialized) return;
+  window.__bintech_auth_initialized = true;
+
+  const boot = () => {
     updateAuthUI();
+    ensureMobileTopUsername();
+    initializeAdminSidebarToggle();
+    populateAdminProfile();
+  };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', boot);
+  } else {
+    boot();
   }
 }
 
@@ -652,6 +868,10 @@ async function handleSignup(event) {
       'role-is-null': role === null
     });
 
+    // Check if Google profile picture was stored (from Google sign-up)
+    const googleProfilePictureInput = form.querySelector('input[name="googleProfilePicture"]');
+    const googleProfilePicture = googleProfilePictureInput ? googleProfilePictureInput.value : null;
+
     const signupBody = {
       email,
       password,
@@ -661,9 +881,16 @@ async function handleSignup(event) {
       role
     };
 
+    // Add Google profile picture if present
+    if (googleProfilePicture) {
+      signupBody.profile_picture = googleProfilePicture;
+      console.log('✓ Google profile picture included in signup request');
+    }
+
     console.log('✓ Basic signup body created:', {
       email, firstName, lastName, role,
-      'role-check': `role="${role}" (type: ${typeof role})`
+      'role-check': `role="${role}" (type: ${typeof role})`,
+      'has-google-picture': !!googleProfilePicture
     });
 
     console.log('ℹ Manual signup');
@@ -734,26 +961,45 @@ function navigateTo(page) {
 // ============================================
 // Global Logout Handler
 // ============================================
-async function handleLogout() {
+function handleLogout() {
   if (confirm('Are you sure you want to logout?')) {
-    AuthManager.logout();
-    
-    // Clear cookie on the client side
-    document.cookie = 'user_role=; path=/; max-age=0';
-    
-    // Notify backend to clear server-side session
-    try {
-      await fetch('/auth/logout', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
+    // Show logout notification modal
+    const notification = document.createElement('div');
+    notification.id = 'logoutNotification';
+    notification.innerHTML = `
+      <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.5); display: flex; align-items: center; justify-content: center; z-index: 9999;">
+        <div style="background: white; border-radius: 16px; padding: 40px; text-align: center; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3); animation: slideUp 0.3s ease-out;">
+          <div style="width: 60px; height: 60px; background: #3d8b7a; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
+            <svg style="width: 32px; height: 32px; color: white;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+            </svg>
+          </div>
+          <h2 style="color: #1a3a2f; font-size: 24px; font-weight: 600; margin: 0 0 8px 0;">You're Logged Out</h2>
+          <p style="color: #6b9080; font-size: 14px; margin: 0 0 24px 0;">You have been successfully logged out.</p>
+          <p style="color: #999; font-size: 12px; margin: 0;">Redirecting to home page...</p>
+        </div>
+      </div>
+      <style>
+        @keyframes slideUp {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
         }
-      });
-    } catch (err) {
-      console.warn('Backend logout failed, continuing:', err);
-    }
+      </style>
+    `;
     
-    window.location.href = '/';
+    document.body.appendChild(notification);
+    
+    // Clear session and redirect after a short delay
+    AuthManager.logout();
+    setTimeout(() => {
+      window.location.href = '/';
+    }, 1500);
   }
 }
 
@@ -895,7 +1141,20 @@ async function handleGoogleSignUp(response) {
         console.log(`  ✓ Email: ${email}`);
       }
 
-      showSuccess('✓ Form auto-filled! Complete the form and click "Create Account"');
+      // Store Google picture URL in a hidden field so handleSignup can send it to backend
+      if (picture) {
+        let hiddenPictureInput = signupForm.querySelector('input[name="googleProfilePicture"]');
+        if (!hiddenPictureInput) {
+          hiddenPictureInput = document.createElement('input');
+          hiddenPictureInput.type = 'hidden';
+          hiddenPictureInput.name = 'googleProfilePicture';
+          signupForm.appendChild(hiddenPictureInput);
+        }
+        hiddenPictureInput.value = picture;
+        console.log(`  ✓ Google Picture URL stored for backend: ${picture.substring(0, 50)}...`);
+      }
+
+      showSuccess('✓ Form auto-filled with Google profile! Complete the form and click "Create Account"');
       console.log('[Google Auth Signup] Form auto-filled successfully. User should now complete password fields.');
 
     } catch (decodeError) {

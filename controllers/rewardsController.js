@@ -1340,26 +1340,21 @@ exports.processRedemption = async (req, res) => {
 // ============================================
 // SEND REDEMPTION CONFIRMATION EMAIL
 // ============================================
+// ============================================
+// SEND REDEMPTION CONFIRMATION EMAIL (via SendGrid)
+// Uses the centralized email service to preserve consistent behavior after migration
+// ============================================
+const emailService = require('../services/emailService');
+
 function sendRedemptionConfirmationEmail(email, rewardName, pointsSpent, couponCodes, remainingPoints) {
   try {
-    const nodemailer = require('nodemailer');
-
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: process.env.EMAIL_USER || 'your-email@gmail.com',
-        pass: process.env.EMAIL_PASSWORD || 'your-app-password'
-      }
-    });
-
     const now = new Date();
     const expiryDate = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000); // 30 days
 
-    // Handle both single coupon and multiple coupons
     const couponsArray = Array.isArray(couponCodes) ? couponCodes : [couponCodes];
-    const couponDisplay = couponsArray.length === 1 
+    const couponDisplay = couponsArray.length === 1
       ? `<p style="color: #5DAE60; font-size: 28px; margin: 0 0 20px 0; font-family: monospace; font-weight: bold;">${couponsArray[0]}</p>`
-      : `<div style="margin: 0 0 20px 0;">${couponsArray.map((code, idx) => 
+      : `<div style="margin: 0 0 20px 0;">${couponsArray.map((code, idx) =>
           `<p style="color: #5DAE60; font-size: 18px; margin: 8px 0; font-family: monospace; font-weight: bold;">Coupon ${idx + 1}: ${code}</p>`
         ).join('')}</div>`;
 
@@ -1367,56 +1362,41 @@ function sendRedemptionConfirmationEmail(email, rewardName, pointsSpent, couponC
       <div style="font-family: Arial, sans-serif; background-color: #f5f5f5; padding: 20px;">
         <div style="background-color: white; border-radius: 10px; padding: 30px; max-width: 600px; margin: 0 auto;">
           <h1 style="color: #0F3B2E; font-family: 'Playfair Display', serif; margin-bottom: 20px;">🎉 Reward Redeemed Successfully!</h1>
-          
           <p style="color: #0F3B2E; font-size: 16px; margin-bottom: 20px;">Dear User,</p>
           <p style="color: #0F3B2E; font-size: 16px; margin-bottom: 20px;">Your reward redemption has been processed successfully. Here are your details:</p>
-          
+
           <div style="background-color: #E8ECEB; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
             <p style="color: #0F3B2E; margin: 0 0 10px 0; font-weight: bold;">Reward:</p>
             <p style="color: #0F3B2E; font-size: 24px; margin: 0 0 20px 0; font-weight: bold;">${rewardName}</p>
-            
             <p style="color: #0F3B2E; margin: 0 0 5px 0; font-weight: bold;">Coupon Code${couponsArray.length > 1 ? 's' : ''}:</p>
             ${couponDisplay}
-            
             <p style="color: #0F3B2E; margin: 0 0 5px 0; font-weight: bold;">Points Spent:</p>
             <p style="color: #0F3B2E; font-size: 18px; margin: 0 0 20px 0;">${pointsSpent} EcoPoints</p>
-            
             <p style="color: #0F3B2E; margin: 0 0 5px 0; font-weight: bold;">Remaining Points:</p>
             <p style="color: #0F3B2E; font-size: 18px; margin: 0;">${remainingPoints} EcoPoints</p>
           </div>
-          
+
           <div style="background-color: #f0f8f0; border-left: 4px solid #5DAE60; padding: 15px; margin-bottom: 20px;">
             <p style="color: #0F3B2E; margin: 0; font-weight: bold;">✓ Coupon${couponsArray.length > 1 ? 's' : ''} Valid Until: ${expiryDate.toDateString()}</p>
           </div>
-          
+
           <p style="color: #0F3B2E; font-size: 14px; margin-bottom: 30px;">Please keep ${couponsArray.length > 1 ? 'these coupon codes' : 'this coupon code'} safe. You can use ${couponsArray.length > 1 ? 'them' : 'it'} at our partner locations or present ${couponsArray.length > 1 ? 'them' : 'it'} when claiming your reward.</p>
-          
           <p style="color: #0F3B2E; font-size: 14px; margin-bottom: 30px;">Thank you for using BinTECH! Keep contributing to a greener planet.</p>
-          
-          <p style="color: #0F3B2E; font-size: 12px; border-top: 1px solid #e0e0e0; padding-top: 15px;">
-            Transaction Date: ${now.toLocaleString()}<br>
-            This is an automated email. Please do not reply directly to this message.
-          </p>
+          <p style="color: #0F3B2E; font-size: 12px; border-top: 1px solid #e0e0e0; padding-top: 15px;">Transaction Date: ${now.toLocaleString()}<br>This is an automated email. Please do not reply directly to this message.</p>
         </div>
       </div>
     `;
 
-    const mailOptions = {
-      from: process.env.EMAIL_USER || 'noreply@bintech.com',
-      to: email,
-      subject: `BinTECH Reward Redeemed: ${couponsArray.length > 1 ? `${couponsArray.length} Coupons` : couponsArray[0]}`,
-      html: htmlContent
-    };
+    const textContent = `Reward Redeemed: ${rewardName}\nCoupons: ${couponsArray.join(', ')}\nPoints Spent: ${pointsSpent}\nRemaining Points: ${remainingPoints}`;
 
-    transporter.sendMail(mailOptions, (error, info) => {
-      if (error) {
-        console.error('❌ Email send error:', error);
-      } else {
-        console.log(`✅ Confirmation email sent to ${email}`);
-      }
-    });
+    void emailService.sendEmailViaSendGrid(email, `BinTECH Reward Redeemed: ${rewardName}`, htmlContent, textContent)
+      .then(sent => {
+        if (sent) console.log(`✅ Confirmation email queued successfully for ${email}`);
+        else console.warn(`⚠️ SendGrid reported failure sending confirmation to ${email}`);
+      })
+      .catch(err => console.error('❌ Unexpected SendGrid error:', err));
 
   } catch (error) {
-    console.error('❌ Error setting up email:', error);
+    console.error('❌ Error preparing redemption email:', error && error.message ? error.message : error);
   }
 }
