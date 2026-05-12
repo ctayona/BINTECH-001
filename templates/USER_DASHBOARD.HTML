@@ -817,6 +817,24 @@
       font-size: 0.75rem;
       margin-top: 4px;
     }
+
+    /* Desktop Chat Messages Display - Synced with floating panel */
+    .desktop-shoutbox-display {
+      height: calc(100vh - 450px);
+      min-height: 400px;
+      max-height: 600px;
+      overflow-y: auto;
+      padding: 1rem;
+      gap: 0.5rem;
+      background-color: #F5F5F5;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .desktop-shoutbox-display > * {
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+    }
   </style>
 </head>
 <body class="h-full">
@@ -1091,19 +1109,15 @@
                 <p class="text-white/70 text-xs">Share your thoughts with the community</p>
               </div>
 
-              <!-- Messages Container -->
-              <div id="shoutbox-messages" class="h-[calc(100vh-450px)] min-h-[400px] max-h-[600px] overflow-y-auto p-4 space-y-2 bg-[#F5F5F5]">
-                <div class="text-center py-8 text-[#0F3B2E]/50">
-                  <p class="text-sm">Loading messages...</p>
-                </div>
-              </div>
+              <!-- Messages Container (Displays shoutbox-messages from floating panel) -->
+              <div class="h-[calc(100vh-450px)] min-h-[400px] max-h-[600px] overflow-y-auto p-4 space-y-2 bg-[#F5F5F5] desktop-shoutbox-display" id="desktop-shoutbox-messages-container"></div>
 
-              <!-- Input Section -->
+              <!-- Input Section (References floating panel inputs) -->
               <div class="p-4 border-t border-[#E0E0E0] bg-white">
-                <!-- Error Message -->
+                <!-- Error Message (shared with floating) -->
                 <div id="shoutbox-error" class="hidden mb-3 bg-red-50 border border-red-200 rounded-lg p-2 text-red-700 text-xs"></div>
 
-                <!-- Textarea -->
+                <!-- Textarea (shared with floating) -->
                 <textarea 
                   id="shoutbox-input" 
                   placeholder="Type your message..." 
@@ -1112,7 +1126,7 @@
                   maxlength="250"
                 ></textarea>
 
-                <!-- Character Count & Send Button -->
+                <!-- Character Count & Send Button (shared with floating) -->
                 <div class="flex items-center justify-between mt-2">
                   <span id="shoutbox-char-count" class="text-xs text-[#9CA3AF]">0/250</span>
                   <button 
@@ -1163,19 +1177,19 @@
 
       <!-- Chat Content -->
       <div class="floating-chat-content">
-        <!-- Messages Container (This is the shoutbox-messages div) -->
+        <!-- Messages Container (shared with desktop) -->
         <div id="shoutbox-messages" class="floating-messages-container">
           <div class="text-center py-8 text-[#0F3B2E]/50">
             <p class="text-sm">Loading messages...</p>
           </div>
         </div>
 
-        <!-- Input Section -->
+        <!-- Input Section (shared with desktop) -->
         <div class="floating-chat-input-section">
-          <!-- Error Message -->
+          <!-- Error Message (shared) -->
           <div id="shoutbox-error" class="hidden text-red-700 text-xs bg-red-50 border border-red-200 rounded p-2"></div>
 
-          <!-- Textarea -->
+          <!-- Textarea (shared) -->
           <textarea 
             id="shoutbox-input" 
             placeholder="Type your message..." 
@@ -1184,7 +1198,7 @@
             maxlength="250"
           ></textarea>
 
-          <!-- Character Count, Send Button & Info -->
+          <!-- Character Count & Send Button (shared) -->
           <div class="floating-chat-input-footer">
             <span id="shoutbox-char-count" class="floating-char-count">0/250</span>
             <button 
@@ -1621,6 +1635,37 @@
       // The shoutbox.js file handles the chat functionality
       // It will auto-initialize when the page loads
       console.log('Shoutbox initialized via shoutbox.js');
+      
+      // Sync messages between desktop and mobile displays
+      syncChatMessagesDisplay();
+    }
+
+    // ============================================
+    // SYNC CHAT MESSAGES DISPLAY
+    // ============================================
+    function syncChatMessagesDisplay() {
+      const messagesDiv = document.getElementById('shoutbox-messages');
+      const desktopContainer = document.getElementById('desktop-shoutbox-messages-container');
+
+      if (!messagesDiv || !desktopContainer) return;
+
+      // Copy initial content to desktop container
+      const copyMessages = () => {
+        desktopContainer.innerHTML = messagesDiv.innerHTML;
+      };
+
+      // Initial copy
+      copyMessages();
+
+      // Watch for changes to the messages div and sync to desktop container
+      const observer = new MutationObserver(copyMessages);
+      observer.observe(messagesDiv, {
+        childList: true,
+        subtree: true,
+        characterData: true
+      });
+
+      console.log('Chat messages display synchronized between desktop and mobile');
     }
 
     // ============================================
