@@ -75,7 +75,7 @@
     .mobile-nav-panel { display: none; }
     
     @media (max-width: 767px) {
-      .mobile-nav-toggle { display: none; }
+      .mobile-nav-toggle { display: inline-flex; }
       .points-badge { display: none; }
       .mobile-nav-panel[data-open="true"] { display: block; }
     }
@@ -1412,7 +1412,9 @@
       const mobilePoints = document.getElementById('mobile-nav-points');
       
       if (!toggle || !panel) return;
-      
+
+      const navRow = toggle.closest('.flex.items-center.justify-between') || toggle.closest('.nav-container');
+      const leftSection = navRow ? navRow.firstElementChild : null;
       const syncPoints = () => {
         if (navPoints && mobilePoints) mobilePoints.textContent = navPoints.textContent;
       };
@@ -1421,6 +1423,15 @@
         panel.dataset.open = 'false';
         panel.style.display = 'none';
         toggle.setAttribute('aria-expanded', 'false');
+      };
+
+      const applyMobileHeaderPolish = () => {
+        if (window.innerWidth < 768) {
+          if (leftSection) leftSection.style.display = '';
+        } else {
+          if (leftSection) leftSection.style.display = '';
+          closeMenu();
+        }
       };
       
       const openMenu = () => {
@@ -1435,9 +1446,10 @@
       });
       
       panel.querySelectorAll('a').forEach(link => link.addEventListener('click', closeMenu));
-      window.addEventListener('resize', () => { if (window.innerWidth >= 768) closeMenu(); });
+      window.addEventListener('resize', applyMobileHeaderPolish);
       document.addEventListener('keydown', (event) => { if (event.key === 'Escape') closeMenu(); });
       
+      applyMobileHeaderPolish();
       syncPoints();
     }
 
