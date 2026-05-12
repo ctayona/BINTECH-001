@@ -309,11 +309,11 @@
     <main class="flex-grow w-full">
       <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
         
-        <!-- Two Column Grid Layout: 70/30 Split -->
+        <!-- Two Column Grid Layout: 60/40 Split -->
         <div class="grid grid-cols-1 lg:grid-cols-10 gap-6 items-start">
           
-          <!-- LEFT COLUMN: Dashboard Content (70% = 7 cols) -->
-          <div class="lg:col-span-7 space-y-8">
+          <!-- LEFT COLUMN: Dashboard Content (60% = 6 cols) -->
+          <div class="lg:col-span-6 space-y-8">
             
             <!-- Page Header -->
             <div>
@@ -476,8 +476,8 @@
           </div>
           <!-- End Left Column -->
 
-          <!-- RIGHT COLUMN: Community Chat (30% = 3 cols) -->
-          <aside class="lg:col-span-3">
+          <!-- RIGHT COLUMN: Community Chat (40% = 4 cols) -->
+          <aside class="lg:col-span-4">
             <div class="bg-white rounded-2xl card-shadow lg:sticky lg:top-20 overflow-hidden">
               <!-- Shoutbox Header -->
               <div class="gradient-dark p-4">
@@ -489,34 +489,34 @@
               </div>
 
               <!-- Messages Container -->
-              <div id="shoutbox-messages" class="h-[calc(100vh-380px)] min-h-[500px] max-h-[700px] overflow-y-auto p-6 space-y-4 bg-[#F5F5F5]">
-                <div class="text-center py-12 text-[#0F3B2E]/50">
-                  <p class="text-base">Loading messages...</p>
+              <div id="shoutbox-messages" class="h-[calc(100vh-450px)] min-h-[400px] max-h-[600px] overflow-y-auto p-4 space-y-2 bg-[#F5F5F5]">
+                <div class="text-center py-8 text-[#0F3B2E]/50">
+                  <p class="text-sm">Loading messages...</p>
                 </div>
               </div>
 
               <!-- Input Section -->
-              <div class="p-6 border-t border-[#E0E0E0] bg-white space-y-4">
+              <div class="p-4 border-t border-[#E0E0E0] bg-white">
                 <!-- Error Message -->
-                <div id="shoutbox-error" class="hidden bg-red-50 border border-red-200 rounded-lg p-3 text-red-700 text-sm"></div>
+                <div id="shoutbox-error" class="hidden mb-3 bg-red-50 border border-red-200 rounded-lg p-2 text-red-700 text-xs"></div>
 
                 <!-- Textarea -->
                 <textarea 
                   id="shoutbox-input" 
                   placeholder="Type your message..." 
-                  class="w-full px-4 py-3 border border-[#E0E0E0] rounded-lg resize-none focus:outline-none focus:border-[#5DAE60] focus:ring-2 focus:ring-[#5DAE60]/20 text-base"
-                  rows="3"
+                  class="w-full px-3 py-2 border border-[#E0E0E0] rounded-lg resize-none focus:outline-none focus:border-[#5DAE60] focus:ring-2 focus:ring-[#5DAE60]/20 text-sm"
+                  rows="2"
                   maxlength="250"
                 ></textarea>
 
                 <!-- Character Count & Send Button -->
-                <div class="flex items-center justify-between">
-                  <span id="shoutbox-char-count" class="text-sm text-[#9CA3AF]">0/250</span>
+                <div class="flex items-center justify-between mt-2">
+                  <span id="shoutbox-char-count" class="text-xs text-[#9CA3AF]">0/250</span>
                   <button 
                     id="shoutbox-send-btn" 
-                    class="bg-gradient-to-r from-[#5DAE60] to-[#4CAF50] text-white px-6 py-3 rounded-lg font-semibold text-base hover:shadow-lg transition-all flex items-center gap-2"
+                    class="bg-gradient-to-r from-[#5DAE60] to-[#4CAF50] text-white px-4 py-2 rounded-lg font-semibold text-sm hover:shadow-lg transition-all flex items-center gap-2"
                   >
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
                     </svg>
                     Send
@@ -524,7 +524,7 @@
                 </div>
 
                 <!-- Info Text -->
-                <p class="text-sm text-[#0F3B2E]/60">⏱ 5 second cooldown between messages</p>
+                <p class="text-xs text-[#0F3B2E]/50 mt-2">⏱ 5 second cooldown between messages</p>
               </div>
             </div>
           </aside>
