@@ -1340,6 +1340,8 @@
         let sessionCheckInterval = null;
         let sessionStartTime = null;
         let timerInterval = null;
+        let scannerInterval = null;
+        let isStartingSession = false;
         const MACHINE_ID = 'BINTECH-SORTER-001';
 
         function toNumber(value, fallback = 0) {
@@ -1504,6 +1506,8 @@
 
         async function attachExistingMachineSession() {
             try {
+                const user = AuthManager.getUser();
+                const effectiveUserId = user?.id || user?.system_id;
                 const response = await fetch(`/api/waste-sorter/api/device/${encodeURIComponent(MACHINE_ID)}/session`);
                 if (!response.ok) return;
 
@@ -1520,12 +1524,14 @@
                     paper_count: toNumber(data.session.paperCount, 0)
                 };
 
-                // Do not auto-show the session UI on page load.
-                // Only remember that a session exists server-side. The UI overlay
-                // should appear only after a successful session creation (scan).
                 currentSession = mappedSession;
-                // Do not call displaySession() or startSessionMonitoring() here to avoid
-                // forcing the modal/panel to appear before the user initiates a session.
+
+                // Resume live sync for current user's active session so ESP32 points keep updating.
+                if (mappedSession.is_active && effectiveUserId && mappedSession.user_id === effectiveUserId) {
+                    sessionStartTime = new Date();
+                    displaySession(mappedSession);
+                    startSessionMonitoring(mappedSession.id);
+                }
             } catch (error) {
                 console.error('Failed to attach existing machine session:', error);
             }
@@ -1558,6 +1564,11 @@
         // QR Scanner Functions
         // ============================================
         function startScanner() {
+            if (scannerInterval) {
+                clearInterval(scannerInterval);
+                scannerInterval = null;
+            }
+
             const user = AuthManager.getUser();
             if (!user) {
                 showStatus('Please log in first', 'error');
@@ -1578,7 +1589,7 @@
                         const canvas = document.createElement('canvas');
                         const context = canvas.getContext('2d');
                         
-                        setInterval(() => {
+                        scannerInterval = setInterval(() => {
                             if (video.readyState === video.HAVE_ENOUGH_DATA) {
                                 canvas.width = video.videoWidth;
                                 canvas.height = video.videoHeight;
@@ -1587,6 +1598,8 @@
                                 try {
                                     const code = jsQR(context.getImageData(0, 0, canvas.width, canvas.height).data, canvas.width, canvas.height);
                                     if (code) {
+                                        clearInterval(scannerInterval);
+                                        scannerInterval = null;
                                         handleQRCodeScanned(code.data);
                                     }
                                 } catch (e) {
@@ -1604,8 +1617,16 @@
         function stopScanner() {
             const video = document.getElementById('qr-video');
             const stream = video.srcObject;
-            const tracks = stream.getTracks();
-            tracks.forEach(track => track.stop());
+            if (stream) {
+                const tracks = stream.getTracks();
+                tracks.forEach(track => track.stop());
+                video.srcObject = null;
+            }
+
+            if (scannerInterval) {
+                clearInterval(scannerInterval);
+                scannerInterval = null;
+            }
             
             document.getElementById('start-scanner').style.display = 'inline-block';
             document.getElementById('stop-scanner').style.display = 'none';
@@ -1613,8 +1634,14 @@
         }
 
         async function handleQRCodeScanned(qrData) {
+            if (isStartingSession) {
+                console.warn('[SESSION] Ignored duplicate scan while session start is in progress');
+                return;
+            }
+
             const user = AuthManager.getUser();
             const effectiveUserId = user?.id || user?.system_id;
+            isStartingSession = true;
             
             stopScanner();
             showLoading(`Initiating session with ${qrData}...`);
@@ -1672,6 +1699,8 @@
                 hideLoading();
                 console.error('[SESSION] Error:', error);
                 showStatus('Error starting session: ' + error.message, 'error');
+            } finally {
+                isStartingSession = false;
             }
         }
 

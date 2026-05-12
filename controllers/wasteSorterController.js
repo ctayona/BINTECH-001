@@ -425,6 +425,26 @@ exports.startSession = async (req, res) => {
     const sessionId = generateSessionToken();
     const sessionToken = generateSessionToken();
 
+    // Keep a single active session per machine to avoid ESP32/frontend sync conflicts.
+    const { error: closeExistingError } = await supabase
+      .from('machine_sessions')
+      .update({
+        status: 'completed',
+        ended_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })
+      .eq('machine_id', hardwareDeviceId)
+      .eq('status', 'active');
+
+    if (closeExistingError) {
+      console.error('❌ Failed to close existing active sessions:', closeExistingError);
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to prepare machine session',
+        error: closeExistingError.message
+      });
+    }
+
     console.log('✓ Creating session:');
     console.log('  sessionId:', sessionId);
     console.log('  machine_id:', hardwareDeviceId);
