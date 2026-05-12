@@ -115,6 +115,305 @@
       to { opacity: 1; transform: translateY(0); }
     }
 
+    /* FLOATING CHAT BUBBLE - Mobile Only */
+    .floating-chat-bubble {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      width: 56px;
+      height: 56px;
+      border-radius: 9999px;
+      background: linear-gradient(135deg, #5DAE60, #4CAF50);
+      border: 2px solid #D4E157;
+      cursor: pointer;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+      box-shadow: 0 4px 12px rgba(15, 59, 46, 0.3);
+      transition: all 0.3s ease;
+      pointer-events: auto;
+    }
+
+    .floating-chat-bubble:hover {
+      transform: scale(1.1);
+      box-shadow: 0 6px 20px rgba(15, 59, 46, 0.4);
+    }
+
+    .floating-chat-bubble:active {
+      transform: scale(0.95);
+    }
+
+    .floating-chat-bubble svg {
+      width: 28px;
+      height: 28px;
+      color: white;
+    }
+
+    /* Floating Chat Panel */
+    .floating-chat-panel {
+      position: fixed;
+      bottom: 88px;
+      right: 24px;
+      width: 380px;
+      max-width: calc(100vw - 48px);
+      height: 500px;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 10px 40px rgba(15, 59, 46, 0.2);
+      display: none;
+      flex-direction: column;
+      z-index: 45;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(20px) scale(0.9);
+      transition: all 0.3s ease;
+      overflow: hidden;
+      pointer-events: none;
+      box-sizing: border-box;
+    }
+
+    .floating-chat-panel.open {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0) scale(1);
+      pointer-events: auto;
+    }
+
+    /* Desktop: Show sidebar chat, hide floating bubble */
+    @media (min-width: 1024px) {
+      .floating-chat-bubble {
+        display: none !important;
+      }
+      .floating-chat-panel {
+        display: none !important;
+      }
+      .desktop-chat-sidebar {
+        display: block;
+      }
+    }
+
+    /* Tablet: Show floating bubble and panel */
+    @media (max-width: 1023px) {
+      .desktop-chat-sidebar {
+        display: none;
+      }
+      .floating-chat-bubble {
+        display: flex;
+      }
+      .floating-chat-panel {
+        display: flex;
+      }
+    }
+
+    /* Mobile adjustments - Tablet and up */
+    @media (max-width: 768px) {
+      .floating-chat-panel {
+        bottom: 80px;
+        right: 16px;
+        width: calc(100vw - 32px);
+        max-width: 420px;
+        height: 420px;
+      }
+
+      .floating-chat-bubble {
+        bottom: 16px;
+        right: 16px;
+      }
+    }
+
+    /* Mobile adjustments - Small phones */
+    @media (max-width: 480px) {
+      .floating-chat-panel {
+        bottom: 72px;
+        right: 12px;
+        width: calc(100vw - 24px);
+        max-width: none;
+        height: 380px;
+      }
+
+      .floating-chat-bubble {
+        bottom: 12px;
+        right: 12px;
+        width: 48px;
+        height: 48px;
+      }
+
+      .floating-chat-bubble svg {
+        width: 24px;
+        height: 24px;
+      }
+    }
+
+    /* Chat Header */
+    .floating-chat-header {
+      background: linear-gradient(135deg, #143D2E, #1F4F3B);
+      padding: 16px;
+      color: white;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      border-bottom: 1px solid rgba(212, 225, 87, 0.1);
+      flex-shrink: 0;
+    }
+
+    .floating-chat-header > div {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .floating-chat-header h3 {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0;
+      font-family: 'Playfair Display', serif;
+      font-size: 1rem;
+      font-weight: 700;
+    }
+
+    .floating-chat-header p {
+      margin: 0;
+      font-size: 0.75rem;
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .floating-chat-close {
+      background: none;
+      border: none;
+      color: white;
+      cursor: pointer;
+      padding: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0.7;
+      transition: opacity 0.2s ease;
+    }
+
+    .floating-chat-close:hover {
+      opacity: 1;
+    }
+
+    .floating-chat-close svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    /* Chat Content */
+    .floating-chat-content {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* Messages Container */
+    .floating-messages-container {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 12px 16px;
+      background: #F5F5F5;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      box-sizing: border-box;
+    }
+
+    .floating-messages-container::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .floating-messages-container::-webkit-scrollbar-track {
+      background: #E0E0E0;
+      border-radius: 3px;
+    }
+
+    .floating-messages-container::-webkit-scrollbar-thumb {
+      background: #5DAE60;
+      border-radius: 3px;
+    }
+
+    .floating-messages-container::-webkit-scrollbar-thumb:hover {
+      background: #4CAF50;
+    }
+
+    /* Input Section */
+    .floating-chat-input-section {
+      padding: 12px;
+      border-top: 1px solid #E0E0E0;
+      background: white;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex-shrink: 0;
+      box-sizing: border-box;
+      overflow: hidden;
+    }
+
+    .floating-chat-input-section textarea {
+      padding: 8px 12px;
+      border: 1px solid #E0E0E0;
+      border-radius: 8px;
+      resize: none;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.875rem;
+      transition: all 0.2s ease;
+    }
+
+    .floating-chat-input-section textarea:focus {
+      outline: none;
+      border-color: #5DAE60;
+      box-shadow: 0 0 0 3px rgba(93, 174, 96, 0.1);
+    }
+
+    .floating-chat-input-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 0.75rem;
+    }
+
+    .floating-chat-input-footer button {
+      background: linear-gradient(135deg, #5DAE60, #4CAF50);
+      color: white;
+      padding: 6px 16px;
+      border: none;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.75rem;
+    }
+
+    .floating-chat-input-footer button:hover {
+      box-shadow: 0 2px 8px rgba(93, 174, 96, 0.3);
+    }
+
+    .floating-chat-input-footer button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .floating-char-count {
+      color: #9CA3AF;
+      font-size: 0.75rem;
+    }
+
+    .floating-cooldown-info {
+      color: #0F3B2E;
+      opacity: 0.5;
+      font-size: 0.75rem;
+      margin-top: 4px;
+    }
+
     /* Enhanced Navbar Styles */
     .nav-welcome {
       display: none;
@@ -613,11 +912,11 @@
     <main class="flex-grow w-full">
       <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
         
-        <!-- Two Column Grid Layout: Full Width (Chat is now floating) -->
+        <!-- Two Column Grid Layout: 70/30 Split -->
         <div class="grid grid-cols-1 lg:grid-cols-10 gap-6 items-start">
           
-          <!-- LEFT COLUMN: Dashboard Content (Full Width) -->
-          <div class="lg:col-span-10 space-y-8">
+          <!-- LEFT COLUMN: Dashboard Content (70% = 7 cols) -->
+          <div class="lg:col-span-7 space-y-8">
             
             <!-- Page Header -->
             <div>
@@ -779,6 +1078,60 @@
             
           </div>
           <!-- End Left Column -->
+
+          <!-- RIGHT COLUMN: Community Chat (30% = 3 cols) - Desktop Only -->
+          <aside class="desktop-chat-sidebar lg:col-span-3 hidden lg:block">
+            <div class="bg-white rounded-2xl card-shadow lg:sticky lg:top-20 overflow-hidden">
+              <!-- Shoutbox Header -->
+              <div class="gradient-dark p-4">
+                <div class="flex items-center gap-2 mb-1">
+                  <span class="text-2xl">💬</span>
+                  <h3 class="font-playfair text-xl text-white font-bold">Community Chat</h3>
+                </div>
+                <p class="text-white/70 text-xs">Share your thoughts with the community</p>
+              </div>
+
+              <!-- Messages Container -->
+              <div id="shoutbox-messages" class="h-[calc(100vh-450px)] min-h-[400px] max-h-[600px] overflow-y-auto p-4 space-y-2 bg-[#F5F5F5]">
+                <div class="text-center py-8 text-[#0F3B2E]/50">
+                  <p class="text-sm">Loading messages...</p>
+                </div>
+              </div>
+
+              <!-- Input Section -->
+              <div class="p-4 border-t border-[#E0E0E0] bg-white">
+                <!-- Error Message -->
+                <div id="shoutbox-error" class="hidden mb-3 bg-red-50 border border-red-200 rounded-lg p-2 text-red-700 text-xs"></div>
+
+                <!-- Textarea -->
+                <textarea 
+                  id="shoutbox-input" 
+                  placeholder="Type your message..." 
+                  class="w-full px-3 py-2 border border-[#E0E0E0] rounded-lg resize-none focus:outline-none focus:border-[#5DAE60] focus:ring-2 focus:ring-[#5DAE60]/20 text-sm"
+                  rows="2"
+                  maxlength="250"
+                ></textarea>
+
+                <!-- Character Count & Send Button -->
+                <div class="flex items-center justify-between mt-2">
+                  <span id="shoutbox-char-count" class="text-xs text-[#9CA3AF]">0/250</span>
+                  <button 
+                    id="shoutbox-send-btn" 
+                    class="bg-gradient-to-r from-[#5DAE60] to-[#4CAF50] text-white px-4 py-2 rounded-lg font-semibold text-sm hover:shadow-lg transition-all flex items-center gap-2"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+                    </svg>
+                    Send
+                  </button>
+                </div>
+
+                <!-- Info Text -->
+                <p class="text-xs text-[#0F3B2E]/50 mt-2">⏱ 5 second cooldown between messages</p>
+              </div>
+            </div>
+          </aside>
+          <!-- End Right Column -->
           
         </div>
         <!-- End Grid -->
@@ -786,13 +1139,14 @@
       </div>
     </main>
 
-    <!-- Floating Chat Bubble & Panel -->
+    <!-- Floating Chat Bubble (Mobile Only) -->
     <div id="floating-chat-bubble" class="floating-chat-bubble" role="button" tabindex="0" aria-label="Open chat" aria-expanded="false">
       <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
       </svg>
     </div>
 
+    <!-- Floating Chat Panel (Mobile Only) -->
     <div id="floating-chat-panel" class="floating-chat-panel" role="dialog" aria-label="Community Chat">
       <!-- Chat Header -->
       <div class="floating-chat-header">
