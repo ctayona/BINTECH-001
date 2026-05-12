@@ -464,26 +464,20 @@
             display: none;
         }
 
-        .session-info.active:not(.session-overlay) {
-            display: block;
-            background: white;
-            border-radius: 1.5rem;
-            padding: 2rem;
-            box-shadow: 0 4px 20px rgba(15, 59, 46, 0.12);
-            margin-bottom: 2rem;
-        }
-
-        /* When used as a full-screen session overlay (active session) - center with backdrop */
-        .session-info.session-overlay {
+        /* Session always shows as modal overlay, never in page flow */
+        .session-info.active {
             position: fixed !important;
             inset: 0;
             display: flex !important;
             align-items: center;
             justify-content: center;
-            background: rgba(0,0,0,0.45);
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: grayscale(100%);
             z-index: 12000;
             padding: 1.5rem;
         }
+
+        /* Removed: session-overlay class no longer needed; .active handles full modal */
 
         .session-panel {
             background: white;
@@ -1633,13 +1627,13 @@
                 sessionEl.classList.add('active');
                 // Use full-screen overlay when session is active so it sits above the page
                 if (isActive) {
-                    sessionEl.classList.add('session-overlay');
+                    // Always show as full-screen modal, remove floating/overlay classes (not needed)
                     sessionEl.classList.remove('session-floating');
                     // lock background scrolling when modal overlay is shown
                     try { document.body.classList.add('modal-open'); } catch (e) { /* ignore */ }
                 } else {
-                    // Completed sessions remain visible but not full-screen
-                    sessionEl.classList.remove('session-overlay', 'session-floating');
+                    // Hide session panel entirely when not active
+                    sessionEl.classList.remove('session-floating');
                     try { document.body.classList.remove('modal-open'); } catch (e) { /* ignore */ }
                 }
             }
@@ -1734,7 +1728,7 @@
                     currentSession = null;
                     const sessionEl = document.getElementById('session-info');
                     if (sessionEl) {
-                        sessionEl.classList.remove('session-overlay', 'session-floating', 'active');
+                        sessionEl.classList.remove('session-floating', 'active');
                     }
                     try { document.body.classList.remove('modal-open'); } catch (e) { /* ignore */ }
 
@@ -1793,7 +1787,7 @@
 
                 currentSession = null;
                 const sessionEl = document.getElementById('session-info');
-                if (sessionEl) sessionEl.classList.remove('session-overlay', 'session-floating', 'active');
+                if (sessionEl) sessionEl.classList.remove('session-floating', 'active');
                 try { document.body.classList.remove('modal-open'); } catch (e) { /* ignore */ }
                 hideStatus();
 
