@@ -473,14 +473,14 @@
             margin-bottom: 2rem;
         }
 
-        /* When used as an overlay (scanner active) - center with backdrop */
+        /* When used as a full-screen session overlay (active session) - center with backdrop */
         .session-info.session-overlay {
             position: fixed !important;
             inset: 0;
             display: flex !important;
             align-items: center;
             justify-content: center;
-            background: rgba(0,0,0,0.35);
+            background: rgba(0,0,0,0.45);
             z-index: 12000;
             padding: 1.5rem;
         }
@@ -971,8 +971,8 @@
         .card-shadow { box-shadow: 0 4px 20px rgba(15, 59, 46, 0.12); }
         .gradient-dark { background: linear-gradient(135deg, var(--secondary-gradient-start), var(--secondary-gradient-end)); }
 
-        /* Session overlay when scanner is active */
-        .session-overlay {
+        /* Small floating panel used while scanner is active (non-blocking) */
+        .session-info.session-floating {
             position: fixed !important;
             right: 1.5rem;
             top: 6rem;
@@ -1491,9 +1491,9 @@
                         video.play();
                         document.getElementById('start-scanner').style.display = 'none';
                         document.getElementById('stop-scanner').style.display = 'inline-block';
-                            // Show session panel as overlay while scanner is active
+                            // Show small floating session panel while scanner is active
                             const sessionEl = document.getElementById('session-info');
-                            if (sessionEl) sessionEl.classList.add('session-overlay');
+                            if (sessionEl) sessionEl.classList.add('session-floating');
                         
                         const canvas = document.createElement('canvas');
                         const context = canvas.getContext('2d');
@@ -1529,9 +1529,9 @@
             
             document.getElementById('start-scanner').style.display = 'inline-block';
             document.getElementById('stop-scanner').style.display = 'none';
-            // Remove session overlay when scanner stops
+            // Remove floating session panel when scanner stops
             const sessionEl = document.getElementById('session-info');
-            if (sessionEl) sessionEl.classList.remove('session-overlay');
+            if (sessionEl) sessionEl.classList.remove('session-floating');
         }
 
         async function handleQRCodeScanned(qrData) {
@@ -1610,12 +1610,25 @@
             const paperCount = toNumber(session.paper_count, 0);
             const isActive = !!session.is_active;
 
-            document.getElementById('session-info').classList.add('active');
+            const sessionEl = document.getElementById('session-info');
+            if (sessionEl) {
+                // Ensure panel visible
+                sessionEl.classList.add('active');
+                // Use full-screen overlay when session is active so it sits above the page
+                if (isActive) {
+                    sessionEl.classList.add('session-overlay');
+                    sessionEl.classList.remove('session-floating');
+                } else {
+                    // Completed sessions remain visible but not full-screen
+                    sessionEl.classList.remove('session-overlay', 'session-floating');
+                }
+            }
+
             document.getElementById('points-earned').textContent = pointsEarned.toFixed(2);
             document.getElementById('items-sorted').textContent = metalCount + plasticCount + paperCount;
             document.getElementById('session-transfer-amount').textContent = pointsEarned.toFixed(2) + ' pts';
             document.getElementById('session-status').textContent = isActive ? 'ACTIVE' : 'COMPLETED';
-            
+
             const statusBadge = document.getElementById('status-badge');
             statusBadge.classList.remove('badge-active', 'badge-transferred');
             
@@ -1699,7 +1712,10 @@
                 if (data.success) {
                     showStatus(`Successfully transferred ${data.data.pointsTransferred} points!`, 'success');
                     currentSession = null;
-                    document.getElementById('session-info').classList.remove('active');
+                    const sessionEl = document.getElementById('session-info');
+                    if (sessionEl) {
+                        sessionEl.classList.remove('session-overlay', 'session-floating', 'active');
+                    }
 
                     if (sessionCheckInterval) {
                         clearInterval(sessionCheckInterval);
@@ -1718,10 +1734,10 @@
                         refreshNavPoints(updatedUser);
                     }
                     
-                        // Refresh page shortly so UI and session state are aligned with backend
-                        setTimeout(() => {
-                            try { window.location.reload(); } catch (e) { /* ignore */ }
-                        }, 1400);
+                    // Refresh page shortly so UI and session state are aligned with backend
+                    setTimeout(() => {
+                        try { window.location.reload(); } catch (e) { /* ignore */ }
+                    }, 1400);
                 } else {
                     showStatus(data.message || 'Failed to transfer points', 'error');
                 }
@@ -1755,7 +1771,8 @@
                 }
 
                 currentSession = null;
-                document.getElementById('session-info').classList.remove('active');
+                const sessionEl = document.getElementById('session-info');
+                if (sessionEl) sessionEl.classList.remove('session-overlay', 'session-floating', 'active');
                 hideStatus();
 
                 if (sessionCheckInterval) {
