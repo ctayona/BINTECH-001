@@ -214,6 +214,160 @@
         display: none;
       }
     }
+
+    /* Mobile Chat Modal Styles */
+    .chat-fab {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #5DAE60, #4CAF50);
+      color: white;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      box-shadow: 0 4px 12px rgba(93, 174, 96, 0.3);
+      transition: all 0.3s ease;
+      z-index: 40;
+      animation: fabPulse 2s ease-in-out infinite;
+    }
+
+    .chat-fab:hover {
+      transform: scale(1.1);
+      box-shadow: 0 6px 16px rgba(93, 174, 96, 0.4);
+    }
+
+    .chat-fab:active {
+      transform: scale(0.95);
+    }
+
+    @keyframes fabPulse {
+      0%, 100% { box-shadow: 0 4px 12px rgba(93, 174, 96, 0.3); }
+      50% { box-shadow: 0 4px 20px rgba(93, 174, 96, 0.5); }
+    }
+
+    .chat-modal-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: none;
+      z-index: 45;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .chat-modal-backdrop.open {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .chat-modal {
+      position: fixed;
+      bottom: -100%;
+      left: 0;
+      right: 0;
+      display: none;
+      z-index: 50;
+      animation: slideUp 0.3s ease forwards;
+    }
+
+    .chat-modal.open {
+      display: block;
+      animation: slideUp 0.3s ease forwards;
+    }
+
+    @keyframes slideUp {
+      from {
+        bottom: -100%;
+        opacity: 0;
+      }
+      to {
+        bottom: 0;
+        opacity: 1;
+      }
+    }
+
+    @keyframes slideDown {
+      from {
+        bottom: 0;
+        opacity: 1;
+      }
+      to {
+        bottom: -100%;
+        opacity: 0;
+      }
+    }
+
+    .chat-modal.closing {
+      animation: slideDown 0.3s ease forwards;
+    }
+
+    .chat-close-btn {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      width: 32px;
+      height: 32px;
+      border: none;
+      background: rgba(0, 0, 0, 0.2);
+      color: white;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+      transition: all 0.2s ease;
+      font-size: 18px;
+    }
+
+    .chat-close-btn:hover {
+      background: rgba(0, 0, 0, 0.4);
+    }
+
+    @media (max-width: 1023px) {
+      .chat-fab {
+        display: flex;
+      }
+    }
+
+    @media (min-width: 1024px) {
+      .chat-fab {
+        display: none;
+      }
+
+      .chat-modal-backdrop {
+        display: none !important;
+      }
+
+      .chat-modal {
+        position: static;
+        bottom: auto;
+        left: auto;
+        right: auto;
+        display: block;
+        animation: none;
+      }
+
+      .chat-modal.open {
+        animation: none;
+      }
+
+      .chat-close-btn {
+        display: none;
+      }
+    }
   </style>
 </head>
 <body class="h-full">
@@ -478,9 +632,10 @@
 
           <!-- RIGHT COLUMN: Community Chat (30% = 3 cols) -->
           <aside class="lg:col-span-3">
-            <div class="bg-white rounded-2xl card-shadow lg:sticky lg:top-20 overflow-hidden">
+            <div class="bg-white rounded-2xl card-shadow lg:sticky lg:top-20 overflow-hidden chat-modal" id="chat-modal">
               <!-- Shoutbox Header -->
-              <div class="gradient-dark p-4">
+              <div class="gradient-dark p-4 relative">
+                <button class="chat-close-btn lg:hidden" id="chat-close-btn" type="button" aria-label="Close chat">×</button>
                 <div class="flex items-center gap-2 mb-1">
                   <span class="text-2xl">💬</span>
                   <h3 class="font-playfair text-xl text-white font-bold">Community Chat</h3>
@@ -489,8 +644,8 @@
               </div>
 
               <!-- Messages Container -->
-              <div id="shoutbox-messages" class="h-[calc(100vh-450px)] min-h-[400px] max-h-[600px] overflow-y-auto p-5 space-y-4 bg-[#F5F5F5]">
-                <div class="text-center py-12 text-[#0F3B2E]/50">
+              <div id="shoutbox-messages" class="h-[calc(100vh-450px)] min-h-[400px] max-h-[600px] overflow-y-auto p-4 space-y-2 bg-[#F5F5F5]">
+                <div class="text-center py-8 text-[#0F3B2E]/50">
                   <p class="text-sm">Loading messages...</p>
                 </div>
               </div>
@@ -534,6 +689,14 @@
         <!-- End Grid -->
       </div>
     </main>
+
+    <!-- Chat Modal Backdrop (Mobile) -->
+    <div class="chat-modal-backdrop" id="chat-modal-backdrop"></div>
+
+    <!-- Floating Action Button (Mobile) -->
+    <button class="chat-fab lg:hidden" id="chat-fab" type="button" aria-label="Open community chat" title="Community Chat">
+      💬
+    </button>
 
     <!-- Footer -->
     <footer class="bintech-user-footer flex-shrink-0">
@@ -733,6 +896,7 @@
     function setupMobileMenu() {
       initializeUserMobileMenu();
       initializeNavDropdown();
+      initializeChatModal();
     }
 
     // ============================================
@@ -924,6 +1088,61 @@
       setTimeout(() => {
         window.location.replace('/');
       }, 200);
+    }
+
+    // ============================================
+    // MOBILE CHAT MODAL HANDLER
+    // ============================================
+    function initializeChatModal() {
+      const chatFab = document.getElementById('chat-fab');
+      const chatModal = document.getElementById('chat-modal');
+      const chatBackdrop = document.getElementById('chat-modal-backdrop');
+      const chatCloseBtn = document.getElementById('chat-close-btn');
+
+      if (!chatFab || !chatModal || !chatBackdrop) return;
+
+      // Open chat modal
+      const openChat = () => {
+        chatModal.classList.add('open');
+        chatBackdrop.classList.add('open');
+        document.body.style.overflow = 'hidden';
+      };
+
+      // Close chat modal
+      const closeChat = () => {
+        chatModal.classList.remove('open');
+        chatModal.classList.add('closing');
+        chatBackdrop.classList.remove('open');
+        document.body.style.overflow = '';
+        
+        // Remove closing animation class after animation completes
+        setTimeout(() => {
+          chatModal.classList.remove('closing');
+        }, 300);
+      };
+
+      // FAB click to open
+      chatFab.addEventListener('click', openChat);
+
+      // Close button click
+      if (chatCloseBtn) {
+        chatCloseBtn.addEventListener('click', closeChat);
+      }
+
+      // Backdrop click to close
+      chatBackdrop.addEventListener('click', closeChat);
+
+      // Escape key to close
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && chatModal.classList.contains('open')) {
+          closeChat();
+        }
+      });
+
+      // Prevent closing when interacting with chat content
+      chatModal.addEventListener('click', (e) => {
+        e.stopPropagation();
+      });
     }
 
     // ============================================
