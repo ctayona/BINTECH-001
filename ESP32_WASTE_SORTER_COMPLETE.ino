@@ -30,8 +30,8 @@ bool sessionActive = false;
 // ============ END MULTIPLE WiFi SETUP ============
 
 // --- PIN ASSIGNMENTS ---
-const int inductivePin = 25;  
-const int capacitivePin = 26; 
+const int inductivePin = 26;  
+const int capacitivePin = 27; 
 const int servoMetalPin = 23; 
 const int servoPlasticPin = 22;
 const int irPin = 15;
