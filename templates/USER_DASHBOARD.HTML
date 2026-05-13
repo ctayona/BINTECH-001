@@ -793,7 +793,7 @@
 
       try {
         // Use activity-overview endpoint which has all the data we need
-        const response = await fetch(`/api/user/activity-overview?userId=${userId}&email=${encodeURIComponent(currentUser.email)}`);
+        const response = await fetch(`/api/dashboard/activity-overview?userId=${userId}&email=${encodeURIComponent(currentUser.email)}`);
         const data = await response.json();
 
         if (data.success && data.summary) {
@@ -833,7 +833,7 @@
       if (!userId) return;
 
       try {
-        const response = await fetch(`/api/user/points?userId=${userId}&email=${encodeURIComponent(currentUser.email)}`);
+        const response = await fetch(`/api/dashboard/points?userId=${userId}&email=${encodeURIComponent(currentUser.email)}`);
         const data = await response.json();
 
         if (data.success) {
