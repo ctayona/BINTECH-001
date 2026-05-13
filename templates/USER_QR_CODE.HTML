@@ -1498,7 +1498,14 @@
                 if (!data.success) return;
 
                 const points = toNumber(data.user?.points, 0);
-                document.getElementById('nav-points').textContent = `${Math.floor(points)} Points`;
+                const pointsText = `${Math.floor(points)} Points`;
+                
+                // Update both desktop and mobile nav
+                const navPointsEl = document.getElementById('nav-points');
+                const mobilePointsEl = document.getElementById('mobile-nav-points');
+                
+                if (navPointsEl) navPointsEl.textContent = pointsText;
+                if (mobilePointsEl) mobilePointsEl.textContent = pointsText;
             } catch (error) {
                 console.error('Failed to refresh nav points:', error);
             }
@@ -1875,13 +1882,13 @@
                         timerInterval = null;
                     }
                     
-                    // Update nav points
+                    // Update nav points (both desktop and mobile)
                     const newPoints = data.data.newPoints;
-                    document.getElementById('nav-points').textContent = Math.floor(newPoints) + ' Points';
-                    const updatedUser = AuthManager.getUser();
-                    if (updatedUser) {
-                        refreshNavPoints(updatedUser);
-                    }
+                    const pointsText = Math.floor(newPoints) + ' Points';
+                    const navPointsEl = document.getElementById('nav-points');
+                    const mobilePointsEl = document.getElementById('mobile-nav-points');
+                    if (navPointsEl) navPointsEl.textContent = pointsText;
+                    if (mobilePointsEl) mobilePointsEl.textContent = pointsText;
                     
                     // Refresh page shortly so UI and session state are aligned with backend
                     setTimeout(() => {
