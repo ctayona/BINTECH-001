@@ -30,8 +30,8 @@ bool sessionActive = false;
 // ============ END MULTIPLE WiFi SETUP ============
 
 // --- PIN ASSIGNMENTS ---
-const int inductivePin = 26;  
-const int capacitivePin = 27; 
+const int inductivePin = 26;   // Metal detection - CORRECTED PIN
+const int capacitivePin = 27;  // Plastic detection - CORRECTED PIN
 const int servoMetalPin = 23; 
 const int servoPlasticPin = 22;
 const int irPin = 15;
@@ -110,7 +110,12 @@ const unsigned long BIN_FULL_THRESHOLD = 10000;
 // --- DETECTION RANGES (in cm) ---
 const int VERIFICATION_RANGE = 30;
 const int OCCUPANCY_DETECTION_RANGE = 40;
-
+// ============ SENSOR LOGIC INVERSION (TEST IF METAL NOT DETECTED) ============
+// If metal objects are not detected (plastic servo activates instead), set these to true to invert logic
+const bool INVERT_INDUCTIVE = false;  // SET TO true IF METAL DETECTION FAILS
+const bool INVERT_CAPACITIVE = false; // SET TO true IF PLASTIC DETECTION FAILS  
+const bool INVERT_IR = false;         // SET TO true IF PAPER DETECTION FAILS
+// ============================================================================
 // --- WiFi timing ---
 unsigned long lastWiFiCheck = 0;
 const unsigned long WiFi_CHECK_INTERVAL = 5000; // Check WiFi every 5 seconds
@@ -257,14 +262,21 @@ void loop() {
 
     case WAITING_FOR_DETECTION:
       // Collect sensor data during identification window
-      if (inductiveVal == LOW) {
-        metalDetected = true;
-      }
-      if (capacitiveVal == LOW) {
-        plasticDetected = true;
-      }
-      if (irVal == LOW) {
-        paperDetected = true;
+      // Apply inversion logic if configured (set to true to invert sensor logic)
+      {
+        bool inductive_triggered = INVERT_INDUCTIVE ? (inductiveVal == HIGH) : (inductiveVal == LOW);
+        bool capacitive_triggered = INVERT_CAPACITIVE ? (capacitiveVal == HIGH) : (capacitiveVal == LOW);
+        bool ir_triggered = INVERT_IR ? (irVal == HIGH) : (irVal == LOW);
+        
+        if (inductive_triggered) {
+          metalDetected = true;
+        }
+        if (capacitive_triggered) {
+          plasticDetected = true;
+        }
+        if (ir_triggered) {
+          paperDetected = true;
+        }
       }
 
       // Check if identification window has closed
@@ -347,7 +359,12 @@ void loop() {
 
 void classifyAndSort() {
   Serial.println("[CLASSIFICATION RESULTS]");
-  Serial.printf("Inductive: %d | Capacitive: %d | IR: %d\n", metalDetected, plasticDetected, paperDetected);
+  Serial.printf("Detection Counts -> Metal: %d | Plastic: %d | Paper: %d\n", 
+                metalDetectionCount, plasticDetectionCount, paperDetectionCount);
+  Serial.printf("Confirmed Detection -> Metal: %d | Plastic: %d | Paper: %d\n", 
+                metalDetected, plasticDetected, paperDetected);
+  Serial.printf("[DEBUG] GPIO26(Inductive)=%d | GPIO27(Capacitive)=%d | GPIO15(IR)=%d\n", 
+                digitalRead(26), digitalRead(27), digitalRead(15));
 
   if (metalDetected) {
     Serial.println("=> METAL DETECTED! Activating metal servo...");
@@ -541,15 +558,15 @@ void printStats() {
   Serial.println("\n========================================");
   Serial.println("         CURRENT SESSION STATS");
   Serial.println("========================================");
-  Serial.printf("Metal Items:   %d | Points: %.1f", metalCount, metalCount * 3.0);
-  if (metalBinFull) Serial.print(" | ⚠️  BIN FULL");
+  Serial.printf("Metal Items:   %d | Points: %.1f", metalCount, metalCount * 3.0);  // UPDATED FROM 2.0
+  if (metalBinFull) Serial.print(" | BIN FULL");
   Serial.println();
   
-  Serial.printf("Plastic Items: %d | Points: %.1f", plasticCount, plasticCount * 2.0);
-  if (plasticBinFull) Serial.print(" | ⚠️  BIN FULL");
+  Serial.printf("Plastic Items: %d | Points: %.1f", plasticCount, plasticCount * 2.0);  // UPDATED FROM 1.0
+  if (plasticBinFull) Serial.print(" | BIN FULL");
   Serial.println();
   
-  Serial.printf("Paper Items:   %d | Points: %.1f", paperCount, paperCount * 1.0);
+  Serial.printf("Paper Items:   %d | Points: %.1f", paperCount, paperCount * 1.0);  // UPDATED FROM 0.5
   if (paperBinFull) Serial.print(" | ⚠️  BIN FULL");
   Serial.println();
   
