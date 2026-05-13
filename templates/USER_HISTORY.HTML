@@ -954,6 +954,13 @@
     reason: item.reason || ''
     }));
 
+    // Update nav and stats with current account points from activity summary
+    const currentPoints = Number(data.summary?.totalPoints || 0);
+    const navPointsEl = document.getElementById('nav-points');
+    const mobilePointsEl = document.getElementById('mobile-nav-points');
+    if (navPointsEl) navPointsEl.textContent = `${currentPoints} Points`;
+    if (mobilePointsEl) mobilePointsEl.textContent = `${currentPoints} Points`;
+
     updateActivityStats();
     renderAllTabs();
    } catch (error) {
