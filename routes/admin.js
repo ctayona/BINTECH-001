@@ -24,6 +24,11 @@ router.get('/', adminController.getDashboard);
 router.get('/summary', adminController.getDashboardSummary);
 router.get('/sorting-overview', adminController.getSortingOverview);
 
+// One-click system backup download
+router.get('/backup', adminController.downloadSystemBackup);
+router.get('/backup/restore', adminController.redirectToSupabaseDashboard);
+router.post('/backup/restore-preview', adminController.previewSystemBackupRestore);
+
 // Analytics API (for analytics page with date range filtering)
 router.get('/analytics', adminController.getAnalytics);
 router.get('/analytics/sessions', adminController.getAnalyticsSessions);

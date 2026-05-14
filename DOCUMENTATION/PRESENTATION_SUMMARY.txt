@@ -1,85 +1,124 @@
-**Project Overview**:
-- **Name**: BinTECH — Intelligent Waste Segregation & Incentive Platform
-- **Purpose**: Real-time hardware sorting (ESP32) + web backend (Node/Express + Supabase) + incentive system for users.
+BinTECH Presentation Summary
 
-**ERD (Entity Relationship Diagram) — key entities**:
-- **machine_sessions**: session id, user_id, machine_id, started_at, ended_at, metal_count, plastic_count, paper_count, total_points, status
-- **user_accounts**: system_id, email, displayName, profile data
-- **account_points**: system_id, points, total_points
-- **bins**: id, machine_id, code, location, waste_type, filled_percentage, status
-- **machine_sorting_telemetry**: machine_id, metal_fill_percentage, plastic_fill_percentage, paper_fill_percentage, counts, totals
+Project Overview
+BinTECH is an intelligent waste segregation and incentive platform that combines an ESP32-based sorting machine, a Node.js and Express backend, a Supabase database, and a web admin and user portal. The system detects waste materials, sorts them through a motorized mechanism, tracks user points, and supports rewards, reporting, and admin control.
 
-Show relationships: user_accounts 1--* machine_sessions ; machine_sessions *--1 machine_sorting_telemetry (summary) ; bins linked by machine_id + waste_type.
+Main Features
+1. Waste sorting automation with ESP32 hardware.
+2. Material detection for paper, plastic, and metal.
+3. LCD display for user feedback and welcome messages.
+4. Real-time session synchronization between the device and the backend.
+5. User point tracking and rewards redemption.
+6. Admin dashboards for monitoring, management, and analytics.
+7. Backup export for database snapshots stored in Supabase.
+8. Safe restore preview that validates backup data without overwriting anything.
+9. Archive history for admin account restoration tracking.
+10. Mobile and desktop navigation with live point display.
 
-**DFD (Data Flow)**:
-- **ESP32 hardware**: sensors -> local classification -> POST /api/waste-sorter/api/session/update -> backend
-- **Backend**: validates session -> updates machine_sessions + telemetry -> responds with resetMachine flag
-- **Frontend**: serves templates + authenticates users -> allows starting/ending sessions and transfers points
+Main Functions and Modules
+Backend controllers
+- controllers/wasteSorterController.js handles machine sessions, device session lookup, point transfer, and session completion.
+- controllers/dashboardController.js provides user stats, activity overview, transaction history, and points display.
+- controllers/rewardsController.js manages rewards listing, creation, update, deletion, and redemption.
+- controllers/authController.js handles registration, login, logout, Google login, and profile updates.
+- controllers/adminController.js manages admin dashboard data, backup export, restore preview, settings, bin management, collections, schedules, accounts, logs, and analytics.
 
-**Cloud Deployment**:
-- **Host**: Render (Node.js app) serving Express API and static templates
-- **DB & Storage**: Supabase (Postgres + Storage buckets for images)
-- **Email**: SendGrid for notification
-- **Auth**: Google OAuth for user sign-in
-- **Config**: Environment variables required: SUPABASE_URL, SUPABASE_ANON_KEY (or SERVICE_ROLE_KEY server-side), SENDGRID_API_KEY, GOOGLE_CLIENT_ID, PORT
+Frontend templates
+- templates/USER_DASHBOARD.HTML shows user stats, activity, and navigation.
+- templates/USER_QR_CODE.HTML handles QR transfer flow and nav point updates.
+- templates/USER_HISTORY.HTML shows waste history and account points.
+- templates/ADMIN_DASHBOARD.html shows admin summary, backup export, and management tools.
 
-**System Deployment (architecture)**:
-- ESP32 devices on local network -> WiFi -> call backend endpoints (device-specific machineId)
-- Backend runs on Render, exposes public API endpoints secured by session tokens / backend checks
-- Supabase manages persistent state, telemetry and storage
-- Static UI delivered via Express templates + client JS in `public/js`
+ESP32 firmware
+- ESP32_WASTE_SORTER_COMPLETE.ino and ESP32-CODE.txt control detection sensors, sorting logic, servo movement, LCD messages, bin checks, and backend synchronization.
 
-**Security & Operational Notes**:
-- Keep `SUPABASE_SERVICE_ROLE_KEY` server-only; never expose to client templates or frontend JS
-- Validate and sanitize all inputs from hardware and clients (controllers already use defensive checks)
-- Limit file upload size/types (multer configured to 5MB + filter)
-- Use HTTPS for all device -> backend traffic; ensure ESP32 `BACKEND_URL` uses HTTPS
-- Rotate tokens and service keys regularly; audit access to Supabase buckets
+Backup and Restore Instructions
+Backup export
+- The backup download exports a JSON snapshot of the system data.
+- The backup is centered on Supabase tables, so the saved data reflects the database state.
+- The export includes key tables, metadata, generation time, and warnings.
+- This is a manual backup meant for review, archiving, and disaster recovery planning.
 
-**Core Features to Highlight in Presentation**:
-- Real-time sorting & verification using inductive/capacitive/IR + ultrasonic sensors
-- On-device classification + backend session synchronization
-- Points/incentive system with account linking and transfer
-- Bin occupancy telemetry and auto bin-full warnings
-- Admin dashboard and analytics (telemetry aggregation)
+Restore preview
+- Restore should be done in manual preview mode first.
+- The restore preview reads the JSON backup and checks that the structure is valid.
+- It lists which tables exist, how many rows each table contains, and any missing table warnings.
+- The preview does not insert, update, or delete anything.
+- This keeps the process safe because nothing in Supabase is overwritten automatically.
+- A full restore should only happen after the preview is reviewed and explicitly approved.
 
-**Demo Plan (recommended)**:
-1. Start a session via frontend (show UI + QR if used)
-2. Show ESP32 live logs (serial) performing detection -> classification
-3. Show motor runs for exact 5s and ultrasonic verification triggers points award
-4. Show backend `machine_sessions` and `machine_sorting_telemetry` update in Supabase (or via `GET /api/waste-sorter/api/device/:deviceId/session`)
-5. Transfer points to user account and show updated `account_points` record
+Why Supabase matters
+- Supabase is the system of record for application data.
+- Storing and restoring from Supabase keeps the backup aligned with the live database.
+- That makes the backup usable, consistent, and easy to explain during presentation.
 
-**Key Files & Paths (for quick reference)**:
-- `ESP32-CODE.txt` (firmware): ESP32 sensor & motor logic
-- `app.js`: Express app entry and template injection
-- `routes/waste-sorter.js` and `controllers/wasteSorterController.js`: hardware API
-- `config/supabase.js`: Supabase client config
-- `templates/` and `public/`: frontend UI and assets
+System Security Features
+1. Supabase-backed authentication and session checks for logged-in users.
+2. Role-based access control for admin routes.
+3. Head-role restriction for archive restore actions.
+4. Server-side handling of sensitive keys and environment variables.
+5. Defensive validation of incoming requests and backup payloads.
+6. File upload size and type controls in the server layer.
+7. Session-based device synchronization instead of trusting the device alone.
+8. Admin archive history that records restore events for auditing.
 
-**Run & Test Commands (local)**:
-```
-npm install
-npm run dev        # start server locally
-# Use curl/postman to POST to hardware endpoints for test payloads
-```
+Hardware Security Features
+1. Session lock so one material can win a detection cycle.
+2. Detection confirmation window to reduce false sensor triggers.
+3. Backend synchronization so the ESP32 uses the server as the source of truth.
+4. Fail-closed behavior when no valid session or material is active.
+5. LCD feedback that shows the active user and current state.
+6. Bin occupancy and verification logic to help prevent unsafe sorting actions.
+7. Sensor-based classification that reduces accidental or inconsistent sorting.
 
-**Risks & Mitigations**:
-- Network reliability: ensure ESP32 has robust reconnect logic and retries for HTTP calls
-- False positives in detection: tune `DETECTION_SAMPLE_INTERVAL` and confirmation thresholds; show sample logs during demo
-- Data consistency: backend upserts telemetry and marks sessions completed atomically; test concurrent updates
+Important Behaviors to Discuss
+1. The system uses backend data as the source of truth for sessions and points.
+2. The ESP32 sends machine state to the server so the dashboard can stay synchronized.
+3. The sorting logic uses a detection window to confirm material before sorting.
+4. The backup feature exports a JSON snapshot of key tables and metadata from Supabase.
+5. The restore preview is manual and safe because it only validates the backup and never overwrites live data.
+6. Mobile navigation points were fixed so the displayed points match the account state.
+7. The dashboard active state was corrected so the wrong tab is not highlighted on mobile.
 
-**Slide Suggestions** (order):
-1. Problem statement & goals
-2. System architecture (diagram)
-3. ERD and DFD (two slides)
-4. Hardware design & sensor list (ESP32 block diagram)
-5. Live demo steps + fallback screenshots
-6. Security & deployment notes
-7. Future work & limitations
+Presentation Talking Points
+- Explain the problem BinTECH solves: waste segregation, rewards, and tracking.
+- Show how the ESP32 machine and web backend work together.
+- Mention how session synchronization keeps device and user data aligned.
+- Highlight the role of points and rewards in motivating users.
+- Explain why a dry-run restore is safer than direct overwrite.
+- Show that the backup export is tied to Supabase so the data stays consistent with the live system.
+- Explain that security is built into both the system and the hardware layer.
 
-**Contact / Repo**:
-- Repo root: show `package.json`, `app.js`, `ESP32-CODE.txt` live in repository
+Likely Questions and Suggested Answers
+1. What does the backup download contain?
+Answer: It exports a JSON snapshot of the main Supabase tables plus metadata like generation time, app info, and warnings. It is designed so the data can be reviewed or restored later.
 
----
-Prepared for the presentation: use this file as the single-slide-content checklist and talking points.
+2. How is the restore safe?
+Answer: The restore preview does not write anything to the database. It validates the backup structure and shows what would be reviewed, so nothing is overwritten by mistake.
+
+3. Why not restore directly?
+Answer: Direct restore can overwrite current live data. A preview step is safer because it lets the admin confirm the contents first.
+
+4. Why should backup data be in Supabase?
+Answer: Because Supabase is the system of record for the project. Keeping the backup aligned with Supabase makes the data consistent, traceable, and easier to recover.
+
+5. How are points updated?
+Answer: Points are updated through backend sessions and transferred into the account points system after a successful waste sort.
+
+6. How does the ESP32 know what material was detected?
+Answer: The detection logic combines sensor triggers inside a confirmation window and then locks onto one material so the classification is stable.
+
+7. What are the system security features?
+Answer: Authentication, role-based access control, head-only restore approval, server-side secrets, validation, and audit history.
+
+8. What are the hardware security features?
+Answer: Detection locking, confirmation timing, backend session sync, fail-closed behavior, and verification logic that helps prevent false sorting actions.
+
+9. What makes the system practical for real use?
+Answer: It combines hardware automation, live synchronization, admin controls, and user incentives in one workflow.
+
+10. What future improvements can be discussed?
+Answer: A full restore import wizard, better sensor calibration tools, more detailed analytics, and automated backup verification.
+
+Short Closing Statement
+BinTECH is a complete waste segregation platform that connects hardware, database services, and admin tools to track waste sorting, reward users, and support safe Supabase-based backup workflows.

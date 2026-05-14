@@ -115,6 +115,127 @@ async function normalizeAssignedTo(value) {
   }
 }
 
+async function fetchBackupTable(tableName) {
+  try {
+    const { data, error } = await supabase
+      .from(tableName)
+      .select('*');
+
+    return {
+      tableName,
+      rowCount: Array.isArray(data) ? data.length : 0,
+      rows: Array.isArray(data) ? data : [],
+      error: error ? error.message : null
+    };
+  } catch (error) {
+    return {
+      tableName,
+      rowCount: 0,
+      rows: [],
+      error: error.message
+    };
+  }
+}
+
+function normalizeBackupPayload(input) {
+  if (!input) {
+    return null;
+  }
+
+  if (typeof input === 'string') {
+    try {
+      return JSON.parse(input);
+    } catch (error) {
+      return null;
+    }
+  }
+
+  if (typeof input === 'object') {
+    return input;
+  }
+
+  return null;
+}
+
+function getSupabaseDashboardUrl() {
+  const supabaseUrl = String(process.env.SUPABASE_URL || '').trim();
+
+  if (!supabaseUrl) {
+    return null;
+  }
+
+  try {
+    const parsedUrl = new URL(supabaseUrl);
+    const projectRef = parsedUrl.hostname.split('.')[0];
+
+    if (!projectRef) {
+      return null;
+    }
+
+    return `https://supabase.com/dashboard/project/${projectRef}`;
+  } catch (error) {
+    return null;
+  }
+}
+
+function buildBackupRestorePreview(backupPayload) {
+  const expectedTables = [
+    'admin_accounts',
+    'user_accounts',
+    'account_points',
+    'machine_sessions',
+    'machine_sorting_telemetry',
+    'hardware_session_logs',
+    'bins',
+    'rewards',
+    'collections',
+    'collection_logs',
+    'routes',
+    'schedules',
+    'admin_accounts_archive_history'
+  ];
+
+  const tables = backupPayload.tables && typeof backupPayload.tables === 'object' ? backupPayload.tables : {};
+
+  const tableReview = expectedTables.map((tableName) => {
+    const tablePayload = tables[tableName] || {};
+    const rowCount = Number.isFinite(Number(tablePayload.rowCount))
+      ? Number(tablePayload.rowCount)
+      : (Array.isArray(tablePayload.rows) ? tablePayload.rows.length : 0);
+
+    return {
+      tableName,
+      rowCount,
+      action: rowCount > 0 ? 'review-only' : 'no-rows-to-restore'
+    };
+  });
+
+  const missingTables = expectedTables.filter((tableName) => !Object.prototype.hasOwnProperty.call(tables, tableName));
+  const warnings = Array.isArray(backupPayload.warnings) ? [...backupPayload.warnings] : [];
+
+  if (missingTables.length > 0) {
+    warnings.push(`Missing tables in backup payload: ${missingTables.join(', ')}`);
+  }
+
+  return {
+    safeMode: true,
+    manualOnly: true,
+    willOverwriteExistingData: false,
+    restoreType: 'preview',
+    canRestore: false,
+    backupVersion: backupPayload.backupVersion || null,
+    generatedAt: backupPayload.generatedAt || null,
+    generatedBy: backupPayload.generatedBy || null,
+    reviewedTables: tableReview,
+    warnings,
+    notes: [
+      'This endpoint performs a dry-run only.',
+      'No Supabase rows are inserted, updated, or deleted.',
+      'Use this to show what a restore would touch before any manual action.'
+    ]
+  };
+}
+
 // ============================================
 // Admin Dashboard
 // ============================================
@@ -128,6 +249,133 @@ exports.getDashboard = async (req, res) => {
     console.error('Admin dashboard error:', error);
     res.status(500).render('error', {
       message: 'Error loading admin dashboard'
+    });
+  }
+};
+
+exports.downloadSystemBackup = async (req, res) => {
+  try {
+    const requesterEmail = String(req?.user?.email || req.headers['x-user-email'] || '').trim().toLowerCase() || null;
+    const backupTables = [
+      'admin_accounts',
+      'user_accounts',
+      'account_points',
+      'machine_sessions',
+      'machine_sorting_telemetry',
+      'hardware_session_logs',
+      'bins',
+      'rewards',
+      'collections',
+      'collection_logs',
+      'routes',
+      'schedules',
+      'admin_accounts_archive_history'
+    ];
+
+    const tableResults = await Promise.all(backupTables.map(fetchBackupTable));
+    const warnings = tableResults
+      .filter((table) => table.error)
+      .map((table) => `${table.tableName}: ${table.error}`);
+
+    const backupPayload = {
+      backupVersion: '1.0',
+      generatedAt: new Date().toISOString(),
+      generatedDate: timestampUtils.getCurrentDate(),
+      generatedTime: timestampUtils.getCurrentTime(),
+      generatedBy: requesterEmail,
+      system: {
+        appName: 'BinTECH',
+        nodeVersion: process.version,
+        platform: process.platform,
+        nodeEnv: process.env.NODE_ENV || 'development',
+        uptimeSeconds: Math.round(process.uptime())
+      },
+      config: {
+        appBaseUrl: `${req.protocol}://${req.get('host')}`,
+        adminRoute: '/admin'
+      },
+      tables: tableResults.reduce((accumulator, table) => {
+        accumulator[table.tableName] = {
+          rowCount: table.rowCount,
+          rows: table.rows
+        };
+        return accumulator;
+      }, {}),
+      warnings
+    };
+
+    const fileStamp = `${timestampUtils.getCurrentDate()}_${timestampUtils.getCurrentTime().replace(/:/g, '-')}`;
+    const fileName = `bintech-backup-${fileStamp}.json`;
+
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+    res.setHeader('Cache-Control', 'no-store');
+
+    return res.status(200).send(JSON.stringify(backupPayload, null, 2));
+  } catch (error) {
+    console.error('Download system backup error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to generate backup',
+      error: error.message
+    });
+  }
+};
+
+exports.redirectToSupabaseDashboard = async (req, res) => {
+  try {
+    const dashboardUrl = getSupabaseDashboardUrl();
+
+    if (!dashboardUrl) {
+      return res.status(500).json({
+        success: false,
+        message: 'Supabase dashboard URL is not configured'
+      });
+    }
+
+    return res.redirect(302, dashboardUrl);
+  } catch (error) {
+    console.error('Supabase dashboard redirect error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to open Supabase dashboard',
+      error: error.message
+    });
+  }
+};
+
+exports.previewSystemBackupRestore = async (req, res) => {
+  try {
+    const rawPayload = req.body?.backupPayload ?? req.body?.backup ?? req.body?.data ?? req.body;
+    const backupPayload = normalizeBackupPayload(rawPayload);
+
+    if (!backupPayload || typeof backupPayload !== 'object') {
+      return res.status(400).json({
+        success: false,
+        message: 'A valid backup JSON payload is required for preview'
+      });
+    }
+
+    if (!backupPayload.tables || typeof backupPayload.tables !== 'object') {
+      return res.status(400).json({
+        success: false,
+        message: 'Backup payload is missing the tables section'
+      });
+    }
+
+    const preview = buildBackupRestorePreview(backupPayload);
+
+    return res.status(200).json({
+      success: true,
+      message: 'Restore preview generated. No data was changed.',
+      preview
+    });
+  } catch (error) {
+    console.error('Preview system backup restore error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to generate restore preview',
+      error: error.message
     });
   }
 };
