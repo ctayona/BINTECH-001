@@ -1119,36 +1119,11 @@ exports.getDeviceSession = async (req, res) => {
       });
     }
 
-    let userDisplayName = '';
-    let userEmail = session.user_email || '';
-    if (session.user_id) {
-      const { data: accountProfile, error: accountProfileError } = await supabase
-        .from('user_accounts')
-        .select('full_name, first_name, last_name, email')
-        .eq('system_id', session.user_id)
-        .maybeSingle();
-
-      if (accountProfileError) {
-        console.warn('[ESP32 SYNC SESSION] Failed to fetch user profile:', accountProfileError.message);
-      } else if (accountProfile) {
-        const firstName = String(accountProfile.first_name || '').trim();
-        const lastName = String(accountProfile.last_name || '').trim();
-        userDisplayName = String(accountProfile.full_name || '').trim() || `${firstName} ${lastName}`.trim();
-        userEmail = accountProfile.email || userEmail;
-      }
-    }
-
-    if (!userDisplayName && userEmail) {
-      userDisplayName = String(userEmail).split('@')[0];
-    }
-
     const responsePayload = {
       success: true,
       session: {
         sessionId: session.id,
         userId: session.user_id,
-        userDisplayName,
-        userEmail,
         isActive: session.status === 'active',
         pointsEarned: session.total_points,
         metalCount: session.metal_count,

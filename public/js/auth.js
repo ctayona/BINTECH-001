@@ -85,6 +85,121 @@ function ensureMobileTopUsername() {
   }
 }
 
+// -----------------------------
+// Signup OTP Modal Utilities
+// -----------------------------
+function ensureSignupOtpModalExists() {
+  if (document.getElementById('signup-otp-modal')) return;
+
+  const modalHtml = `
+  <div id="signup-otp-modal" class="success-modal">
+    <div class="success-modal-content">
+      <div class="success-icon">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.28 3.939a1 1 0 00.95.69h4.136c.969 0 1.371 1.24.588 1.81l-3.344 2.43a1 1 0 00-.364 1.118l1.28 3.939c.3.921-.755 1.688-1.54 1.118l-3.344-2.43a1 1 0 00-1.175 0l-3.344 2.43c-.784.57-1.838-.197-1.539-1.118l1.28-3.939a1 1 0 00-.364-1.118L2.644 9.366c-.783-.57-.38-1.81.588-1.81h4.136a1 1 0 00.95-.69l1.281-3.939z"/></svg>
+      </div>
+      <h2>Verify Your Email</h2>
+      <p>Enter the 6-digit OTP sent to <strong id="signup-otp-email-display" class="email-highlight"></strong>.</p>
+      <div class="instructions">
+        <ol>
+          <li>Check your email inbox and spam folder</li>
+          <li>Enter the OTP below to finish creating your account</li>
+          <li>The code expires in <strong id="signup-otp-expiry">10 minutes</strong></li>
+        </ol>
+      </div>
+      <div id="signup-otp-error" class="error-message" style="display:none; margin-bottom: 12px;"></div>
+      <form id="signup-otp-form" class="space-y-4">
+        <input id="signup-otp-input" type="text" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="Enter OTP" class="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/50 text-center tracking-[0.4em] text-lg focus:outline-none focus:ring-2 focus:ring-eco-yellow/40">
+        <div class="success-modal-buttons">
+          <button type="button" id="signup-otp-verify-button" class="btn-primary-success">Verify and Create Account</button>
+          <button type="button" class="btn-secondary-success" id="signup-otp-cancel">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>`;
+
+  const wrapper = document.createElement('div');
+  wrapper.innerHTML = modalHtml;
+  document.body.appendChild(wrapper.firstElementChild);
+
+  // Wire up handlers
+  const verifyBtn = document.getElementById('signup-otp-verify-button');
+  const cancelBtn = document.getElementById('signup-otp-cancel');
+  const otpForm = document.getElementById('signup-otp-form');
+
+  if (verifyBtn) verifyBtn.addEventListener('click', (e) => verifySignupOtp(e));
+  if (cancelBtn) cancelBtn.addEventListener('click', closeSignupOtpModal);
+  if (otpForm) otpForm.addEventListener('submit', (e) => verifySignupOtp(e));
+}
+
+function showSignupOtpModal(expiresInMinutes, email) {
+  ensureSignupOtpModalExists();
+  const modal = document.getElementById('signup-otp-modal');
+  const emailDisplay = document.getElementById('signup-otp-email-display');
+  const expiry = document.getElementById('signup-otp-expiry');
+  const otpError = document.getElementById('signup-otp-error');
+  const otpInput = document.getElementById('signup-otp-input');
+
+  if (emailDisplay) emailDisplay.textContent = email || '';
+  if (expiry) expiry.textContent = `${expiresInMinutes || 10} minutes`;
+  if (otpError) { otpError.textContent = ''; otpError.style.display = 'none'; }
+  if (otpInput) otpInput.value = '';
+
+  if (modal) modal.classList.add('active');
+}
+
+function closeSignupOtpModal() {
+  const modal = document.getElementById('signup-otp-modal');
+  const otpError = document.getElementById('signup-otp-error');
+  if (modal) modal.classList.remove('active');
+  if (otpError) { otpError.textContent = ''; otpError.style.display = 'none'; }
+}
+
+async function verifySignupOtp(event) {
+  event.preventDefault();
+
+  const otpInput = document.getElementById('signup-otp-input');
+  const verifyButton = document.getElementById('signup-otp-verify-button');
+  const otpError = document.getElementById('signup-otp-error');
+
+  if (!window.pendingSignupVerification) {
+    if (otpError) { otpError.textContent = 'Session expired. Please request a new OTP.'; otpError.style.display = 'block'; }
+    return;
+  }
+
+  const otp = otpInput ? otpInput.value.trim() : '';
+  if (!otp) {
+    if (otpError) { otpError.textContent = 'Please enter the 6-digit OTP.'; otpError.style.display = 'block'; }
+    return;
+  }
+
+  const originalText = verifyButton ? verifyButton.textContent : 'Verifying...';
+  if (verifyButton) { verifyButton.textContent = 'Verifying...'; verifyButton.disabled = true; }
+
+  try {
+    const res = await fetch('/auth/register/verify-otp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: window.pendingSignupVerification.email, otp, signupToken: window.pendingSignupVerification.signupToken })
+    });
+
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      throw new Error(data.message || 'OTP verification failed');
+    }
+
+    // success: create user session and redirect
+    AuthManager.setUser(data.user);
+    showSuccess('Account created successfully! Redirecting...');
+    closeSignupOtpModal();
+    window.pendingSignupVerification = null;
+    setTimeout(() => { window.location.href = '/dashboard'; }, 900);
+  } catch (err) {
+    if (otpError) { otpError.textContent = err.message || 'OTP verification failed'; otpError.style.display = 'block'; }
+  } finally {
+    if (verifyButton) { verifyButton.textContent = originalText; verifyButton.disabled = false; }
+  }
+}
+
 // Populate admin sidebar/profile widgets across admin pages
 function populateAdminProfile() {
   try {
@@ -753,64 +868,21 @@ async function handleSignup(event) {
 
   try {
     const form = event.target;
-    
-    // Debug: Log form information
-    console.log('[Signup] Form submission detected');
-    console.log('[Signup] Form element:', form);
-    console.log('[Signup] Form ID:', form.id);
-    console.log('[Signup] Form class:', form.className);
-    
-    // Get form values - use more reliable selectors
+
+    // Get form values
     const firstNameInput = form.querySelector('input[placeholder="First name"]');
     const middleNameInput = form.querySelector('input[placeholder="Middle name (optional)"]');
     const lastNameInput = form.querySelector('input[placeholder="Last name"]');
     const emailInput = form.querySelector('.signup-email');
     const roleSelect = form.querySelector('.signup-role');
-    
-    // Get password inputs - handle both type="password" and type="text" (when visibility toggled)
     const passwordInputs = form.querySelectorAll('input[id="signup-password"], input[id="signup-confirm-password"]');
-    
     const termsCheckbox = form.querySelector('input[type="checkbox"]');
-    
-    // Debug: Log field detection
-    console.log('[Signup] Field detection:', {
-      firstNameInput: !!firstNameInput,
-      lastNameInput: !!lastNameInput,
-      emailInput: !!emailInput,
-      roleSelect: !!roleSelect,
-      passwordInputs: passwordInputs.length,
-      termsCheckbox: !!termsCheckbox
-    });
-    
-    // Validate all fields exist
+
     if (!firstNameInput || !lastNameInput || !emailInput || !roleSelect || passwordInputs.length < 2 || !termsCheckbox) {
-      console.error('[Signup] Form fields not found:', {
-        firstNameInput: !!firstNameInput,
-        lastNameInput: !!lastNameInput,
-        emailInput: !!emailInput,
-        roleSelect: !!roleSelect,
-        passwordInputs: passwordInputs.length,
-        termsCheckbox: !!termsCheckbox
-      });
-      
-      // Try alternative selectors as fallback
-      console.log('[Signup] Attempting fallback field detection...');
-      const allInputs = form.querySelectorAll('input');
-      console.log('[Signup] Total inputs found:', allInputs.length);
-      allInputs.forEach((input, index) => {
-        console.log(`[Signup] Input ${index}:`, {
-          type: input.type,
-          placeholder: input.placeholder,
-          class: input.className,
-          id: input.id
-        });
-      });
-      
       showError('Form Error: Please refresh the page and try again.');
       return;
     }
-    
-    // Get form values
+
     const firstName = firstNameInput.value.trim();
     const middleName = middleNameInput ? middleNameInput.value.trim() : '';
     const lastName = lastNameInput.value.trim();
@@ -819,9 +891,8 @@ async function handleSignup(event) {
     const password = passwordInputs[0].value;
     const confirmPassword = passwordInputs[1].value;
 
-    // Validate required fields
-    if (!firstName || !lastName || !email || !role || !password || !confirmPassword) {
-      showError('Please fill in all required fields');
+    if (!firstName || !lastName || !email || !role) {
+      showError('Please fill in all required fields.');
       return;
     }
 
@@ -835,113 +906,57 @@ async function handleSignup(event) {
       return;
     }
 
-    // Validate password strength (8+ chars, uppercase, number, special char)
+    // password strength
     const passwordValidation = {
       length: password.length >= 8,
       uppercase: /[A-Z]/.test(password),
       number: /[0-9]/.test(password),
-      special: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)
+      special: /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>\/?]/.test(password)
     };
-    
+
     if (!Object.values(passwordValidation).every(v => v)) {
-      showError('Password must contain:\n• At least 8 characters\n• One uppercase letter (A-Z)\n• One number (0-9)\n• One special character (!@#$%^&*)');
+      showError('Password must contain: at least 8 characters, one uppercase, one number, and one special character');
       return;
     }
 
-    // Show loading state
-    const button = form.querySelector('button[type="submit"]');
-    const originalText = button.textContent;
-    button.textContent = 'Creating Account...';
-    button.disabled = true;
-
-    showInfo('Creating your account...');
-
-    // Log the request for debugging
-    console.log('Signup Request:', {
-      email,
-      firstName,
-      middleName,
-      lastName,
-      role,
-      'role-value-type': typeof role,
-      'role-is-empty': role === '',
-      'role-is-null': role === null
-    });
-
-    // Check if Google profile picture was stored (from Google sign-up)
-    const googleProfilePictureInput = form.querySelector('input[name="googleProfilePicture"]');
-    const googleProfilePicture = googleProfilePictureInput ? googleProfilePictureInput.value : null;
-
     const signupBody = {
-      email,
-      password,
       firstName,
-      middleName,
+      middleName: middleName || null,
       lastName,
-      role
+      email,
+      role,
+      password
     };
 
-    // Add Google profile picture if present
-    if (googleProfilePicture) {
-      signupBody.profile_picture = googleProfilePicture;
-      console.log('✓ Google profile picture included in signup request');
-    }
+    // two-step: request OTP
+    const button = form.querySelector('button[type="submit"]');
+    const originalText = button ? button.textContent : 'Submit';
+    if (button) { button.textContent = 'Sending OTP...'; button.disabled = true; }
 
-    console.log('✓ Basic signup body created:', {
-      email, firstName, lastName, role,
-      'role-check': `role="${role}" (type: ${typeof role})`,
-      'has-google-picture': !!googleProfilePicture
-    });
+    showInfo('Requesting signup verification code...');
 
-    console.log('ℹ Manual signup');
-    console.log('  Final signup body:', signupBody);
-
-    // Send to backend
-    const res = await fetch('/auth/register', {
+    const otpResp = await fetch('/auth/register/request-otp', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(signupBody)
     });
 
-    console.log('Response Status:', res.status, res.statusText);
-
-    const data = await res.json();
-    console.log('Response Data:', data);
-
-    if (data.success) {
-      // Show success
-      button.textContent = '✓ Account Created!';
-      button.classList.add('bg-green-500');
-
-      // Store user data
-      AuthManager.setUser(data.user);
-      console.log('User stored in session:', data.user);
-
-      showSuccess('Account created successfully! ✓ Welcome to BinTECH!');
-
-      // Redirect to dashboard after 1 second
-      setTimeout(() => {
-        window.location.href = '/dashboard';
-      }, 1000);
-    } else {
-      // Backend returned an error response
-      const errorMessage = data.message || data.error || 'Signup failed';
-      console.error('Backend error response:', data);
-      console.error('Full response:', JSON.stringify(data, null, 2));
-      throw new Error(errorMessage);
+    const otpData = await otpResp.json();
+    if (!otpResp.ok || !otpData.success) {
+      throw new Error(otpData.message || 'Failed to request signup OTP');
     }
+
+    ensureSignupOtpModalExists();
+    window.pendingSignupVerification = { email, signupToken: otpData.signupToken, signupBody };
+    showSignupOtpModal(otpData.expiresInMinutes || 10, email);
+
+    if (button) { button.textContent = originalText; button.disabled = false; }
   } catch (error) {
     console.error('Signup error:', error);
-    console.error('Error stack:', error.stack);
     showError('Signup failed: ' + (error.message || 'Unknown error'));
-    
     const button = event.target.querySelector('button[type="submit"]');
-    const originalText = button.getAttribute('data-original-text') || 'Create Account';
-    button.textContent = originalText;
-    button.classList.remove('bg-red-500');
-    button.disabled = false;
+    const originalText = button ? (button.getAttribute('data-original-text') || 'Create Account') : 'Create Account';
+    if (button) { button.textContent = originalText; button.classList.remove('bg-red-500'); button.disabled = false; }
   }
 }
 

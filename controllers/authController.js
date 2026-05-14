@@ -5,6 +5,7 @@
 const supabase = require('../config/supabase');
 const bcrypt = require('bcrypt');
 const emailService = require('../services/emailService');
+const signupOtpService = require('../services/signupOtpService');
 const { URL } = require('url');
 
 // ============================================
@@ -761,6 +762,423 @@ exports.register = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Server error during registration',
+      error: error.message
+    });
+  }
+};
+
+function parseSignupRole(role, email) {
+  let userRole = role;
+  if (!userRole) {
+    userRole = classifyEmailRole(email);
+  }
+
+  userRole = String(userRole || '').toLowerCase().trim();
+  const validRoles = ['student', 'faculty', 'staff'];
+
+  if (!validRoles.includes(userRole)) {
+    return {
+      success: false,
+      message: `Invalid role. Must be one of: ${validRoles.join(', ')}`,
+      receivedRole: userRole
+    };
+  }
+
+  return {
+    success: true,
+    userRole
+  };
+}
+
+async function checkSignupEmailAvailability(trimmedEmail) {
+  const { data: existingUser, error: checkError } = await supabase
+    .from('user_accounts')
+    .select('email, system_id, created_at, role')
+    .ilike('email', trimmedEmail)
+    .maybeSingle();
+
+  if (checkError && checkError.code !== 'PGRST116') {
+    throw checkError;
+  }
+
+  if (!existingUser) {
+    return { available: true };
+  }
+
+  try {
+    const foundRole = existingUser.role || null;
+    if (foundRole) {
+      const roleTableName = getTableNameByRole(foundRole);
+      const { data: roleProfile, error: roleProfileErr } = await supabase
+        .from(roleTableName)
+        .select('system_id')
+        .eq('system_id', existingUser.system_id)
+        .maybeSingle();
+
+      if (roleProfileErr && roleProfileErr.code !== 'PGRST116') {
+        console.warn('Error checking role profile during signup availability check:', roleProfileErr.message);
+      }
+
+      if (!roleProfile) {
+        await cleanupOrphanedAccount(existingUser.system_id);
+        return { available: true, cleanedOrphan: true };
+      }
+
+      return {
+        available: false,
+        message: 'Email already registered',
+        existingEmail: existingUser.email
+      };
+    }
+
+    await cleanupOrphanedAccount(existingUser.system_id);
+    return { available: true, cleanedOrphan: true };
+  } catch (error) {
+    return {
+      available: false,
+      message: 'Email already registered',
+      existingEmail: existingUser.email
+    };
+  }
+}
+
+async function buildSignupContext(body) {
+  const { email, password, firstName, middleName, lastName, role, google_id, profile_picture } = body;
+
+  if (!email || !password || !firstName || !lastName) {
+    return {
+      success: false,
+      statusCode: 400,
+      message: 'Email, password, first name, and last name are required'
+    };
+  }
+
+  const trimmedEmail = String(email).trim().toLowerCase();
+
+  if (!trimmedEmail.includes('@')) {
+    return {
+      success: false,
+      statusCode: 400,
+      message: 'Invalid email address'
+    };
+  }
+
+  if (String(password).length < 8) {
+    return {
+      success: false,
+      statusCode: 400,
+      message: 'Password must be at least 8 characters long'
+    };
+  }
+
+  const passwordValidation = {
+    length: String(password).length >= 8,
+    uppercase: /[A-Z]/.test(password),
+    number: /[0-9]/.test(password),
+    special: /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>\/?]/.test(password)
+  };
+
+  if (!Object.values(passwordValidation).every(Boolean)) {
+    return {
+      success: false,
+      statusCode: 400,
+      message: 'Password must contain: at least 8 characters, one uppercase letter (A-Z), one number (0-9), and one special character (!@#$%^&*)'
+    };
+  }
+
+  const roleResult = parseSignupRole(role, email);
+  if (!roleResult.success) {
+    return {
+      success: false,
+      statusCode: 400,
+      message: roleResult.message,
+      receivedRole: roleResult.receivedRole
+    };
+  }
+
+  const userRole = roleResult.userRole;
+  const roleTableName = getTableNameByRole(userRole);
+  const idColumnName = getIdColumnNameByRole(userRole);
+
+  let campusId = extractCampusId(email, userRole);
+  let staffAccountId = null;
+
+  if (userRole === 'staff' && !campusId) {
+    staffAccountId = await generateStaffAccountId();
+    campusId = staffAccountId;
+  }
+
+  if (userRole === 'faculty' && !campusId) {
+    const timestamp = Date.now().toString().slice(-5);
+    staffAccountId = 'FIX' + timestamp;
+    campusId = staffAccountId;
+  }
+
+  if (userRole === 'student' && !campusId) {
+    return {
+      success: false,
+      statusCode: 400,
+      message: `Invalid email format for ${userRole}. Students must use UMak email with K-number or A-number (e.g., name.k12345@umak.edu.ph).`
+    };
+  }
+
+  const availability = await checkSignupEmailAvailability(trimmedEmail);
+  if (!availability.available) {
+    return {
+      success: false,
+      statusCode: 400,
+      message: availability.message,
+      existingEmail: availability.existingEmail
+    };
+  }
+
+  const hashedPassword = await bcrypt.hash(password, 10);
+
+  return {
+    success: true,
+    payload: {
+      email: trimmedEmail,
+      password: hashedPassword,
+      firstName,
+      middleName: middleName || null,
+      lastName,
+      role: userRole,
+      roleTableName,
+      idColumnName,
+      campusId,
+      staffAccountId,
+      google_id: google_id || null,
+      profile_picture: profile_picture || null
+    }
+  };
+}
+
+function buildSignupUserAccountData(context) {
+  const userAccountData = {
+    email: context.email,
+    password: context.password,
+    role: context.role,
+    campus_id: context.role === 'staff' ? context.staffAccountId : (context.campusId || null),
+    status: 'active'
+  };
+
+  if (context.google_id) {
+    userAccountData.google_id = context.google_id;
+  }
+
+  return userAccountData;
+}
+
+async function createUserRecordsFromSignupContext(context) {
+  const userAccountData_insert = buildSignupUserAccountData(context);
+
+  const { data: userAccountData, error: userAccountError } = await supabase
+    .from('user_accounts')
+    .insert([userAccountData_insert])
+    .select();
+
+  if (userAccountError) {
+    if (userAccountError.code === '23505') {
+      return {
+        success: false,
+        statusCode: 400,
+        message: 'Email already registered',
+        error: userAccountError.message
+      };
+    }
+
+    return {
+      success: false,
+      statusCode: 400,
+      message: 'Error creating user account',
+      error: userAccountError.message,
+      code: userAccountError.code
+    };
+  }
+
+  const systemId = userAccountData[0].system_id;
+
+  const roleSpecificData = {
+    system_id: systemId,
+    email: context.email,
+    first_name: context.firstName,
+    middle_name: context.middleName,
+    last_name: context.lastName
+  };
+
+  if (context.role === 'student') {
+    roleSpecificData[context.idColumnName] = context.campusId;
+  } else if (context.role === 'faculty') {
+    roleSpecificData[context.idColumnName] = context.campusId || context.staffAccountId;
+  } else if (context.role === 'staff') {
+    roleSpecificData.account_id = context.staffAccountId;
+  }
+
+  if (context.profile_picture) {
+    roleSpecificData.profile_picture = context.profile_picture;
+  }
+
+  const { data: roleData, error: roleError } = await supabase
+    .from(context.roleTableName)
+    .insert([roleSpecificData])
+    .select();
+
+  if (roleError) {
+    await supabase
+      .from('user_accounts')
+      .delete()
+      .eq('system_id', systemId);
+
+    return {
+      success: false,
+      statusCode: 400,
+      message: 'Error creating user profile',
+      error: roleError.message
+    };
+  }
+
+  void emailService.sendSignupWelcomeEmail(context.email, context.firstName)
+    .catch((emailError) => {
+      console.error('Signup welcome email failed:', emailError && emailError.message ? emailError.message : emailError);
+    });
+
+  return {
+    success: true,
+    user: {
+      id: systemId,
+      email: context.email,
+      first_name: context.firstName,
+      middle_name: context.middleName,
+      last_name: context.lastName,
+      full_name: `${context.firstName} ${context.middleName ? context.middleName + ' ' : ''}${context.lastName}`.trim(),
+      role: context.role,
+      campus_id: context.role === 'staff' ? context.staffAccountId : (context.campusId || null),
+      account_id: context.role === 'staff' ? context.staffAccountId : null
+    }
+  };
+}
+
+exports.requestSignupOtp = async (req, res) => {
+  try {
+    const preparation = await buildSignupContext(req.body || {});
+
+    if (!preparation.success) {
+      return res.status(preparation.statusCode || 400).json({
+        success: false,
+        message: preparation.message,
+        receivedRole: preparation.receivedRole,
+        existingEmail: preparation.existingEmail
+      });
+    }
+
+    const pendingRegistration = preparation.payload;
+    const otp = signupOtpService.generateOTP();
+    const stored = signupOtpService.storeSignupSession(pendingRegistration.email, pendingRegistration, otp);
+
+    if (!stored) {
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to initiate signup verification. Please try again.'
+      });
+    }
+
+    const emailSent = await emailService.sendSignupOTPEmail(
+      pendingRegistration.email,
+      otp,
+      pendingRegistration.firstName
+    );
+
+    if (!emailSent) {
+      signupOtpService.invalidateSignupSession(pendingRegistration.email);
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to send verification OTP. Please try again.'
+      });
+    }
+
+    const session = signupOtpService.getSignupSession(pendingRegistration.email);
+
+    return res.status(200).json({
+      success: true,
+      message: 'Verification OTP sent. Please check your email before your account is created.',
+      requiresVerification: true,
+      signupToken: session?.signupToken || null,
+      expiresInMinutes: signupOtpService.OTP_EXPIRY_MINUTES
+    });
+  } catch (error) {
+    console.error('Signup OTP request error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Server error during signup OTP request',
+      error: error.message
+    });
+  }
+};
+
+exports.verifySignupOtpAndRegister = async (req, res) => {
+  try {
+    const { email, otp, signupToken } = req.body || {};
+    const normalizedEmail = String(email || '').trim().toLowerCase();
+
+    if (!normalizedEmail || !otp || !signupToken) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email, OTP, and signup token are required'
+      });
+    }
+
+    const verificationResult = signupOtpService.verifySignupOTP(normalizedEmail, otp);
+    if (!verificationResult.success) {
+      return res.status(400).json({
+        success: false,
+        message: verificationResult.message,
+        attemptsRemaining: verificationResult.attemptsRemaining
+      });
+    }
+
+    const tokenValid = signupOtpService.verifySignupToken(normalizedEmail, signupToken);
+    if (!tokenValid) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid signup token'
+      });
+    }
+
+    const session = signupOtpService.getSignupSession(normalizedEmail);
+    const pendingRegistration = session?.pendingRegistration;
+
+    if (!pendingRegistration) {
+      return res.status(400).json({
+        success: false,
+        message: 'Signup session not found or expired'
+      });
+    }
+
+    const created = await createUserRecordsFromSignupContext(pendingRegistration);
+
+    if (!created.success) {
+      return res.status(created.statusCode || 400).json({
+        success: false,
+        message: created.message,
+        error: created.error,
+        code: created.code
+      });
+    }
+
+    signupOtpService.invalidateSignupSession(normalizedEmail);
+
+    return res.status(201).json({
+      success: true,
+      message: 'Account created successfully! Welcome to BinTECH.',
+      user: created.user,
+      emailSent: true,
+      signupVerified: true
+    });
+  } catch (error) {
+    console.error('Signup OTP verification error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Server error during signup verification',
       error: error.message
     });
   }

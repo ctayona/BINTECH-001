@@ -1030,6 +1030,8 @@
       return Object.values(requirements).every(req => req === true);
     }
 
+    let pendingSignupVerification = null;
+
     async function handleSignup(event) {
       event.preventDefault();
       
@@ -1107,15 +1109,15 @@
       }
       
       const originalText = submitButton.textContent;
-      submitButton.textContent = 'Creating Account...';
+      submitButton.textContent = 'Sending OTP...';
       submitButton.disabled = true;
       
       try {
-        console.log('[Signup] Sending registration request...');
+        console.log('[Signup] Requesting signup OTP...');
         console.log('[Signup] Email:', email);
         console.log('[Signup] Role:', role);
         
-        const response = await fetch('/auth/register', {
+        const response = await fetch('/auth/register/request-otp', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -1131,21 +1133,28 @@
         });
         
         const data = await response.json();
-        console.log('[Signup] Response status:', response.status);
-        console.log('[Signup] Response data:', data);
+        console.log('[Signup] OTP request response status:', response.status);
+        console.log('[Signup] OTP request response data:', data);
         
         if (!response.ok || !data.success) {
-          const errorMessage = data.message || 'Registration failed. Please try again.';
+          const errorMessage = data.message || 'Signup OTP request failed. Please try again.';
           throw new Error(errorMessage);
         }
         
-        console.log('[Signup] Registration successful!');
-        
-        // Show success modal
-        showSignupSuccessModal(email);
-        
-        // Clear form
-        form.reset();
+        pendingSignupVerification = {
+          email,
+          signupToken: data.signupToken,
+          signupBody: {
+            firstName,
+            middleName: middleName || null,
+            lastName,
+            email,
+            role,
+            password
+          }
+        };
+
+        showSignupOtpModal(email, data.expiresInMinutes || 10);
         
         // Reset button
         submitButton.textContent = originalText;
@@ -1158,6 +1167,126 @@
         
         submitButton.textContent = originalText;
         submitButton.disabled = false;
+      }
+    }
+
+    async function verifySignupOtp(event) {
+      event.preventDefault();
+
+      const otpInput = document.getElementById('signup-otp-input');
+      const verifyButton = document.getElementById('signup-otp-verify-button');
+      const otpError = document.getElementById('signup-otp-error');
+
+      if (!pendingSignupVerification) {
+        if (otpError) {
+          otpError.textContent = 'Signup session expired. Please request a new OTP.';
+          otpError.style.display = 'block';
+        }
+        return;
+      }
+
+      if (!otpInput || !verifyButton) {
+        return;
+      }
+
+      const otp = otpInput.value.trim();
+      if (!otp) {
+        if (otpError) {
+          otpError.textContent = 'Please enter the 6-digit OTP sent to your email.';
+          otpError.style.display = 'block';
+        }
+        return;
+      }
+
+      const originalText = verifyButton.textContent;
+      verifyButton.textContent = 'Verifying...';
+      verifyButton.disabled = true;
+
+      try {
+        const response = await fetch('/auth/register/verify-otp', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            email: pendingSignupVerification.email,
+            otp,
+            signupToken: pendingSignupVerification.signupToken
+          })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+          throw new Error(data.message || 'OTP verification failed. Please try again.');
+        }
+
+        const createdEmail = data.user?.email || pendingSignupVerification.email;
+        pendingSignupVerification = null;
+        closeSignupOtpModal();
+
+        const form = document.querySelector('form[onsubmit="handleSignup(event)"]');
+        if (form) {
+          form.reset();
+        }
+
+        showSignupSuccessModal(createdEmail);
+      } catch (error) {
+        if (otpError) {
+          otpError.textContent = error.message || 'OTP verification failed. Please try again.';
+          otpError.style.display = 'block';
+        }
+      } finally {
+        verifyButton.textContent = originalText;
+        verifyButton.disabled = false;
+      }
+    }
+
+    function showSignupOtpModal(email, expiresInMinutes) {
+      const modal = document.getElementById('signup-otp-modal');
+      const emailDisplay = document.getElementById('signup-otp-email-display');
+      const otpError = document.getElementById('signup-otp-error');
+      const otpInput = document.getElementById('signup-otp-input');
+      const expiry = document.getElementById('signup-otp-expiry');
+
+      if (!modal) {
+        return;
+      }
+
+      if (emailDisplay) {
+        emailDisplay.textContent = email;
+      }
+
+      if (expiry) {
+        expiry.textContent = `${expiresInMinutes || 10} minutes`;
+      }
+
+      if (otpError) {
+        otpError.textContent = '';
+        otpError.style.display = 'none';
+      }
+
+      if (otpInput) {
+        otpInput.value = '';
+      }
+
+      modal.classList.add('active');
+      if (otpInput) {
+        otpInput.focus();
+      }
+    }
+
+    function closeSignupOtpModal() {
+      const modal = document.getElementById('signup-otp-modal');
+      const otpError = document.getElementById('signup-otp-error');
+
+      if (modal) {
+        modal.classList.remove('active');
+      }
+
+      if (otpError) {
+        otpError.textContent = '';
+        otpError.style.display = 'none';
       }
     }
 
@@ -1564,15 +1693,14 @@
           <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
         </svg>
       </div>
-      <h2>Signup Successful!</h2>
-      <p>Your account has been created successfully.</p>
+      <h2>Signup Complete!</h2>
+      <p>Your email was verified and your account has been created successfully.</p>
       
       <div class="instructions">
         <ol>
-          <li>A confirmation email has been sent to <strong id="success-email-display"></strong></li>
-          <li>Check your email inbox (and spam folder) for the confirmation link</li>
-          <li>Click the link to verify your email address</li>
-          <li>Return here and login with your credentials</li>
+          <li>An OTP was verified for <strong id="success-email-display"></strong></li>
+          <li>You can now log in with your credentials</li>
+          <li>Check your inbox for the welcome email</li>
         </ol>
       </div>
 
@@ -1588,6 +1716,38 @@
           Back to Home
         </button>
       </div>
+    </div>
+  </div>
+
+  <!-- Signup OTP Modal -->
+  <div id="signup-otp-modal" class="success-modal">
+    <div class="success-modal-content">
+      <div class="success-icon">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.28 3.939a1 1 0 00.95.69h4.136c.969 0 1.371 1.24.588 1.81l-3.344 2.43a1 1 0 00-.364 1.118l1.28 3.939c.3.921-.755 1.688-1.54 1.118l-3.344-2.43a1 1 0 00-1.175 0l-3.344 2.43c-.784.57-1.838-.197-1.539-1.118l1.28-3.939a1 1 0 00-.364-1.118L2.644 9.366c-.783-.57-.38-1.81.588-1.81h4.136a1 1 0 00.95-.69l1.281-3.939z" />
+        </svg>
+      </div>
+      <h2>Verify Your Email</h2>
+      <p>Enter the 6-digit OTP sent to <strong id="signup-otp-email-display" class="email-highlight"></strong>.</p>
+
+      <div class="instructions">
+        <ol>
+          <li>Check your email inbox and spam folder</li>
+          <li>Enter the OTP below to create your account</li>
+          <li>The code expires in <strong id="signup-otp-expiry">10 minutes</strong></li>
+        </ol>
+      </div>
+
+      <div id="signup-otp-error" class="error-message" style="display:none; margin-bottom: 12px;"></div>
+
+      <form onsubmit="verifySignupOtp(event)" class="space-y-4">
+        <input id="signup-otp-input" type="text" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="Enter OTP" class="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/50 text-center tracking-[0.4em] text-lg focus:outline-none focus:ring-2 focus:ring-eco-yellow/40">
+
+        <div class="success-modal-buttons">
+          <button type="submit" id="signup-otp-verify-button" class="btn-primary-success">Verify and Create Account</button>
+          <button type="button" class="btn-secondary-success" onclick="closeSignupOtpModal()">Cancel</button>
+        </div>
+      </form>
     </div>
   </div>
 

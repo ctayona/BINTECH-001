@@ -1,0 +1,250 @@
+BinTECH Comprehensive System Guide
+
+1. Project Overview
+BinTECH is an intelligent waste segregation and incentive platform. It combines ESP32 hardware, a Node.js and Express backend, Supabase as the database and storage layer, and browser-based user and admin pages. The system detects waste, sorts it, awards points, and provides management tools for administrators.
+
+2. Main Technology Stack
+- Backend: Node.js, Express
+- Database: Supabase PostgreSQL
+- Storage: Supabase Storage
+- Frontend: HTML templates with client-side JavaScript and Tailwind CSS CDN
+- Hardware: ESP32 with sensors, servo motor, LCD, WiFi, and backend HTTP calls
+- Email: SendGrid-based email delivery
+- Authentication: Local auth, Google OAuth, and OTP verification flows
+
+3. User Pages and What They Do
+- templates/USER_DASHBOARD.HTML
+  - Main landing page for logged-in users
+  - Shows points, activity, waste statistics, and navigation
+  - Uses live data from dashboard endpoints
+- templates/USER_QR_CODE.HTML
+  - Handles QR-based sorting session flow and point transfer
+  - Syncs desktop and mobile nav points
+  - Starts or resumes machine-linked user sessions
+- templates/USER_HISTORY.HTML
+  - Shows disposal history and account points
+  - Pulls activity overview and summary data from backend APIs
+- templates/USER_PROFILE.HTML
+  - Handles personal profile viewing and editing
+  - Supports profile picture and Google photo sync
+- templates/REWARDS.HTML
+  - Shows redeemable rewards and redemption actions
+
+4. Admin Pages and What They Do
+- templates/ADMIN_DASHBOARD.html
+  - Admin overview page with system statistics, charts, and quick actions
+  - Contains backup export and restore access buttons
+- templates/ADMIN_ACCOUNTS.html
+  - Admin account management, archiving, and restore actions
+- templates/ADMIN_BINMANAGE.html
+  - Bin creation, editing, and waste-type assignments
+- templates/ADMIN_COLLECTION.html
+  - Collection logs and collection management
+- templates/ADMIN_ANALYTICS.html
+  - Analytics, trends, and usage summaries
+- templates/ADMIN_REWARDS.html
+  - Reward creation, editing, and deletion
+- templates/ADMIN_ROUTES.html
+  - Route and schedule management
+- templates/ADMIN_PROFILE.html
+  - Admin profile data and account settings
+- templates/ADMIN_COLLECTION_LOGS / ADMIN_WEBSITE_LOGS views
+  - Audit and operational log pages
+
+5. Backend File Ownership
+- controllers/authController.js
+  - Registration, login, logout, Google login, profile retrieval, profile updates
+  - New signup OTP request and verification endpoints
+- controllers/passwordRecoveryController.js
+  - Forgot password OTP flow, OTP verification, and password reset
+- controllers/dashboardController.js
+  - User dashboard statistics, activity overview, transaction history, points endpoints
+- controllers/rewardsController.js
+  - Reward listings, redeem actions, admin reward management, and point transfers
+- controllers/wasteSorterController.js
+  - Machine sessions, device session lookup, point transfer, session end, telemetry, and hardware sync
+- controllers/adminController.js
+  - Admin dashboard data, analytics, bin management, schedules, collections, account archive, backup export, restore preview, and Supabase redirect
+- controllers/adminDashboardController.js
+  - Admin dashboard-specific account archive and restore logic in the older dashboard surface
+- config/supabase.js
+  - Supabase client creation and environment-driven connection config
+- config/auth.js
+  - Authentication helper utilities
+- services/emailService.js
+  - SendGrid email sending, OTP emails, signup welcome emails, password reset confirmation emails
+- services/passwordRecoveryService.js
+  - In-memory OTP storage for password recovery
+- services/signupOtpService.js
+  - In-memory OTP storage for signup verification
+- middleware/adminAuth.js
+  - Admin route protection
+- app.js
+  - Express app setup, routes, template serving, and middleware wiring
+
+6. API Logic Summary
+User authentication APIs
+- POST /auth/register
+  - Existing registration flow
+- POST /auth/register/request-otp
+  - Sends a signup OTP before account creation
+- POST /auth/register/verify-otp
+  - Verifies OTP and creates the account only after success
+- POST /auth/login
+  - User login
+- POST /auth/google-login
+  - Google login
+- POST /auth/forgot-password
+  - Sends password recovery OTP
+- POST /auth/verify-otp
+  - Verifies password recovery OTP
+- POST /auth/reset-password
+  - Resets password after OTP verification
+
+User and session APIs
+- /api/dashboard/...
+  - User dashboard statistics, activity, points, and history data
+- /api/waste-sorter/api/session/...
+  - Session start, update, transfer, and end flows for the ESP32 machine
+- /api/rewards/...
+  - Rewards, redemption, and transfer operations
+
+Admin APIs
+- GET /api/admin/backup
+  - Downloads a JSON backup snapshot of the Supabase-backed system tables
+- GET /api/admin/backup/restore
+  - Redirects to the Supabase dashboard for manual review/restoration context
+- POST /api/admin/backup/restore-preview
+  - Validates a backup JSON payload and returns a non-destructive restore preview
+- GET /api/admin/summary
+  - Dashboard summary counts and live stats
+- GET /api/admin/analytics/...
+  - Analytics and reporting endpoints
+- Archive routes under /api/admin/accounts/archive-history/...
+  - Snapshot view and safe account restore for archived admin accounts
+
+7. Authentication and OTP Flow
+Signup OTP flow
+1. User sends signup details to /auth/register/request-otp.
+2. Backend validates the fields and checks whether the email is available.
+3. Backend generates an OTP and stores a pending signup session.
+4. Backend sends the OTP by email.
+5. User submits the OTP and signup token to /auth/register/verify-otp.
+6. Backend verifies the OTP.
+7. Backend creates the user account only after verification succeeds.
+8. Backend sends the welcome email after successful creation.
+
+Password recovery OTP flow
+1. User requests OTP through /auth/forgot-password.
+2. Backend generates and stores a recovery OTP.
+3. Backend sends the OTP by email.
+4. User verifies OTP with /auth/verify-otp.
+5. Backend allows the password reset step.
+
+8. Backup and Restore Behavior
+Backup export
+- The backup download is a JSON snapshot of important Supabase tables.
+- It includes data from admin, user, session, telemetry, bin, reward, collection, route, and schedule tables.
+- It also includes metadata like version, timestamps, system info, and warnings.
+- This is a manual export for disaster recovery and documentation.
+
+Safe restore behavior
+- Restore is intentionally manual and preview-based.
+- The restore preview endpoint only validates the backup payload.
+- It lists table names, row counts, and missing-table warnings.
+- It does not insert, update, or delete live data.
+- The separate Supabase redirect button is for opening the project dashboard, not for automated overwrites.
+
+Why Supabase matters for backup
+- Supabase is the system of record.
+- Backups should reflect Supabase data because that is where live records are stored.
+- This makes backup export and restore review traceable and consistent.
+
+9. Hardware Logic Summary
+- ESP32 firmware reads the physical sensors and updates classification state.
+- A detection window is used so one material can win the cycle.
+- The firmware synchronizes with backend session data.
+- The LCD shows the active user and current machine state.
+- The machine stops or resets when backend state requires it.
+- Bin telemetry and verification logic reduce unsafe sorting actions.
+
+10. Security Features
+System security
+- Authenticated access to user and admin pages
+- Admin route protection through middleware
+- Role-based access checks for sensitive actions
+- Head-role restriction for archive restore
+- Server-side secrets and environment variables
+- Validation of request payloads and backup payloads
+- Audit history for account restoration
+
+Hardware security
+- Session lock so only one material wins the current detection window
+- Confirmation thresholds to reduce false sensor triggers
+- Backend sync so the server remains the source of truth
+- Fail-closed behavior when no valid session exists
+- Verification logic before sorting action completes
+
+11. Key Data Tables To Discuss
+- user_accounts
+  - Main user auth record
+- student_accounts, faculty_accounts, other_accounts
+  - Role-specific profile tables
+- admin_accounts
+  - Admin users
+- account_points
+  - User points ledger
+- machine_sessions
+  - Sorting session state and totals
+- machine_sorting_telemetry
+  - Material counts and telemetry
+- bins
+  - Bin status and fill state
+- rewards
+  - Redeemable items
+- collections
+  - Collection operations
+- collection_logs
+  - Collection audit trail
+- routes and schedules
+  - Operational planning data
+- admin_accounts_archive_history
+  - Admin archive and restore tracking
+
+12. What You Can Present
+- The problem BinTECH solves
+- How the ESP32 and backend communicate
+- How user points are earned and transferred
+- How admin dashboards support management
+- Why backup export is useful
+- Why restore preview is safer than direct overwrite
+- Why Supabase is the data backbone
+- How security is built into both software and hardware
+
+13. Common Panel Questions And Ready Answers
+Q: What does the backup contain?
+A: It exports a JSON snapshot of the main Supabase-backed tables, plus metadata and warnings.
+
+Q: How is restore made safe?
+A: Restore uses a preview-only flow that validates the backup but does not overwrite anything automatically.
+
+Q: Why use Supabase?
+A: Supabase is the live data store and storage layer, so it keeps the system consistent and easier to manage.
+
+Q: How does signup OTP work?
+A: The system sends an OTP before account creation, verifies the code, then creates the account only after the OTP is correct.
+
+Q: What happens if the hardware sensors misread a material?
+A: The detection window and locking logic reduce false classification, and the backend sync helps keep the machine state consistent.
+
+Q: How are points protected?
+A: Points are controlled by backend session updates instead of trusting the device alone.
+
+Q: What is the role of the admin dashboard?
+A: It centralizes monitoring, analytics, account controls, backups, and operational tools.
+
+Q: What security measures are in place?
+A: Authentication, authorization, validation, server-side secrets, restore preview, and audit logging.
+
+14. Short Closing Statement
+BinTECH is a connected waste sorting platform that uses hardware automation, Supabase-backed data, and role-based web tools to track waste, award points, and keep backup and restore operations safe.

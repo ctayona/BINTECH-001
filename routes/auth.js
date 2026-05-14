@@ -30,6 +30,8 @@ const upload = multer({
 
 // User Registration
 router.post('/register', authController.register);
+router.post('/register/request-otp', authController.requestSignupOtp);
+router.post('/register/verify-otp', authController.verifySignupOtpAndRegister);
 
 // User Login
 router.post('/login', authController.login);
