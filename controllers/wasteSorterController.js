@@ -185,6 +185,70 @@ function safeNumber(value) {
   return Number.isFinite(numeric) ? numeric : 0;
 }
 
+function displayNameFromEmail(email) {
+  const safeEmail = String(email || '').trim();
+  if (!safeEmail) {
+    return '';
+  }
+
+  const atIndex = safeEmail.indexOf('@');
+  if (atIndex > 0) {
+    return safeEmail.substring(0, atIndex);
+  }
+
+  return safeEmail;
+}
+
+async function resolveSessionUserDisplayName(userId, fallbackEmail = '') {
+  if (!userId) {
+    return displayNameFromEmail(fallbackEmail);
+  }
+
+  const { data: userAccount, error: userError } = await supabase
+    .from('user_accounts')
+    .select('role, email')
+    .eq('system_id', userId)
+    .maybeSingle();
+
+  if (userError) {
+    console.warn('[SESSION] Failed to read user_accounts for display name:', userError.message);
+    return displayNameFromEmail(fallbackEmail);
+  }
+
+  const role = String(userAccount?.role || '').trim().toLowerCase();
+  const preferredEmail = String(userAccount?.email || fallbackEmail || '').trim();
+
+  let roleTable = '';
+  if (role === 'student') {
+    roleTable = 'student_accounts';
+  } else if (role === 'faculty') {
+    roleTable = 'faculty_accounts';
+  } else if (role === 'staff' || role === 'other') {
+    roleTable = 'other_accounts';
+  }
+
+  if (roleTable) {
+    const { data: profile, error: profileError } = await supabase
+      .from(roleTable)
+      .select('first_name, last_name')
+      .eq('system_id', userId)
+      .maybeSingle();
+
+    if (profileError) {
+      console.warn(`[SESSION] Failed to read ${roleTable} for display name:`, profileError.message);
+    } else {
+      const firstName = String(profile?.first_name || '').trim();
+      const lastName = String(profile?.last_name || '').trim();
+      const fullName = `${firstName} ${lastName}`.trim();
+      if (fullName) {
+        return fullName;
+      }
+    }
+  }
+
+  return displayNameFromEmail(preferredEmail);
+}
+
 async function getTelemetryRow(machineId) {
   const { data, error } = await supabase
     .from(TELEMETRY_TABLE)
@@ -1119,11 +1183,15 @@ exports.getDeviceSession = async (req, res) => {
       });
     }
 
+    const userDisplayName = await resolveSessionUserDisplayName(session.user_id, session.user_email);
+
     const responsePayload = {
       success: true,
       session: {
         sessionId: session.id,
         userId: session.user_id,
+        userEmail: session.user_email || null,
+        userDisplayName: userDisplayName || null,
         isActive: session.status === 'active',
         pointsEarned: session.total_points,
         metalCount: session.metal_count,
@@ -1134,6 +1202,7 @@ exports.getDeviceSession = async (req, res) => {
 
     console.log('✅ Returning session to ESP32:');
     console.log('  sessionId:', responsePayload.session.sessionId);
+    console.log('  userDisplayName:', responsePayload.session.userDisplayName || 'N/A');
     console.log('  pointsEarned:', responsePayload.session.pointsEarned);
     console.log('========================================\n');
 
