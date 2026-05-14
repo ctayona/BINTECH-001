@@ -153,72 +153,6 @@ function generateOTPEmailTemplate(firstName, otp) {
   `;
 }
 
-function generateSignupOTPEmailTemplate(firstName, otp) {
-  return `
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <style>
-          body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; }
-          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-          .header { background: linear-gradient(135deg, #0f3b2e 0%, #1f4f3b 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
-          .header h1 { margin: 0; font-size: 28px; }
-          .content { background: #f5f5f5; padding: 30px; border-radius: 0 0 8px 8px; }
-          .otp-box { background: white; border: 3px solid #d4e157; padding: 30px; text-align: center; border-radius: 8px; margin: 30px 0; }
-          .otp-code { font-size: 48px; letter-spacing: 8px; font-weight: bold; color: #0f3b2e; font-family: 'Courier New', monospace; }
-          .otp-label { color: #666; font-size: 14px; margin-top: 10px; }
-          .warning { background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; border-radius: 4px; color: #856404; }
-          .footer { text-align: center; color: #666; font-size: 12px; margin-top: 20px; }
-          .divider { border: 0; border-top: 1px solid #ddd; margin: 20px 0; }
-        </style>
-      </head>
-      <body>
-        <div class="container">
-          <div class="header">
-            <h1>🔐 Verify Your BinTECH Account</h1>
-          </div>
-
-          <div class="content">
-            <p>Hi <strong>${firstName}</strong>,</p>
-
-            <p>Use this one-time password (OTP) to verify your email before your BinTECH account is created:</p>
-
-            <div class="otp-box">
-              <div class="otp-code">${otp}</div>
-              <div class="otp-label">Valid for 10 minutes</div>
-            </div>
-
-            <p>Enter this code in the signup verification form to finish creating your account.</p>
-
-            <div class="warning">
-              <strong>⚠️ Security Notice:</strong><br>
-              If you did not request this signup verification, you can ignore this email.
-            </div>
-
-            <p style="color: #666; font-size: 12px;">
-              This OTP will expire in 10 minutes for security reasons. Do not share this code with anyone.
-            </p>
-
-            <p>If you have any questions, feel free to reach out to our support team.<br><strong>The BinTECH Team</strong></p>
-
-            <hr class="divider">
-
-            <p style="font-size: 11px; color: #999;">
-              BinTECH - Smart Waste Sorting & Rewards Platform<br>
-              University of Makati | <a href="https://bintech.umak.edu.ph" style="color: #0f3b2e; text-decoration: none;">bintech.umak.edu.ph</a>
-            </p>
-          </div>
-
-          <div class="footer">
-            <p>© 2024 BinTECH - University of Makati. All rights reserved.</p>
-            <p>This is an automated email. Please do not reply to this message.</p>
-          </div>
-        </div>
-      </body>
-    </html>
-  `;
-}
-
 /**
  * Send welcome email after signup
  * @param {string} email - User's email address (umak.edu.ph or gmail)
@@ -377,18 +311,6 @@ async function sendOTPEmail(email, otp, firstName) {
   }
 }
 
-async function sendSignupOTPEmail(email, otp, firstName) {
-  try {
-    const htmlContent = generateSignupOTPEmailTemplate(firstName, otp);
-    const textContent = `Your signup verification code is: ${otp}. This code expires in 10 minutes. Do not share this with anyone.`;
-
-    return await sendEmailViaSendGrid(email, '🔐 Verify Your BinTECH Account', htmlContent, textContent);
-  } catch (error) {
-    console.error('❌ Error in sendSignupOTPEmail:', error && error.message ? error.message : error);
-    return false;
-  }
-}
-
 /**
  * Send password reset confirmation email
  * @param {string} email - User's email address
@@ -511,12 +433,188 @@ async function sendWelcomeEmail(email, firstName) {
   return sendSignupWelcomeEmail(email, firstName);
 }
 
+/**
+ * Send schedule notification email to assigned admin
+ * @param {string} email - Admin's email address
+ * @param {string} adminName - Admin's full name
+ * @param {object} eventDetails - Schedule event details
+ * @returns {Promise<boolean>} - Success status
+ */
+async function sendScheduleNotification(email, adminName, eventDetails, isUpdate = false) {
+  try {
+    const dashboardLink = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/admin/schedule`;
+    const emailSubject = isUpdate ? '📅 Schedule Updated - Action Required' : '📅 Schedule Assignment - Action Required';
+    const actionText = isUpdate ? 'Your assigned schedule has been updated.' : 'You have been assigned to a new schedule event.';
+    
+    const timeStart = eventDetails.scheduled_at 
+      ? new Date(eventDetails.scheduled_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+      : 'TBD';
+    
+    const timeEnd = eventDetails.end_time
+      ? new Date(eventDetails.end_time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+      : 'TBD';
+    
+    const dateStr = eventDetails.scheduled_at
+      ? new Date(eventDetails.scheduled_at).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+      : 'TBD';
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <style>
+            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background: linear-gradient(135deg, #0f3b2e 0%, #1f4f3b 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
+            .header h1 { margin: 0; font-size: 28px; }
+            .content { background: #f5f5f5; padding: 30px; border-radius: 0 0 8px 8px; }
+            .event-box { background: white; border-left: 4px solid #3d8b7a; padding: 20px; margin: 20px 0; border-radius: 4px; }
+            .event-detail { display: flex; align-items: flex-start; margin: 12px 0; }
+            .event-icon { font-size: 20px; margin-right: 12px; min-width: 24px; }
+            .event-text { flex: 1; }
+            .event-label { color: #666; font-size: 12px; font-weight: 600; text-transform: uppercase; }
+            .event-value { color: #0f3b2e; font-size: 16px; font-weight: 500; }
+            .button { display: inline-block; background: #3d8b7a; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold; margin: 20px 0; }
+            .button:hover { background: #2d5a47; }
+            .footer { text-align: center; color: #666; font-size: 12px; margin-top: 20px; }
+            .divider { border: 0; border-top: 1px solid #ddd; margin: 20px 0; }
+            .info-box { background: #e8f5e9; border-left: 4px solid #4caf50; padding: 15px; border-radius: 4px; margin: 20px 0; }
+            .update-badge { background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; border-radius: 4px; margin: 20px 0; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>📅 ${isUpdate ? 'Schedule Updated' : 'Schedule Assignment'}</h1>
+            </div>
+            
+            <div class="content">
+              <p>Hi <strong>${adminName}</strong>,</p>
+              
+              <p>${actionText} Please review the details below.</p>
+              
+              ${isUpdate ? `
+              <div class="update-badge">
+                <strong>ℹ️ Important:</strong> The details of your assigned schedule have been updated. Please review the new information carefully.
+              </div>
+              ` : ''}
+              
+              <div class="event-box">
+                <h3 style="color: #0f3b2e; margin-top: 0;">${eventDetails.task || 'Untitled Event'}</h3>
+                
+                <div class="event-detail">
+                  <div class="event-icon">📅</div>
+                  <div class="event-text">
+                    <div class="event-label">Date</div>
+                    <div class="event-value">${dateStr}</div>
+                  </div>
+                </div>
+                
+                <div class="event-detail">
+                  <div class="event-icon">⏰</div>
+                  <div class="event-text">
+                    <div class="event-label">Time</div>
+                    <div class="event-value">${timeStart} - ${timeEnd}</div>
+                  </div>
+                </div>
+                
+                <div class="event-detail">
+                  <div class="event-icon">🏷️</div>
+                  <div class="event-text">
+                    <div class="event-label">Type</div>
+                    <div class="event-value">${eventDetails.type || 'Collection'}</div>
+                  </div>
+                </div>
+                
+                ${eventDetails.bin_label ? `
+                <div class="event-detail">
+                  <div class="event-icon">🗑️</div>
+                  <div class="event-text">
+                    <div class="event-label">Bin</div>
+                    <div class="event-value">${eventDetails.bin_label}</div>
+                  </div>
+                </div>
+                ` : ''}
+                
+                ${eventDetails.notes ? `
+                <div class="event-detail">
+                  <div class="event-icon">📝</div>
+                  <div class="event-text">
+                    <div class="event-label">Notes</div>
+                    <div class="event-value">${eventDetails.notes}</div>
+                  </div>
+                </div>
+                ` : ''}
+              </div>
+              
+              <div class="info-box">
+                <strong>What's Next?</strong>
+                <p>Please log in to your admin dashboard to view the full event details and confirm your availability. If you have any questions or conflicts, please contact your administrator.</p>
+              </div>
+              
+              <div style="text-align: center;">
+                <a href="${dashboardLink}" class="button">View in Dashboard</a>
+              </div>
+              
+              <p>If you have any questions or need assistance, please contact our support team.</p>
+              
+              <p>Best regards,<br><strong>The BinTECH Team</strong></p>
+              
+              <hr class="divider">
+              
+              <p style="font-size: 11px; color: #999;">
+                BinTECH - Smart Waste Sorting & Rewards Platform<br>
+                University of Makati
+              </p>
+            </div>
+            
+            <div class="footer">
+              <p>© 2024 BinTECH - University of Makati. All rights reserved.</p>
+              <p>This is an automated email. Please do not reply to this message.</p>
+            </div>
+          </div>
+        </body>
+      </html>
+    `;
+
+    const textContent = `
+${isUpdate ? 'Schedule Updated' : 'Schedule Assignment'}
+
+Hi ${adminName},
+
+${actionText} Please review the details below.
+
+Event: ${eventDetails.task || 'Untitled Event'}
+Date: ${dateStr}
+Time: ${timeStart} - ${timeEnd}
+Type: ${eventDetails.type || 'Collection'}
+${eventDetails.bin_label ? `Bin: ${eventDetails.bin_label}` : ''}
+${eventDetails.notes ? `Notes: ${eventDetails.notes}` : ''}
+
+Please log in to your admin dashboard to view the full event details and confirm your availability.
+
+View in Dashboard: ${dashboardLink}
+
+Best regards,
+The BinTECH Team
+
+---
+BinTECH - University of Makati
+    `;
+
+    return await sendEmailViaSendGrid(email, emailSubject, htmlContent, textContent);
+  } catch (error) {
+    console.error('❌ Error in sendScheduleNotification:', error && error.message ? error.message : error);
+    return false;
+  }
+}
+
 module.exports = {
   sendEmailViaSendGrid,
   sendSignupWelcomeEmail,
   sendOTPEmail,
-  sendSignupOTPEmail,
   sendPasswordResetConfirmation,
   sendEmail,
-  sendWelcomeEmail
+  sendWelcomeEmail,
+  sendScheduleNotification
 };

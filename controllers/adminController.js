@@ -2996,32 +2996,45 @@ exports.getSchedule = async (req, res) => {
     // DEBUG: Log what we're returning from database (safely)
     if (data && data.length > 0) {
       console.log('[getSchedule] Fetched ' + data.length + ' schedules from DB');
-      console.log('[getSchedule] First schedule assigned_to:', {
-        assigned_to: data[0].assigned_to,
-        assigned_to_type: typeof data[0].assigned_to,
-        assigned_to_isNull: data[0].assigned_to === null
-      });
     }
 
-    // IMPORTANT: Ensure assigned_to is always a string (UUID) or null, never an object
-    const cleanedData = (data || []).map(d => {
-      let cleanedAssignedTo = d.assigned_to;
+    // Enrich schedules with admin details from schedule_admins table
+    const enrichedSchedules = [];
+    for (const schedule of (data || [])) {
+      let cleanedAssignedTo = schedule.assigned_to;
       
       // If assigned_to is an object, try to extract the ID
       if (typeof cleanedAssignedTo === 'object' && cleanedAssignedTo !== null) {
-        console.warn('[getSchedule] assigned_to is an object, extracting id:', cleanedAssignedTo);
         cleanedAssignedTo = cleanedAssignedTo.id || cleanedAssignedTo.system_id || null;
       }
-      
-      return {
-        ...d,
-        assigned_to: cleanedAssignedTo
-      };
-    });
+
+      // Fetch all admins assigned to this schedule
+      const { data: adminAssignments, error: adminError } = await supabase
+        .from('schedule_admins')
+        .select('admin_id, admin_accounts(id, email, full_name)')
+        .eq('schedule_id', schedule.id);
+
+      let assignedAdmins = [];
+      if (!adminError && adminAssignments) {
+        assignedAdmins = adminAssignments
+          .map(assignment => ({
+            id: assignment.admin_id,
+            email: assignment.admin_accounts?.email,
+            full_name: assignment.admin_accounts?.full_name
+          }))
+          .filter(admin => admin.email);
+      }
+
+      enrichedSchedules.push({
+        ...schedule,
+        assigned_to: cleanedAssignedTo,
+        assigned_admins: assignedAdmins  // New field with all assigned admins
+      });
+    }
 
     res.json({
       success: true,
-      schedules: cleanedData
+      schedules: enrichedSchedules
     });
   } catch (error) {
     console.error('[getSchedule] Server error:', error.message, error);
@@ -3060,14 +3073,18 @@ exports.addSchedule = async (req, res) => {
       });
     }
 
-    // DEBUG: Include assigned_to to see what frontend sends
-    console.log('[addSchedule] Frontend sent assigned_to:', assigned_to, '(type:', typeof assigned_to, ', length:', assigned_to ? assigned_to.length : 0, ')');
+    // Handle multiple admin assignments - assigned_to can be array or single value
+    const adminIds = Array.isArray(assigned_to) ? assigned_to.filter(id => id) : (assigned_to ? [assigned_to] : []);
+    console.log('[addSchedule] Processing adminIds:', adminIds, '(count:', adminIds.length, ')');
+    
+    // Store the first admin (for backward compatibility) or null if no admins
+    const primaryAdminId = adminIds.length > 0 ? adminIds[0] : null;
     
     const insertData = {
       bin_id: bin_id || null,
       task,
       scheduled_at,
-      assigned_to: assigned_to || null,  // ✅ Re-enabled for debugging
+      assigned_to: primaryAdminId,  // Primary admin for backward compatibility
       notes: notes || null,
       status: status || 'pending'
     };
@@ -3078,16 +3095,15 @@ exports.addSchedule = async (req, res) => {
     }
 
     console.log('[addSchedule] Final insert payload:', insertData);
-    console.log('[addSchedule] About to insert with payload:', JSON.stringify(insertData, null, 2));
 
     let { data, error } = await supabase
       .from('schedules')
       .insert([insertData])
       .select();
 
-    // If FK constraint error on assigned_to, retry with assigned_to = null
+    // Fallback logic for schema issues
     if (error && String(error.message || '').toLowerCase().includes('assigned_to_fkey')) {
-      console.warn('[addSchedule] FK constraint error - assigned_to is invalid:', assigned_to, '- retrying with assigned_to = null');
+      console.warn('[addSchedule] FK constraint error - retrying with assigned_to = null');
       const retryData = { ...insertData };
       retryData.assigned_to = null;
       const retry = await supabase
@@ -3098,7 +3114,6 @@ exports.addSchedule = async (req, res) => {
       error = retry.error;
     }
 
-    // If there's an end_time field error, retry without it
     if (error && String(error.message || '').toLowerCase().includes('end_time')) {
       console.warn('[addSchedule] end_time field not supported, retrying without it');
       const retryData = { ...insertData };
@@ -3120,29 +3135,47 @@ exports.addSchedule = async (req, res) => {
       });
     }
 
-    console.log('[addSchedule] Success:', data);
+    console.log('[addSchedule] Schedule created successfully:', data);
     
-    // Send email notification if assigned_to is set
-    if (assigned_to && data && data.length > 0) {
+    // If we have multiple admins or a schedule was created, insert admin assignments
+    if (data && data.length > 0 && adminIds.length > 0) {
+      const scheduleId = data[0].id;
+      console.log('[addSchedule] Inserting admin assignments for schedule:', scheduleId);
+      
+      // Create schedule_admins entries for all admins
+      const adminAssignments = adminIds.map(adminId => ({
+        schedule_id: scheduleId,
+        admin_id: adminId
+      }));
+
+      const { data: assignmentData, error: assignmentError } = await supabase
+        .from('schedule_admins')
+        .insert(adminAssignments)
+        .select();
+
+      if (assignmentError) {
+        console.warn('[addSchedule] Failed to insert schedule_admins:', assignmentError.message);
+        // This is non-blocking - the schedule was created successfully
+      } else {
+        console.log('[addSchedule] ✓ Admin assignments created:', assignmentData?.length);
+      }
+    }
+    
+    // Send email notifications to all assigned admins
+    if (adminIds.length > 0 && data && data.length > 0) {
       try {
         const emailService = require('../services/emailService');
         
-        console.log('[addSchedule] Attempting to send email - assigned_to:', assigned_to);
-        
-        // Get admin details from admin_accounts table
-        // Note: admin_accounts uses 'id' as primary key, not 'system_id'
-        const { data: adminData, error: adminError } = await supabase
+        // Fetch all admin details
+        const { data: adminsList, error: adminsError } = await supabase
           .from('admin_accounts')
-          .select('email, full_name')
-          .eq('id', assigned_to)
-          .single();
-        
-        if (adminError) {
-          console.warn('[addSchedule] Could not fetch admin details for email:', adminError.message);
-          console.warn('[addSchedule] Tried to query admin_accounts with id =', assigned_to);
-        } else if (adminData && adminData.email) {
-          console.log('[addSchedule] ✓ Found admin:', adminData.email);
-          console.log('[addSchedule] Sending schedule notification to:', adminData.email);
+          .select('id, email, full_name')
+          .in('id', adminIds);
+
+        if (adminsError) {
+          console.warn('[addSchedule] Could not fetch admin list:', adminsError.message);
+        } else if (adminsList && adminsList.length > 0) {
+          console.log('[addSchedule] Sending notifications to', adminsList.length, 'admins');
           
           const eventDetails = {
             task: task,
@@ -3153,34 +3186,37 @@ exports.addSchedule = async (req, res) => {
             bin_id: bin_id,
             bin_label: req.body.bin_label || null
           };
-          
-          const emailSent = await emailService.sendScheduleNotification(
-            adminData.email,
-            adminData.full_name || 'Admin',
-            eventDetails
-          );
-          
-          if (emailSent) {
-            console.log('[addSchedule] ✓ Schedule notification email sent successfully');
-          } else {
-            console.warn('[addSchedule] ⚠️ Failed to send schedule notification email (non-blocking)');
+
+          // Send email to each admin
+          for (const admin of adminsList) {
+            try {
+              console.log('[addSchedule] Sending notification to:', admin.email);
+              const emailSent = await emailService.sendScheduleNotification(
+                admin.email,
+                admin.full_name || 'Admin',
+                eventDetails
+              );
+              if (emailSent) {
+                console.log('[addSchedule] ✓ Email sent to:', admin.email);
+              } else {
+                console.warn('[addSchedule] ⚠️ Failed to send email to:', admin.email);
+              }
+            } catch (adminEmailError) {
+              console.error('[addSchedule] Error sending email to admin:', admin.email, adminEmailError.message);
+            }
           }
-        } else {
-          console.warn('[addSchedule] Admin data found but no email:', adminData);
         }
       } catch (emailError) {
-        console.error('[addSchedule] Error sending schedule notification:', emailError.message);
-        console.error('[addSchedule] Error details:', emailError);
-        // Don't fail the schedule creation if email fails
+        console.error('[addSchedule] Error in email notification process:', emailError.message);
+        // Don't fail the schedule creation if emails fail
       }
-    } else {
-      console.log('[addSchedule] No email to send - assigned_to:', assigned_to, 'data length:', data?.length);
     }
     
     res.status(201).json({
       success: true,
       message: 'Schedule added successfully',
-      schedules: data
+      schedules: data,
+      adminsNotified: adminIds.length
     });
   } catch (error) {
     console.error('[addSchedule] Server error:', error);
@@ -3212,14 +3248,18 @@ exports.updateSchedule = async (req, res) => {
       notes
     });
 
-    // DEBUG: Include assigned_to to see what frontend sends
-    console.log('[updateSchedule] Frontend sent assigned_to:', assigned_to, '(type:', typeof assigned_to, ', length:', assigned_to ? assigned_to.length : 0, ')');
+    // Handle multiple admin assignments - assigned_to can be array or single value
+    const adminIds = Array.isArray(assigned_to) ? assigned_to.filter(id => id) : (assigned_to ? [assigned_to] : []);
+    console.log('[updateSchedule] Processing adminIds:', adminIds, '(count:', adminIds.length, ')');
+    
+    // Store the first admin (for backward compatibility) or null if no admins
+    const primaryAdminId = adminIds.length > 0 ? adminIds[0] : null;
     
     const updateData = {
       bin_id: bin_id || null,
       task,
       scheduled_at,
-      assigned_to: assigned_to || null,  // ✅ Re-enabled for debugging
+      assigned_to: primaryAdminId,  // Primary admin for backward compatibility
       status: status || 'pending',
       notes: notes || null
     };
@@ -3239,7 +3279,7 @@ exports.updateSchedule = async (req, res) => {
 
     // If FK constraint error on assigned_to, retry with assigned_to = null
     if (error && String(error.message || '').toLowerCase().includes('assigned_to_fkey')) {
-      console.warn('[updateSchedule] FK constraint error - assigned_to is invalid:', assigned_to, '- retrying with assigned_to = null');
+      console.warn('[updateSchedule] FK constraint error - retrying with assigned_to = null');
       const retryData = { ...updateData };
       retryData.assigned_to = null;
       const retry = await supabase
@@ -3293,29 +3333,59 @@ exports.updateSchedule = async (req, res) => {
       });
     }
 
-    console.log('[updateSchedule] Success:', data);
+    console.log('[updateSchedule] Schedule updated successfully:', data);
     
-    // Send email notification if assigned_to is set (for updates)
-    if (assigned_to && data && data.length > 0) {
+    // Update admin assignments (delete old, insert new)
+    if (data && data.length > 0) {
+      const scheduleId = data[0].id;
+      
+      // Delete existing admin assignments
+      const { error: deleteError } = await supabase
+        .from('schedule_admins')
+        .delete()
+        .eq('schedule_id', scheduleId);
+
+      if (deleteError) {
+        console.warn('[updateSchedule] Failed to delete old admin assignments:', deleteError.message);
+      } else {
+        console.log('[updateSchedule] Old admin assignments cleared');
+      }
+
+      // Insert new admin assignments
+      if (adminIds.length > 0) {
+        const adminAssignments = adminIds.map(adminId => ({
+          schedule_id: scheduleId,
+          admin_id: adminId
+        }));
+
+        const { data: assignmentData, error: assignmentError } = await supabase
+          .from('schedule_admins')
+          .insert(adminAssignments)
+          .select();
+
+        if (assignmentError) {
+          console.warn('[updateSchedule] Failed to insert new admin assignments:', assignmentError.message);
+        } else {
+          console.log('[updateSchedule] ✓ Admin assignments updated:', assignmentData?.length);
+        }
+      }
+    }
+    
+    // Send email notifications to all assigned admins
+    if (adminIds.length > 0 && data && data.length > 0) {
       try {
         const emailService = require('../services/emailService');
         
-        console.log('[updateSchedule] Attempting to send email - assigned_to:', assigned_to);
-        
-        // Get admin details from admin_accounts table
-        // Note: admin_accounts uses 'id' as primary key, not 'system_id'
-        const { data: adminData, error: adminError } = await supabase
+        // Fetch all admin details
+        const { data: adminsList, error: adminsError } = await supabase
           .from('admin_accounts')
-          .select('email, full_name')
-          .eq('id', assigned_to)
-          .single();
-        
-        if (adminError) {
-          console.warn('[updateSchedule] Could not fetch admin details for email:', adminError.message);
-          console.warn('[updateSchedule] Tried to query admin_accounts with id =', assigned_to);
-        } else if (adminData && adminData.email) {
-          console.log('[updateSchedule] ✓ Found admin:', adminData.email);
-          console.log('[updateSchedule] Sending schedule update notification to:', adminData.email);
+          .select('id, email, full_name')
+          .in('id', adminIds);
+
+        if (adminsError) {
+          console.warn('[updateSchedule] Could not fetch admin list:', adminsError.message);
+        } else if (adminsList && adminsList.length > 0) {
+          console.log('[updateSchedule] Sending update notifications to', adminsList.length, 'admins');
           
           const eventDetails = {
             task: task,
@@ -3326,34 +3396,38 @@ exports.updateSchedule = async (req, res) => {
             bin_id: bin_id,
             bin_label: req.body.bin_label || null
           };
-          
-          const emailSent = await emailService.sendScheduleNotification(
-            adminData.email,
-            adminData.full_name || 'Admin',
-            eventDetails
-          );
-          
-          if (emailSent) {
-            console.log('[updateSchedule] ✓ Schedule update notification email sent successfully');
-          } else {
-            console.warn('[updateSchedule] ⚠️ Failed to send schedule update notification email (non-blocking)');
+
+          // Send email to each admin
+          for (const admin of adminsList) {
+            try {
+              console.log('[updateSchedule] Sending update notification to:', admin.email);
+              const emailSent = await emailService.sendScheduleNotification(
+                admin.email,
+                admin.full_name || 'Admin',
+                eventDetails,
+                true // isUpdate flag
+              );
+              if (emailSent) {
+                console.log('[updateSchedule] ✓ Email sent to:', admin.email);
+              } else {
+                console.warn('[updateSchedule] ⚠️ Failed to send email to:', admin.email);
+              }
+            } catch (adminEmailError) {
+              console.error('[updateSchedule] Error sending email to admin:', admin.email, adminEmailError.message);
+            }
           }
-        } else {
-          console.warn('[updateSchedule] Admin data found but no email:', adminData);
         }
       } catch (emailError) {
-        console.error('[updateSchedule] Error sending schedule notification:', emailError.message);
-        console.error('[updateSchedule] Error details:', emailError);
-        // Don't fail the schedule update if email fails
+        console.error('[updateSchedule] Error in email notification process:', emailError.message);
+        // Don't fail the schedule update if emails fail
       }
-    } else {
-      console.log('[updateSchedule] No email to send - assigned_to:', assigned_to, 'data length:', data?.length);
     }
     
     res.json({
       success: true,
       message: 'Schedule updated successfully',
-      schedules: data
+      schedules: data,
+      adminsNotified: adminIds.length
     });
   } catch (error) {
     console.error('[updateSchedule] Server error:', error);
@@ -3362,7 +3436,6 @@ exports.updateSchedule = async (req, res) => {
       message: 'Server error',
       error: error.message
     });
-
   }
 };
 
