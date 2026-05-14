@@ -69,7 +69,7 @@ void showSessionLcd() {
   if (sessionLabel.length() == 0) {
     sessionLabel = "Active session";
   }
-  updateLcd("Welcome user:", sessionLabel);
+  updateLcd("User: " + sessionLabel, "Ready to sort");
 }
 
 void showSortingLcd(const String& material) {
@@ -87,7 +87,7 @@ const char* ssids[] = {
   "GlobeAtHome_9B6AA_2.4",
   "Main4g",
   "HONOR 200",
-  "",
+  "Fiber",
   "",
   ""
 };
@@ -96,7 +96,7 @@ const char* passwords[] = {
   "RkF2b3ub",
   "iNTERNET.4gMain!",
   "hrrtz123",
-  "",
+  "Malayko..",
   "",
   ""
 };
@@ -109,8 +109,8 @@ bool sessionActive = false;
 // ============ END MULTIPLE WiFi SETUP ============
 
 // --- PIN ASSIGNMENTS ---
-const int inductivePin = 25;  
-const int capacitivePin = 26; 
+const int inductivePin = 26;  
+const int capacitivePin = 27; 
 const int servoMetalPin = 32; 
 const int servoPlasticPin = 33;
 const int irPin = 15;
@@ -148,9 +148,16 @@ unsigned long motorStartTime = 0;
 unsigned long motorActivateTime = 0;
 unsigned long verificationStartTime = 0;
 const unsigned long DETECTION_SAMPLE_INTERVAL = 40;
-const int DETECTION_CONFIRMATION_COUNT = 1;
+const int DETECTION_CONFIRMATION_COUNT = 2;
 const int ULTRASONIC_SAMPLE_COUNT = 3;
 const unsigned long ULTRASONIC_SAMPLE_GAP = 20;
+
+enum DetectedMaterial {
+  MATERIAL_NONE,
+  MATERIAL_METAL,
+  MATERIAL_PLASTIC,
+  MATERIAL_PAPER
+};
 
 // Sensor readings during detection window
 bool metalDetected = false;
@@ -160,6 +167,9 @@ unsigned long lastDetectionSampleTime = 0;
 int metalDetectionCount = 0;
 int plasticDetectionCount = 0;
 int paperDetectionCount = 0;
+DetectedMaterial lockedMaterial = MATERIAL_NONE;
+bool materialLocked = false;
+DetectedMaterial activeTriggerMaterial = MATERIAL_NONE;
 
 // Verification flags
 bool verificationNeeded = false;
@@ -237,6 +247,9 @@ void resetMachineSession(bool clearSessionId = true) {
   plasticDetectionCount = 0;
   paperDetectionCount = 0;
   lastDetectionSampleTime = 0;
+  lockedMaterial = MATERIAL_NONE;
+  materialLocked = false;
+  activeTriggerMaterial = MATERIAL_NONE;
   motorStopped = false;
   motorActivateTime = 0;
   showIdleLcd();
@@ -354,6 +367,9 @@ void loop() {
           currentState = WAITING_FOR_DETECTION;
           detectionStartTime = millis();
           lastDetectionSampleTime = 0;
+          lockedMaterial = MATERIAL_NONE;
+          materialLocked = false;
+          activeTriggerMaterial = MATERIAL_NONE;
           
           // Reset material flags
           metalDetected = false;
@@ -367,26 +383,59 @@ void loop() {
       break;
 
     case WAITING_FOR_DETECTION:
-      // Collect sensor data during identification window
+      // Lock the first material that is actually triggered and ignore the rest for this cycle.
       if (millis() - lastDetectionSampleTime >= DETECTION_SAMPLE_INTERVAL) {
-        if (inductiveVal == LOW) {
+        bool inductive_triggered = inductiveVal == LOW;
+        bool capacitive_triggered = capacitiveVal == LOW;
+        bool ir_triggered = irVal == LOW;
+
+        if (activeTriggerMaterial == MATERIAL_NONE) {
+          if (inductive_triggered) {
+            activeTriggerMaterial = MATERIAL_METAL;
+          } else if (capacitive_triggered) {
+            activeTriggerMaterial = MATERIAL_PLASTIC;
+          } else if (ir_triggered) {
+            activeTriggerMaterial = MATERIAL_PAPER;
+          }
+        }
+
+        if (activeTriggerMaterial == MATERIAL_METAL && inductive_triggered) {
           metalDetectionCount++;
-        }
-        if (capacitiveVal == LOW) {
+          if (metalDetectionCount >= DETECTION_CONFIRMATION_COUNT) {
+            lockedMaterial = MATERIAL_METAL;
+            materialLocked = true;
+          }
+        } else if (activeTriggerMaterial == MATERIAL_PLASTIC && capacitive_triggered) {
           plasticDetectionCount++;
-        }
-        if (irVal == LOW) {
+          if (plasticDetectionCount >= DETECTION_CONFIRMATION_COUNT) {
+            lockedMaterial = MATERIAL_PLASTIC;
+            materialLocked = true;
+          }
+        } else if (activeTriggerMaterial == MATERIAL_PAPER && ir_triggered) {
           paperDetectionCount++;
+          if (paperDetectionCount >= DETECTION_CONFIRMATION_COUNT) {
+            lockedMaterial = MATERIAL_PAPER;
+            materialLocked = true;
+          }
         }
+
         lastDetectionSampleTime = millis();
       }
 
-      metalDetected = isConfirmedDetection(metalDetectionCount);
-      plasticDetected = isConfirmedDetection(plasticDetectionCount);
-      paperDetected = isConfirmedDetection(paperDetectionCount);
+      metalDetected = (lockedMaterial == MATERIAL_METAL);
+      plasticDetected = (lockedMaterial == MATERIAL_PLASTIC);
+      paperDetected = (lockedMaterial == MATERIAL_PAPER);
 
       // Check if identification window has closed
       if (millis() - detectionStartTime >= IDENTIFICATION_WINDOW) {
+        if (!materialLocked) {
+          lockedMaterial = activeTriggerMaterial;
+          materialLocked = (lockedMaterial != MATERIAL_NONE);
+          metalDetected = (lockedMaterial == MATERIAL_METAL);
+          plasticDetected = (lockedMaterial == MATERIAL_PLASTIC);
+          paperDetected = (lockedMaterial == MATERIAL_PAPER);
+        }
+
         classifyAndSort();
         currentState = MOTOR_RUNNING;
         motorStartTime = millis();
@@ -468,6 +517,13 @@ void classifyAndSort() {
                 metalDetectionCount, plasticDetectionCount, paperDetectionCount, DETECTION_CONFIRMATION_COUNT);
   Serial.printf("Confirmed Detection -> Metal: %d | Plastic: %d | Paper: %d\n", 
                 metalDetected, plasticDetected, paperDetected);
+
+  if (!metalDetected && !plasticDetected && !paperDetected) {
+    Serial.println("=> NO MATERIAL LOCKED! Defaulting to motor only...");
+    verificationNeeded = false;
+    pointsAlreadyAwarded = false;
+    return;
+  }
 
   if (metalDetected) {
     Serial.println("=> METAL DETECTED! Activating metal servo...");
@@ -699,15 +755,15 @@ void printStats() {
   Serial.println("\n========================================");
   Serial.println("         CURRENT SESSION STATS");
   Serial.println("========================================");
-  Serial.printf("Metal Items:   %d | Points: %.1f", metalCount, metalCount * 3.0);
+  Serial.printf("Metal Items:   %d | Points: %.1f", metalCount, metalCount * 2.0);
   if (metalBinFull) Serial.print(" | ⚠️  BIN FULL");
   Serial.println();
   
-  Serial.printf("Plastic Items: %d | Points: %.1f", plasticCount, plasticCount * 2.0);
+  Serial.printf("Plastic Items: %d | Points: %.1f", plasticCount, plasticCount * 1.0);
   if (plasticBinFull) Serial.print(" | ⚠️  BIN FULL");
   Serial.println();
   
-  Serial.printf("Paper Items:   %d | Points: %.1f", paperCount, paperCount * 1.0);
+  Serial.printf("Paper Items:   %d | Points: %.1f", paperCount, paperCount * 0.5);
   if (paperBinFull) Serial.print(" | ⚠️  BIN FULL");
   Serial.println();
   
@@ -1032,7 +1088,7 @@ void syncActiveSessionFromBackend() {
     if (!err && doc["success"] == true && doc["session"]) {
       JsonObject session = doc["session"];
       String backendSessionId = session["sessionId"] | "";
-      String backendUserName = session["userDisplayName"] | session["userEmail"] | "";
+      String backendUserName = session["userDisplayName"] | session["userEmail"] | session["userId"] | "";
 
       if (backendSessionId.length() > 0) {
         bool sessionChanged = (sessionID != backendSessionId);
@@ -1050,7 +1106,7 @@ void syncActiveSessionFromBackend() {
           Serial.printf("[SESSION] Synced active session from backend: %s\n", sessionID.c_str());
           // Print a friendly welcome with the provided display name (preserve existing logs)
           if (backendUserName.length() > 0) {
-            Serial.printf("[SESSION] Welcome user: %s\n", backendUserName.c_str());
+            Serial.printf("[SESSION] Welcome %s\n", backendUserName.c_str());
           }
         }
 

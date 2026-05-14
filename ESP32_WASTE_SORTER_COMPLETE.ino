@@ -3,26 +3,102 @@
 #include <WebServer.h>
 #include <ArduinoJson.h>
 #include <HTTPClient.h>
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
 
 // ============ MACHINE IDENTIFICATION ============
 const String MACHINE_ID = "BINTECH-SORTER-001";
-const String BACKEND_URL = "http://192.168.254.105:3000"; // Change to your Node.js server IP
+const String BACKEND_URL = "https://bintech-001.onrender.com"; // http://192.168.254.105:3000  http://192.168.254.113:3000
+
+// Helper: build endpoint URL without duplicate slashes
+String buildUrl(const String &path) {
+  String base = BACKEND_URL;
+  if (base.endsWith("/")) base.remove(base.length() - 1);
+  String p = path;
+  if (!p.startsWith("/")) p = "/" + p;
+  return base + p;
+}
+
+// ============ LCD SETUP ============
+const uint8_t LCD_ADDRESS = 0x27;
+const uint8_t LCD_COLUMNS = 16;
+const uint8_t LCD_ROWS = 2;
+LiquidCrystal_I2C lcd(LCD_ADDRESS, LCD_COLUMNS, LCD_ROWS);
+
+String sessionDisplayName = "No active user";
+String lastLcdLine1 = "";
+String lastLcdLine2 = "";
+
+String fitLcdText(const String& text) {
+  String output = text;
+  if (output.length() > LCD_COLUMNS) {
+    output = output.substring(0, LCD_COLUMNS);
+  }
+  while (output.length() < LCD_COLUMNS) {
+    output += " ";
+  }
+  return output;
+}
+
+void updateLcd(const String& line1, const String& line2) {
+  String paddedLine1 = fitLcdText(line1);
+  String paddedLine2 = fitLcdText(line2);
+
+  if (paddedLine1 == lastLcdLine1 && paddedLine2 == lastLcdLine2) {
+    return;
+  }
+
+  lastLcdLine1 = paddedLine1;
+  lastLcdLine2 = paddedLine2;
+
+  lcd.setCursor(0, 0);
+  lcd.print(paddedLine1);
+  lcd.setCursor(0, 1);
+  lcd.print(paddedLine2);
+}
+
+void showIdleLcd() {
+  updateLcd("Sorter ready", "Waiting for user");
+}
+
+void showSessionLcd() {
+  String sessionLabel = sessionDisplayName;
+  if (sessionLabel.length() == 0) {
+    sessionLabel = "Active session";
+  }
+  updateLcd("User: " + sessionLabel, "Ready to sort");
+}
+
+void showSortingLcd(const String& material) {
+  updateLcd("Sorting " + material, "Please wait...");
+}
+
+void showSortedLcd(const String& material) {
+  updateLcd(material + " sorted", "Points updated");
+}
+
 // ============================================
 
 // ============ MULTIPLE WiFi SETUP ============
 const char* ssids[] = {
   "GlobeAtHome_9B6AA_2.4",
-  "MyHomeWiFi",
+  "Main4g",
+  "HONOR 200",
+  "",
+  "",
   ""
 };
 
 const char* passwords[] = {
   "RkF2b3ub",
-  "Pass123456",
+  "iNTERNET.4gMain!",
+  "hrrtz123",
+  "",
+  "",
   ""
 };
 
-const int networkCount = 3;
+const int networkCount = 6;
 WebServer server(80);
 
 String sessionID = "";
@@ -30,10 +106,10 @@ bool sessionActive = false;
 // ============ END MULTIPLE WiFi SETUP ============
 
 // --- PIN ASSIGNMENTS ---
-const int inductivePin = 26;   // Metal detection - CORRECTED PIN
-const int capacitivePin = 27;  // Plastic detection - CORRECTED PIN
-const int servoMetalPin = 23; 
-const int servoPlasticPin = 22;
+const int inductivePin = 26;   // Metal detection
+const int capacitivePin = 27;  // Plastic detection
+const int servoMetalPin = 32; 
+const int servoPlasticPin = 33;
 const int irPin = 15;
 const int motorENA = 13;
 const int motorIN1 = 12;
@@ -61,16 +137,38 @@ enum DetectionState {
 
 DetectionState currentState = IDLE;
 unsigned long detectionStartTime = 0;
-const unsigned long IDENTIFICATION_WINDOW = 2000;
-const unsigned long MOTOR_DELAY = 1000;
+const unsigned long IDENTIFICATION_WINDOW = 2500;     // 2.5 seconds for multiple samples
+const unsigned long MOTOR_DELAY = 500;
 const unsigned long VERIFICATION_TIMEOUT = 10000;
+const unsigned long MOTOR_RUNTIME = 5000;
 unsigned long motorStartTime = 0;
+unsigned long motorActivateTime = 0;
 unsigned long verificationStartTime = 0;
+const unsigned long DETECTION_SAMPLE_INTERVAL = 40;   // Sample every 40ms
+const int METAL_DETECTION_THRESHOLD = 5;              // INCREASED for relay noise filtering - require 5 confirmations
+const int PLASTIC_DETECTION_THRESHOLD = 4;            // require 4 confirmations
+const int PAPER_DETECTION_THRESHOLD = 4;              // require 4 confirmations
+const int ULTRASONIC_SAMPLE_COUNT = 3;
+const unsigned long ULTRASONIC_SAMPLE_GAP = 20;
+
+enum DetectedMaterial {
+  MATERIAL_NONE,
+  MATERIAL_METAL,
+  MATERIAL_PLASTIC,
+  MATERIAL_PAPER
+};
 
 // Sensor readings during detection window
 bool metalDetected = false;
 bool plasticDetected = false;
 bool paperDetected = false;
+unsigned long lastDetectionSampleTime = 0;
+int metalDetectionCount = 0;
+int plasticDetectionCount = 0;
+int paperDetectionCount = 0;
+DetectedMaterial lockedMaterial = MATERIAL_NONE;
+bool materialLocked = false;
+DetectedMaterial activeTriggerMaterial = MATERIAL_NONE;
 
 // Verification flags
 bool verificationNeeded = false;
@@ -84,11 +182,14 @@ bool inductivePrev = HIGH;
 bool capacitivePrev = HIGH;
 bool irPrev = HIGH;
 
-// --- POINTS SYSTEM ---
+// --- POINTS SYSTEM (CORRECTED VALUES) ---
 float totalPoints = 0.0;
 int metalCount = 0;
 int plasticCount = 0;
 int paperCount = 0;
+const float METAL_POINTS = 3.0;    // Metal = 3 points
+const float PLASTIC_POINTS = 2.0;  // Plastic = 2 points
+const float PAPER_POINTS = 1.0;    // Paper = 1 point
 
 // --- ULTRASONIC DETECTION COOLDOWN ---
 unsigned long lastMetalDetectTime = 0;
@@ -108,25 +209,26 @@ unsigned long paperOccupancyStartTime = 0;
 const unsigned long BIN_FULL_THRESHOLD = 10000;
 
 // --- DETECTION RANGES (in cm) ---
-const int VERIFICATION_RANGE = 30;
-const int OCCUPANCY_DETECTION_RANGE = 40;
-// ============ SENSOR LOGIC INVERSION (TEST IF METAL NOT DETECTED) ============
-// If metal objects are not detected (plastic servo activates instead), set these to true to invert logic
-const bool INVERT_INDUCTIVE = false;  // SET TO true IF METAL DETECTION FAILS
-const bool INVERT_CAPACITIVE = false; // SET TO true IF PLASTIC DETECTION FAILS  
-const bool INVERT_IR = false;         // SET TO true IF PAPER DETECTION FAILS
-// ============================================================================
+const int VERIFICATION_RANGE = 4;
+const int OCCUPANCY_DETECTION_RANGE = 4;
+
+// --- DEBUG GPIO NOISE DIAGNOSTICS ---
+unsigned long lastGpioDiagnostic = 0;
+const unsigned long GPIO_DIAGNOSTIC_INTERVAL = 5000;  // Print GPIO state every 5 seconds
+
 // --- WiFi timing ---
 unsigned long lastWiFiCheck = 0;
-const unsigned long WiFi_CHECK_INTERVAL = 5000; // Check WiFi every 5 seconds
+const unsigned long WiFi_CHECK_INTERVAL = 5000;
 
 // --- Backend Update timing ---
 unsigned long lastBackendUpdate = 0;
-const unsigned long BACKEND_UPDATE_INTERVAL = 5000; // Send updates every 5 seconds
+const unsigned long BACKEND_UPDATE_INTERVAL = 5000;
 
 void syncActiveSessionFromBackend();
 void sendBinCapacityTelemetry();
 int distanceToFillPercentage(long distanceCm);
+long readStableDistance(int trigPin, int echoPin, int sampleCount = ULTRASONIC_SAMPLE_COUNT);
+bool isConfirmedDetection(int detectionCount, int threshold);
 
 void resetMachineSession(bool clearSessionId = true) {
   currentState = IDLE;
@@ -143,6 +245,9 @@ void resetMachineSession(bool clearSessionId = true) {
   verificationNeeded = false;
   materialToVerify = "";
   pointsAwarded = 0.0;
+  lockedMaterial = MATERIAL_NONE;
+  materialLocked = false;
+  activeTriggerMaterial = MATERIAL_NONE;
   Serial.println("[SESSION] Machine counters reset.");
 }
 
@@ -251,6 +356,20 @@ void loop() {
           Serial.println("\n[DETECTION START] Opening 2-second identification window...");
           currentState = WAITING_FOR_DETECTION;
           detectionStartTime = millis();
+          lockedMaterial = MATERIAL_NONE;
+          materialLocked = false;
+          activeTriggerMaterial = MATERIAL_NONE;
+          metalDetectionCount = 0;
+          plasticDetectionCount = 0;
+          paperDetectionCount = 0;
+
+          if (capacitivePrev == HIGH && capacitiveVal == LOW) {
+            activeTriggerMaterial = MATERIAL_PLASTIC;
+          } else if (inductivePrev == HIGH && inductiveVal == LOW) {
+            activeTriggerMaterial = MATERIAL_METAL;
+          } else if (irPrev == HIGH && irVal == LOW) {
+            activeTriggerMaterial = MATERIAL_PAPER;
+          }
           
           // Reset material flags
           metalDetected = false;
@@ -261,26 +380,51 @@ void loop() {
       break;
 
     case WAITING_FOR_DETECTION:
-      // Collect sensor data during identification window
-      // Apply inversion logic if configured (set to true to invert sensor logic)
-      {
+      // Collect sensor data during identification window.
+      // The first confirmed material wins this cycle and the others are ignored.
+      if (millis() - lastDetectionSampleTime >= DETECTION_SAMPLE_INTERVAL) {
         bool inductive_triggered = INVERT_INDUCTIVE ? (inductiveVal == HIGH) : (inductiveVal == LOW);
         bool capacitive_triggered = INVERT_CAPACITIVE ? (capacitiveVal == HIGH) : (capacitiveVal == LOW);
         bool ir_triggered = INVERT_IR ? (irVal == HIGH) : (irVal == LOW);
-        
-        if (inductive_triggered) {
-          metalDetected = true;
+
+        if (activeTriggerMaterial == MATERIAL_METAL && inductive_triggered) {
+          metalDetectionCount++;
+          if (metalDetectionCount >= METAL_DETECTION_THRESHOLD) {
+            lockedMaterial = MATERIAL_METAL;
+            materialLocked = true;
+          }
+        } else if (activeTriggerMaterial == MATERIAL_PLASTIC && capacitive_triggered) {
+          plasticDetectionCount++;
+          if (plasticDetectionCount >= PLASTIC_DETECTION_THRESHOLD) {
+            lockedMaterial = MATERIAL_PLASTIC;
+            materialLocked = true;
+          }
+        } else if (activeTriggerMaterial == MATERIAL_PAPER && ir_triggered) {
+          paperDetectionCount++;
+          if (paperDetectionCount >= PAPER_DETECTION_THRESHOLD) {
+            lockedMaterial = MATERIAL_PAPER;
+            materialLocked = true;
+          }
         }
-        if (capacitive_triggered) {
-          plasticDetected = true;
-        }
-        if (ir_triggered) {
-          paperDetected = true;
-        }
+
+        lastDetectionSampleTime = millis();
       }
+
+      metalDetected = (lockedMaterial == MATERIAL_METAL);
+      plasticDetected = (lockedMaterial == MATERIAL_PLASTIC);
+      paperDetected = (lockedMaterial == MATERIAL_PAPER);
 
       // Check if identification window has closed
       if (millis() - detectionStartTime >= IDENTIFICATION_WINDOW) {
+        if (!materialLocked) {
+          lockedMaterial = activeTriggerMaterial;
+          materialLocked = (lockedMaterial != MATERIAL_NONE);
+        }
+
+        metalDetected = (lockedMaterial == MATERIAL_METAL);
+        plasticDetected = (lockedMaterial == MATERIAL_PLASTIC);
+        paperDetected = (lockedMaterial == MATERIAL_PAPER);
+
         classifyAndSort();
         currentState = MOTOR_RUNNING;
         motorStartTime = millis();
@@ -365,6 +509,13 @@ void classifyAndSort() {
                 metalDetected, plasticDetected, paperDetected);
   Serial.printf("[DEBUG] GPIO26(Inductive)=%d | GPIO27(Capacitive)=%d | GPIO15(IR)=%d\n", 
                 digitalRead(26), digitalRead(27), digitalRead(15));
+
+  if (!metalDetected && !plasticDetected && !paperDetected) {
+    Serial.println("=> NO MATERIAL LOCKED! Defaulting to motor only...");
+    verificationNeeded = false;
+    pointsAlreadyAwarded = false;
+    return;
+  }
 
   if (metalDetected) {
     Serial.println("=> METAL DETECTED! Activating metal servo...");
